@@ -44,6 +44,11 @@ services:
       - "7700:7700"
     volumes:
       - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - veritas
 

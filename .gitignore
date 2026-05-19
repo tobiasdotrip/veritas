@@ -50,7 +50,7 @@ Thumbs.db
 .turbo/
 
 # Drizzle
-drizzle/
+drizzle/*.log
 
 # Meilisearch
 meili_data/

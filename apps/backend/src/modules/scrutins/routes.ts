@@ -1,0 +1,159 @@
+import { z } from "zod";
+import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { createScrutinRepository } from "./repository.js";
+import { createScrutinService } from "./service.js";
+import { CacheService, getRedis } from "../common/cache.js";
+import { getDb } from "../../db/client.js";
+import { CursorPaginationQuery, OffsetPaginationQuery } from "../common/pagination.js";
+import { DateString } from "../common/schemas.js";
+
+const ScrutinSchema = z.object({
+  id: z.string(),
+  legislature: z.string(),
+  numero: z.number(),
+  dateScrutin: DateString,
+  titre: z.string(),
+  sortCode: z.enum(["adopté", "rejeté"]).nullable(),
+  nombrePour: z.number().nullable(),
+  nombreContre: z.number().nullable(),
+  nombreAbstentions: z.number().nullable(),
+  nombreNonVotants: z.number().nullable(),
+  codeTypeVote: z.string().nullable(),
+  demandeur: z.string().nullable(),
+});
+
+const ScrutinDetailSchema = ScrutinSchema.extend({
+  themes: z.array(
+    z.object({
+      id: z.number(),
+      slug: z.string(),
+      label: z.string(),
+      confidence: z.string().nullable(),
+    })
+  ),
+  groupVotes: z.array(
+    z.object({
+      id: z.number(),
+      politicalGroupId: z.string(),
+      name: z.string(),
+      abbreviation: z.string().nullable(),
+      nombreMembresGroupe: z.number().nullable(),
+      positionMajoritaire: z.string().nullable(),
+      nombrePour: z.number().nullable(),
+      nombreContre: z.number().nullable(),
+      nombreAbstentions: z.number().nullable(),
+      nombreNonVotants: z.number().nullable(),
+    })
+  ),
+});
+
+const ScrutinVoteSchema = z.object({
+  voteId: z.number(),
+  position: z.enum(["pour", "contre", "abstention", "nonVotant"]),
+  parDelegation: z.boolean().nullable(),
+  causePositionVote: z.string().nullable(),
+  deputyId: z.string(),
+  deputyFirstName: z.string(),
+  deputyLastName: z.string(),
+  deputySlug: z.string(),
+  groupId: z.string(),
+  groupName: z.string(),
+  groupAbbreviation: z.string().nullable(),
+});
+
+const plugin: FastifyPluginAsyncZod = async function (fastify) {
+  const db = getDb();
+  const repo = createScrutinRepository(db);
+  const cache = new CacheService(getRedis());
+  const service = createScrutinService(repo, cache);
+
+  fastify.route({
+    method: "GET",
+    url: "/scrutins",
+    schema: {
+      tags: ["Scrutins"],
+      querystring: z.object({
+        q: z.string().min(1).max(200).optional(),
+        from: z.string().date().optional(),
+        to: z.string().date().optional(),
+        type: z.string().optional(),
+        theme: z.string().optional(),
+        sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),
+        legislature: z.string().default("17"),
+        ...CursorPaginationQuery.shape,
+      }),
+      response: {
+        200: z.object({
+          data: ScrutinSchema.array(),
+          nextCursor: z.string().nullable(),
+          hasMore: z.boolean(),
+        }),
+      },
+    },
+    handler: async (req, reply) => {
+      const { q, from, to, type, theme, sort, legislature, limit, cursor } = req.query;
+      const result = await service.searchScrutins(
+        legislature,
+        { q, from, to, type, theme, sort },
+        { limit, cursor }
+      );
+      return reply.send(result);
+    },
+  });
+
+  fastify.route({
+    method: "GET",
+    url: "/scrutins/:id",
+    schema: {
+      tags: ["Scrutins"],
+      params: z.object({ id: z.string() }),
+      response: {
+        200: ScrutinDetailSchema,
+      },
+    },
+    handler: async (req, reply) => {
+      const { id } = req.params;
+      const scrutin = await service.getScrutinById(id);
+      return reply.send(scrutin);
+    },
+  });
+
+  fastify.route({
+    method: "GET",
+    url: "/scrutins/:id/votes",
+    schema: {
+      tags: ["Scrutins"],
+      params: z.object({ id: z.string() }),
+      querystring: z.object({
+        group: z.string().optional(),
+        position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
+        ...OffsetPaginationQuery.shape,
+      }),
+      response: {
+        200: z.object({
+          data: ScrutinVoteSchema.array(),
+          total: z.number(),
+          limit: z.number(),
+          offset: z.number(),
+        }),
+      },
+    },
+    handler: async (req, reply) => {
+      const { id } = req.params;
+      const { group, position, limit, offset } = req.query;
+      const result = await service.getScrutinVotes(
+        id,
+        { group, position },
+        { limit, offset }
+      );
+      return reply.send({
+        data: result.rows,
+        total: result.total,
+        limit,
+        offset,
+      });
+    },
+  });
+};
+
+export default plugin;
