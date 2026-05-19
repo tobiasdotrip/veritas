@@ -28,6 +28,7 @@ export async function buildApp() {
     logger: {
       level: process.env.LOG_LEVEL ?? "info",
     },
+    trustProxy: true,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
@@ -42,7 +43,13 @@ export async function buildApp() {
   await app.register(rateLimit, {
     max: 60,
     timeWindow: "1 minute",
-    keyGenerator: (req) => req.ip,
+    keyGenerator: (req) => {
+      const forwarded = req.headers["x-forwarded-for"];
+      if (typeof forwarded === "string") {
+        return forwarded.split(",")[0]?.trim() ?? req.ip;
+      }
+      return req.ip;
+    },
     redis: getRedis(),
     errorResponseBuilder: (_req, context) => ({
       type: "https://veritas.fr/errors/rate-limit",

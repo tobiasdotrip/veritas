@@ -66,19 +66,15 @@ export function createScrutinRepository(db: Database) {
         );
       }
       if (cursor) {
-        try {
-          const decoded = decodeCursor(cursor) as { date: string; id: string };
-          if (filters.sort === "date_asc") {
-            conditions.push(
-              sql`(${scrutins.dateScrutin}, ${scrutins.id}) > (${new Date(decoded.date)}, ${decoded.id})`
-            );
-          } else {
-            conditions.push(
-              sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`
-            );
-          }
-        } catch {
-          // ignore invalid cursor
+        const decoded = decodeCursor(cursor);
+        if (filters.sort === "date_asc") {
+          conditions.push(
+            sql`(${scrutins.dateScrutin}, ${scrutins.id}) > (${new Date(decoded.date)}, ${decoded.id})`
+          );
+        } else {
+          conditions.push(
+            sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`
+          );
         }
       }
 
@@ -112,7 +108,10 @@ export function createScrutinRepository(db: Database) {
         .orderBy(...orderBy)
         .limit(limit + 1);
 
-      return buildCursorResponse(rows, limit, "id");
+      return buildCursorResponse(rows, limit, (item) => ({
+        date: (item.dateScrutin as Date).toISOString(),
+        id: item.id as string,
+      }));
     },
 
     async getById(id: string) {

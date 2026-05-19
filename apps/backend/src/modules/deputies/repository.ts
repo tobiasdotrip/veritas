@@ -51,6 +51,25 @@ export function createDeputyRepository(db: Database) {
       if (filters.circo !== undefined) {
         conditions.push(eq(deputies.circoNumber, filters.circo));
       }
+      if (filters.group) {
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${deputyGroupAffiliations}
+            WHERE ${deputyGroupAffiliations.deputyId} = ${deputies.id}
+              AND ${deputyGroupAffiliations.politicalGroupId} = ${filters.group}
+              AND ${deputyGroupAffiliations.endDate} IS NULL
+          )`
+        );
+      }
+      if (filters.legislature) {
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${deputyMandates}
+            WHERE ${deputyMandates.deputyId} = ${deputies.id}
+              AND ${deputyMandates.legislature} = ${filters.legislature}
+          )`
+        );
+      }
 
       const baseQuery = db
         .select({
@@ -169,15 +188,21 @@ export function createDeputyRepository(db: Database) {
       if (filters.position) {
         conditions.push(eq(scrutinVotes.position, filters.position));
       }
+      if (filters.theme) {
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${scrutinThemes}
+            INNER JOIN ${themes} ON ${scrutinThemes.themeId} = ${themes.id}
+            WHERE ${scrutinThemes.scrutinId} = ${scrutins.id}
+              AND ${themes.slug} = ${filters.theme}
+          )`
+        );
+      }
       if (cursor) {
-        try {
-          const decoded = decodeCursor(cursor) as { date: string; id: string };
-          conditions.push(
-            sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`
-          );
-        } catch {
-          // ignore invalid cursor
-        }
+        const decoded = decodeCursor(cursor);
+        conditions.push(
+          sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`
+        );
       }
 
       const rows = await db
@@ -199,7 +224,10 @@ export function createDeputyRepository(db: Database) {
         .orderBy(desc(scrutins.dateScrutin), desc(scrutins.id))
         .limit(limit + 1);
 
-      return buildCursorResponse(rows, limit, "scrutinId");
+      return buildCursorResponse(rows, limit, (item) => ({
+        date: (item.dateScrutin as Date).toISOString(),
+        id: item.scrutinId as string,
+      }));
     },
 
     async getStats(deputyId: string, legislature: string) {
@@ -268,9 +296,9 @@ export function createDeputyRepository(db: Database) {
       return {
         totalScrutins,
         votesCast,
-        participationRate: totalScrutins > 0 ? Number((votesCast / totalScrutins).toFixed(4)) : 0,
+        participationRate: totalScrutins > 0 ? Number(((votesCast / totalScrutins) * 100).toFixed(2)) : 0,
         votesWithGroup,
-        loyaltyRate: votesCast > 0 ? Number((votesWithGroup / votesCast).toFixed(4)) : 0,
+        loyaltyRate: votesCast > 0 ? Number(((votesWithGroup / votesCast) * 100).toFixed(2)) : 0,
         votesAgainstGroup,
       };
     },

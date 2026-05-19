@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { eq, and, sql, count } from "drizzle-orm";
+import { eq, and, sql, count, countDistinct } from "drizzle-orm";
 import { getDb } from "../../db/client.js";
 import { politicalGroups, scrutinVotes, scrutins, scrutinGroupVotes } from "../../db/schema.js";
 import { NotFoundError } from "../common/errors.js";
@@ -98,7 +98,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
 
       // Count distinct members who voted in this legislature
       const membersResult = await db
-        .select({ total: count() })
+        .select({ total: countDistinct(scrutinVotes.deputyId) })
         .from(scrutinVotes)
         .innerJoin(scrutins, eq(scrutinVotes.scrutinId, scrutins.id))
         .where(

@@ -130,8 +130,13 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         limit: z.coerce.number().min(1).max(20).default(10),
       }),
       response: {
-        200: SearchResultSchema,
-      },
+        200: SearchResultSchema.extend({
+          meta: z.object({
+            total: z.number(),
+            hasMore: z.boolean(),
+          }),
+        }),
+      },},{
     },
     handler: async (req, reply) => {
       const { q, limit: maxResults } = req.query;
@@ -191,6 +196,10 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       return reply.send({
         deputies: deputyRows,
         scrutins: scrutinRows,
+        meta: {
+          total: deputyRows.length + scrutinRows.length,
+          hasMore: false,
+        },
       });
     },
   });

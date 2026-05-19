@@ -2,9 +2,10 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema.js";
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ??
-  "postgresql://veritas:veritas_dev@localhost:5432/veritas";
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
 let pool: Pool | undefined;
 let db: ReturnType<typeof createDb> | undefined;

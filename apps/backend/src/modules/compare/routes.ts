@@ -5,6 +5,8 @@ import { createCompareService } from "./service.js";
 import { CacheService, getRedis } from "../common/cache.js";
 import { getDb } from "../../db/client.js";
 import { DateString } from "../common/schemas.js";
+import { deputies } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
 
 const CompareResponseSchema = z.object({
   deputies: z.array(
@@ -57,6 +59,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
   const cache = new CacheService(getRedis());
   const service = createCompareService(repo, cache);
 
+  async function resolveDeputyId(idOrSlug: string): Promise<string | null> {
+    if (idOrSlug.startsWith("PA")) {
+      const result = await db.select({ id: deputies.id }).from(deputies).where(eq(deputies.id, idOrSlug)).limit(1);
+      if (result.length > 0) return result[0].id;
+    }
+    const result = await db.select({ id: deputies.id }).from(deputies).where(eq(deputies.slug, idOrSlug)).limit(1);
+    return result[0]?.id ?? null;
+  }
+
   fastify.route({
     method: "GET",
     url: "/compare",
@@ -65,12 +76,12 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       querystring: z.object({
         deputies: z
           .string()
-          .regex(
-            /^PA\d+(,PA\d+){1,4}$/,
-            "2 à 5 députés requis (séparés par des virgules)"
-          ),
-        from: z.iso.date().optional(),
-        to: z.iso.date().optional(),
+          .min(3)
+          .refine((val) => val.split(",").length >= 2 && val.split(",").length <= 5, {
+            message: "2 à 5 députés requis (séparés par des virgules)",
+          }),
+        from: z.string().date().optional(),
+        to: z.string().date().optional(),
         legislature: z.string().default("17"),
       }),
       response: {
@@ -79,7 +90,18 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     },
     handler: async (req, reply) => {
       const { deputies: deputiesParam, from, to, legislature } = req.query;
-      const deputyIds = deputiesParam.split(",");
+      const idsOrSlugs = deputiesParam.split(",");
+      const resolvedIds = await Promise.all(idsOrSlugs.map(resolveDeputyId));
+      const deputyIds = resolvedIds.filter((id): id is string => id !== null);
+      if (deputyIds.length < 2) {
+        return reply.status(400).send({
+          type: "https://veritas.fr/errors/validation",
+          title: "Invalid deputies parameter",
+          status: 400,
+          detail: "Could not resolve at least 2 valid deputy identifiers",
+          instance: req.url,
+        });
+      }
       const result = await service.compareDeputies(deputyIds, legislature, from, to);
       return reply.send(result);
     },

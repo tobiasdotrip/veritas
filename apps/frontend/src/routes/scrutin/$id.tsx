@@ -22,14 +22,6 @@ function useScrutin(id: string) {
   });
 }
 
-function useScrutinGroups(id: string) {
-  return useQuery({
-    queryKey: ["scrutin", id, "groups"],
-    queryFn: () => apiFetch<ScrutinGroupVote[]>(`/scrutins/${id}/groups`),
-    staleTime: 1000 * 60 * 30,
-  });
-}
-
 function ScrutinPage() {
   const { id } = useParams({ from: "/scrutin/$id" });
   const {
@@ -38,12 +30,6 @@ function ScrutinPage() {
     error: sError,
     refetch: sRefetch,
   } = useScrutin(id);
-  const {
-    data: groups,
-    isLoading: gLoading,
-    error: gError,
-    refetch: gRefetch,
-  } = useScrutinGroups(id);
 
   if (sLoading) {
     return (
@@ -92,28 +78,10 @@ function ScrutinPage() {
         <h2 className="text-lg font-semibold text-text-primary">
           Votes par groupe
         </h2>
-        {gLoading && (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <SkeletonCard key={i} lines={1} />
-            ))}
-          </div>
-        )}
-        {gError && (
-          <ErrorFallback
-            title="Erreur de chargement"
-            description="Impossible de charger les votes par groupe."
-            onRetry={() => gRefetch()}
-          />
-        )}
-        {!gLoading && !gError && groups && (
-          <>
-            {groups.length === 0 ? (
-              <EmptyState title="Aucun groupe" description="Les données par groupe ne sont pas disponibles pour ce scrutin." />
-            ) : (
-              <GroupAccordion groups={groups} />
-            )}
-          </>
+        {scrutin.groupVotes.length === 0 ? (
+          <EmptyState title="Aucun groupe" description="Les données par groupe ne sont pas disponibles pour ce scrutin." />
+        ) : (
+          <GroupAccordion groups={scrutin.groupVotes} />
         )}
       </section>
     </div>

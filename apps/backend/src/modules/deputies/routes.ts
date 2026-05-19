@@ -163,8 +163,10 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       response: {
         200: z.object({
           data: DeputyVoteSchema.array(),
-          nextCursor: z.string().nullable(),
-          hasMore: z.boolean(),
+          meta: z.object({
+            nextCursor: z.string().nullable(),
+            hasMore: z.boolean(),
+          }),
         }),
       },
     },
@@ -178,7 +180,10 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         { from, to, type, theme, position },
         { limit, cursor }
       );
-      return reply.send(result);
+      return reply.send({
+        data: result.data,
+        meta: { nextCursor: result.nextCursor, hasMore: result.hasMore },
+      });
     },
   });
 

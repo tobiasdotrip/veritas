@@ -30,9 +30,20 @@ export function encodeCursor(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
-export function decodeCursor(cursor: string): unknown {
+export function decodeCursor(cursor: string): { date: string; id: string } {
   try {
-    return JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8"));
+    const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8")) as unknown;
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "date" in parsed &&
+      "id" in parsed &&
+      typeof (parsed as Record<string, unknown>).date === "string" &&
+      typeof (parsed as Record<string, unknown>).id === "string"
+    ) {
+      return parsed as { date: string; id: string };
+    }
+    throw new Error("Invalid cursor structure");
   } catch {
     throw new Error("Invalid cursor format");
   }
@@ -41,12 +52,12 @@ export function decodeCursor(cursor: string): unknown {
 export function buildCursorResponse<T extends Record<string, unknown>>(
   items: T[],
   limit: number,
-  cursorField: keyof T
+  cursorBuilder: (item: T) => { date: string; id: string }
 ): CursorPaginationResult<T> {
   const hasMore = items.length > limit;
   const data = hasMore ? items.slice(0, limit) : items;
   const lastItem = data[data.length - 1];
-  const nextCursor = lastItem ? encodeCursor(lastItem[cursorField]) : null;
+  const nextCursor = lastItem ? encodeCursor(cursorBuilder(lastItem)) : null;
 
   return {
     data,

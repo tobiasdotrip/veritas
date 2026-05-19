@@ -77,23 +77,40 @@ export interface ScrutinIndividualVote {
 }
 
 export interface ComparisonResult {
-  reference: { slug: string; firstName: string; lastName: string };
-  compared: {
-    slug: string;
+  deputies: {
+    id: string;
     firstName: string;
     lastName: string;
-    score: number;
-    votesCommuns: number;
-    votesIdentiques: number;
+    slug: string;
+    photoUrl: string | null;
   }[];
-  details: {
+  totalCommonVotes: number;
+  identicalVotes: number;
+  concordanceRate: number;
+  divergences: {
     scrutinId: string;
+    numero: number;
+    dateScrutin: string;
     titre: string;
-    date: string;
-    positions: Record<string, VotePosition>;
-    resultatGlobal: "adopté" | "rejeté" | null;
+    sortCode: "adopté" | "rejeté" | null;
+    positions: {
+      deputyId: string;
+      firstName: string;
+      lastName: string;
+      slug: string;
+      groupAbbreviation: string | null;
+      position: VotePosition;
+    }[];
   }[];
-  warning?: string;
+  pairwise: {
+    deputyAId: string;
+    deputyAName: string;
+    deputyBId: string;
+    deputyBName: string;
+    concordanceRate: number;
+    identicalVotes: number;
+    totalCommon: number;
+  }[];
 }
 
 export interface SearchResultDepute {

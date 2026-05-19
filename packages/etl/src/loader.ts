@@ -320,11 +320,17 @@ export async function loadScrutins(
                 createdAt: new Date(),
               }))
             )
-            .onConflictDoNothing({
+            .onConflictDoUpdate({
               target: [
                 schema.scrutinVotes.scrutinId,
                 schema.scrutinVotes.deputyId,
               ],
+              set: {
+                position: sql`excluded.position`,
+                parDelegation: sql`excluded.par_delegation`,
+                politicalGroupId: sql`excluded.political_group_id`,
+                mandateId: sql`excluded.mandate_id`,
+              },
             });
         }
       });
