@@ -18,13 +18,13 @@ Les données des votes existent (Open Data de l'Assemblée Nationale), mais elle
 
 ## 🏗️ Architecture
 
-| Couche | Technologie |
-|--------|-------------|
-| **Frontend** | Tanstack Start (React, SSR/SSG) |
-| **Backend API** | Fastify + TypeScript |
-| **Base de données** | PostgreSQL 15+ + Drizzle ORM |
-| **Recherche** | Meilisearch |
-| **Cache** | Redis |
+| Couche | Technologie | Version validée |
+|--------|-------------|-----------------|
+| **Frontend** | Tanstack Start (React 19, SSR/SSG) | 1.168.x |
+| **Backend API** | Fastify + TypeScript | 5.8.x |
+| **Base de données** | PostgreSQL 17 + Drizzle ORM | Drizzle 0.45.2 |
+| **Recherche** | Meilisearch | 1.41.x |
+| **Cache** | Redis | 8.0.x |
 | **ETL** | Node.js Streams |
 
 ## 📁 Structure du projet
@@ -72,6 +72,12 @@ veritas/
 ## 🚀 Démarrage rapide
 
 > *À venir — Phase de développement en cours*
+
+## 🔒 Sécurité
+
+Un [audit de sécurité complet](docs/SECURITY_AUDIT.md) a été réalisé sur l'ensemble du stack. Les versions proposées ont été corrigées pour éliminer toutes les vulnérabilités HIGH/CRITICAL identifiées.
+
+Voir aussi : [Versions validées et corrigées](docs/STACK_VERSIONS.md)
 
 ## 📜 Licence
 
