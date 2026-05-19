@@ -5,6 +5,7 @@ import { createCompareService } from "./service.js";
 import { CacheService, getRedis } from "../common/cache.js";
 import { getDb } from "../../db/client.js";
 import { DateString } from "../common/schemas.js";
+import { ValidationError } from "../common/errors.js";
 import { deputies } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 
@@ -62,7 +63,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
   async function resolveDeputyId(idOrSlug: string): Promise<string | null> {
     if (idOrSlug.startsWith("PA")) {
       const result = await db.select({ id: deputies.id }).from(deputies).where(eq(deputies.id, idOrSlug)).limit(1);
-      if (result.length > 0) return result[0].id;
+      const row = result[0];
+      if (row) return row.id;
     }
     const result = await db.select({ id: deputies.id }).from(deputies).where(eq(deputies.slug, idOrSlug)).limit(1);
     return result[0]?.id ?? null;
@@ -94,13 +96,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       const resolvedIds = await Promise.all(idsOrSlugs.map(resolveDeputyId));
       const deputyIds = resolvedIds.filter((id): id is string => id !== null);
       if (deputyIds.length < 2) {
-        return reply.status(400).send({
-          type: "https://veritas.fr/errors/validation",
-          title: "Invalid deputies parameter",
-          status: 400,
-          detail: "Could not resolve at least 2 valid deputy identifiers",
-          instance: req.url,
-        });
+        throw new ValidationError(
+          "Could not resolve at least 2 valid deputy identifiers"
+        );
       }
       const result = await service.compareDeputies(deputyIds, legislature, from, to);
       return reply.send(result);

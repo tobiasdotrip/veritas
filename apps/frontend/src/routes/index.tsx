@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Search, Scale, Users, FileText } from "lucide-react";
-import { useSearch } from "@/hooks/useSearch";
+import { useLatestScrutins } from "@/hooks/useLatestScrutins";
 import { Card } from "@/components/ui/Card";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { BadgeResultat } from "@/components/ui/BadgeResultat";
@@ -51,7 +51,7 @@ function HeroSearch() {
 }
 
 function LatestScrutins() {
-  const { data, isLoading } = useSearch("", "scrutin", 0, 6);
+  const { data: scrutins, isLoading } = useLatestScrutins(6);
 
   return (
     <section className="py-8">
@@ -65,9 +65,9 @@ function LatestScrutins() {
           ))}
         </div>
       )}
-      {data && (
+      {scrutins && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.scrutins.map((s) => (
+          {scrutins.map((s) => (
             <Card key={s.id} variant="hoverable">
               <Link
                 to="/scrutin/$id"

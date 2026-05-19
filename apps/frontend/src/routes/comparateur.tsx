@@ -81,26 +81,32 @@ function ComparatorPage() {
 
       {!isLoading && !error && result && (
         <div className="space-y-6">
-          {result.warning && (
-            <div
-              role="status"
-              className="rounded-md border border-warning/20 bg-warning-bg px-4 py-2 text-sm text-warning"
-            >
-              {result.warning}
-            </div>
-          )}
-
           <div className="flex flex-wrap items-center justify-around gap-6 rounded-lg border border-border bg-surface p-6">
-            {result.compared.map((c) => (
-              <ConcordanceScore
-                key={c.slug}
-                score={c.score}
-                votesCommuns={c.votesCommuns}
-              />
+            <ConcordanceScore
+              score={result.concordanceRate}
+              votesCommuns={result.totalCommonVotes}
+            />
+            {result.pairwise.map((pair) => (
+              <div key={`${pair.deputyAId}-${pair.deputyBId}`} className="text-center">
+                <p className="mb-2 text-xs text-text-muted">
+                  {pair.deputyAName} / {pair.deputyBName}
+                </p>
+                <ConcordanceScore
+                  score={pair.concordanceRate}
+                  votesCommuns={pair.totalCommon}
+                />
+              </div>
             ))}
           </div>
 
-          <ComparisonTable result={result} />
+          {result.divergences.length > 0 ? (
+            <ComparisonTable result={result} />
+          ) : (
+            <EmptyState
+              title="Concordance totale"
+              description="Sur les votes communs, tous les députés ont voté de la même manière."
+            />
+          )}
         </div>
       )}
     </div>

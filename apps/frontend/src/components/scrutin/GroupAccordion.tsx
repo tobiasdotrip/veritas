@@ -55,8 +55,8 @@ export function GroupAccordion({ groups, className }: GroupAccordionProps) {
           (g.nombreNonVotants ?? 0);
         return (
           <AccordionPrimitive.Item
-            key={g.groupId}
-            value={g.groupId}
+            key={g.politicalGroupId}
+            value={g.politicalGroupId}
             className="rounded-lg border border-border bg-surface"
           >
             <AccordionPrimitive.Header>
@@ -64,11 +64,11 @@ export function GroupAccordion({ groups, className }: GroupAccordionProps) {
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-text-primary">
-                      {g.groupName}
+                      {g.name}
                     </span>
-                    {g.groupAbbreviation && (
+                    {g.abbreviation && (
                       <span className="text-xs text-text-muted">
-                        {g.groupAbbreviation}
+                        {g.abbreviation}
                       </span>
                     )}
                   </div>

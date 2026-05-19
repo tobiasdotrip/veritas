@@ -136,7 +136,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             hasMore: z.boolean(),
           }),
         }),
-      },},{
+      },
     },
     handler: async (req, reply) => {
       const { q, limit: maxResults } = req.query;

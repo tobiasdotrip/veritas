@@ -29,12 +29,20 @@ function SearchPage() {
   const navigate = useNavigate({ from: "/recherche" });
   const [input, setInput] = React.useState(search.q ?? "");
 
-  const { data, isLoading, error, refetch } = useSearchData(
+  const { data: rawData, isLoading, error, refetch } = useSearchData(
     search.q ?? "",
-    search.type ?? "all",
     0,
     20
   );
+
+  const data = React.useMemo(() => {
+    if (!rawData) return undefined;
+    const type = search.type ?? "all";
+    return {
+      deputies: type === "scrutin" ? [] : rawData.deputies,
+      scrutins: type === "depute" ? [] : rawData.scrutins,
+    };
+  }, [rawData, search.type]);
 
   const options = React.useMemo(() => {
     const list: { id: string; label: string; group: string; meta: string }[] = [];

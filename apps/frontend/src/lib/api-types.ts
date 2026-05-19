@@ -50,13 +50,20 @@ export interface DeputeVoteItem {
 export interface ScrutinDetail extends Scrutin {
   libelleTypeVote: string | null;
   nombreNonVotants: number | null;
-  themes: { slug: string; label: string }[];
+  themes: {
+    id: number;
+    slug: string;
+    label: string;
+    confidence: string | null;
+  }[];
+  groupVotes: ScrutinGroupVote[];
 }
 
 export interface ScrutinGroupVote {
-  groupId: string;
-  groupName: string;
-  groupAbbreviation: string | null;
+  id: number;
+  politicalGroupId: string;
+  name: string;
+  abbreviation: string | null;
   positionMajoritaire: string | null;
   nombreMembresGroupe: number | null;
   nombrePour: number | null;

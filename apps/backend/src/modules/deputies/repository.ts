@@ -8,6 +8,8 @@ import {
   scrutinVotes,
   scrutins,
   scrutinGroupVotes,
+  scrutinThemes,
+  themes,
 } from "../../db/schema.js";
 import { decodeCursor, buildCursorResponse } from "../common/pagination.js";
 import type { CursorPaginationInput } from "../common/pagination.js";

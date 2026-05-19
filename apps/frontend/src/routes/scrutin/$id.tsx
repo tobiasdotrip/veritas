@@ -8,7 +8,7 @@ import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ShareButton } from "@/components/ui/ShareButton";
-import type { ScrutinDetail, ScrutinGroupVote } from "@/lib/api-types";
+import type { ScrutinDetail } from "@/lib/api-types";
 
 export const Route = createFileRoute("/scrutin/$id")({
   component: ScrutinPage,
