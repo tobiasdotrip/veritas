@@ -1,0 +1,58 @@
+import { z } from "zod";
+
+export const CursorPaginationQuery = z.object({
+  limit: z.coerce.number().min(1).max(100).default(20),
+  cursor: z.string().optional(),
+});
+
+export const OffsetPaginationQuery = z.object({
+  limit: z.coerce.number().min(1).max(50).default(20),
+  offset: z.coerce.number().min(0).default(0),
+});
+
+export const SearchDeputiesQuery = z.object({
+  q: z.string().min(1).max(100).optional(),
+  department: z.string().length(2).optional(),
+  circo: z.coerce.number().min(1).max(21).optional(),
+  group: z.string().optional(),
+  legislature: z.string().default("17"),
+  ...OffsetPaginationQuery.shape,
+});
+
+export const DeputyVotesQuery = z.object({
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+  type: z
+    .enum(["solennel", "motion_censure", "amendement", "budget", "autre"])
+    .optional(),
+  theme: z.string().optional(),
+  position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
+  ...CursorPaginationQuery.shape,
+});
+
+export const SearchScrutinsQuery = z.object({
+  q: z.string().min(1).max(200).optional(),
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+  type: z.string().optional(),
+  theme: z.string().optional(),
+  sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),
+  ...CursorPaginationQuery.shape,
+});
+
+export const ScrutinVotesQuery = z.object({
+  group: z.string().optional(),
+  position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
+  ...OffsetPaginationQuery.shape,
+});
+
+export const CompareQuery = z.object({
+  deputies: z
+    .string()
+    .regex(
+      /^PA\d+(,PA\d+){1,4}$/,
+      "2 à 5 députés requis (séparés par des virgules)"
+    ),
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+});

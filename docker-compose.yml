@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: veritas-postgres
+    environment:
+      POSTGRES_USER: veritas
+      POSTGRES_PASSWORD: veritas_dev
+      POSTGRES_DB: veritas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veritas -d veritas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - veritas
+
+  redis:
+    image: redis:8.0-alpine
+    container_name: veritas-redis
+    command: redis-server --requirepass veritas_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "veritas_redis", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - veritas
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.41.0
+    container_name: veritas-meilisearch
+    environment:
+      MEILI_MASTER_KEY: veritas_meili_master_key
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - veritas
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:
+
+networks:
+  veritas:
+    driver: bridge

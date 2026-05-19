@@ -1,0 +1,36 @@
+{
+  "name": "@veritas/etl",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@veritas/shared": "workspace:*",
+    "bullmq": "^5.76.8",
+    "dotenv": "^16.5.0",
+    "ioredis": "^5.10.1",
+    "pg": "^8.15.0",
+    "pg-copy-streams": "^6.0.6",
+    "undici": "^8.0.0",
+    "unzipper": "^0.12.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.11.0",
+    "@types/pg-copy-streams": "^1.2.5",
+    "@types/unzipper": "^0.10.11",
+    "typescript": "^6.0.3"
+  }
+}

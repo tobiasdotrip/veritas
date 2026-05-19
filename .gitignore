@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.build/
+.output/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+.docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database
+*.db
+*.sqlite
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Drizzle
+drizzle/
+
+# Meilisearch
+meili_data/
+
+# PostgreSQL
+postgres_data/
