@@ -87,7 +87,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         legislature: z.string().default("17"),
       }),
       response: {
-        200: CompareResponseSchema,
+        200: z.object({
+          data: CompareResponseSchema,
+        }),
       },
     },
     handler: async (req, reply) => {
@@ -101,7 +103,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         );
       }
       const result = await service.compareDeputies(deputyIds, legislature, from, to);
-      return reply.send(result);
+      return reply.send({ data: result });
     },
   });
 };

@@ -23,6 +23,7 @@ const ScrutinSchema = z.object({
 });
 
 const ScrutinDetailSchema = ScrutinSchema.extend({
+  libelleTypeVote: z.string().nullable(),
   themes: z.array(
     z.object({
       id: z.number(),
@@ -113,13 +114,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       tags: ["Scrutins"],
       params: z.object({ id: z.string() }),
       response: {
-        200: ScrutinDetailSchema,
+        200: z.object({
+          data: ScrutinDetailSchema,
+        }),
       },
     },
     handler: async (req, reply) => {
       const { id } = req.params;
       const scrutin = await service.getScrutinById(id);
-      return reply.send(scrutin);
+      return reply.send({ data: scrutin });
     },
   });
 

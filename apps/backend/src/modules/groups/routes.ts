@@ -72,7 +72,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         legislature: z.string().default("17"),
       }),
       response: {
-        200: GroupStatsSchema,
+        200: z.object({
+          data: GroupStatsSchema,
+        }),
       },
     },
     handler: async (req, reply) => {
@@ -178,14 +180,16 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       const avgLoyaltyRate = Number(loyaltyResult.rows[0]?.["avg_loyalty"] ?? 0);
 
       return reply.send({
-        groupId: group.id,
-        name: group.name,
-        abbreviation: group.abbreviation,
-        totalMembers,
-        totalScrutins,
-        avgParticipationRate: Number(avgParticipationRate.toFixed(4)),
-        avgLoyaltyRate: Number(avgLoyaltyRate.toFixed(4)),
-        voteDistribution,
+        data: {
+          groupId: group.id,
+          name: group.name,
+          abbreviation: group.abbreviation,
+          totalMembers,
+          totalScrutins,
+          avgParticipationRate: Number(avgParticipationRate.toFixed(4)),
+          avgLoyaltyRate: Number(avgLoyaltyRate.toFixed(4)),
+          voteDistribution,
+        },
       });
     },
   });

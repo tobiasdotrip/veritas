@@ -14,12 +14,13 @@ export function useSearch(
 
   return useQuery({
     queryKey: ["search", q, offset, limit],
-    queryFn: () =>
-      apiFetch<{
-        deputies: SearchResultDepute[];
-        scrutins: SearchResultScrutin[];
-        meta: { total: number; hasMore: boolean };
-      }>(`/search?${params.toString()}`),
+    queryFn: async () =>
+      (
+        await apiFetch<{
+          deputies: SearchResultDepute[];
+          scrutins: SearchResultScrutin[];
+        }>(`/search?${params.toString()}`)
+      ).data,
     enabled: q.length >= 2,
     staleTime: 1000 * 60 * 2,
   });

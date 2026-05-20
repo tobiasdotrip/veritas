@@ -219,9 +219,26 @@ export function createDeputyRepository(db: Database) {
           titre: scrutins.titre,
           sortCode: scrutins.sortCode,
           codeTypeVote: scrutins.codeTypeVote,
+          groupPosition: scrutinGroupVotes.positionMajoritaire,
+          alignment: sql<"aligned" | "opposed" | "neutral">`
+            CASE
+              WHEN ${scrutinVotes.position} = ${scrutinGroupVotes.positionMajoritaire} THEN 'aligned'
+              WHEN ${scrutinVotes.position} IN ('pour', 'contre')
+                   AND ${scrutinGroupVotes.positionMajoritaire} IN ('pour', 'contre')
+                   AND ${scrutinVotes.position} != ${scrutinGroupVotes.positionMajoritaire} THEN 'opposed'
+              ELSE 'neutral'
+            END
+          `,
         })
         .from(scrutinVotes)
         .innerJoin(scrutins, eq(scrutinVotes.scrutinId, scrutins.id))
+        .leftJoin(
+          scrutinGroupVotes,
+          and(
+            eq(scrutinGroupVotes.scrutinId, scrutinVotes.scrutinId),
+            eq(scrutinGroupVotes.politicalGroupId, scrutinVotes.politicalGroupId)
+          )
+        )
         .where(and(...conditions))
         .orderBy(desc(scrutins.dateScrutin), desc(scrutins.id))
         .limit(limit + 1);

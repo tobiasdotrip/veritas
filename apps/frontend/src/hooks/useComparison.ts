@@ -12,7 +12,8 @@ export function useComparison(
   if (period) params.set("from", period);
   return useQuery({
     queryKey: ["compare", refSlug, compareSlugs, period],
-    queryFn: () => apiFetch<ComparisonResult>(`/compare?${params.toString()}`),
+    queryFn: async () =>
+      (await apiFetch<ComparisonResult>(`/compare?${params.toString()}`)).data,
     enabled: compareSlugs.length > 0,
     staleTime: Infinity,
   });

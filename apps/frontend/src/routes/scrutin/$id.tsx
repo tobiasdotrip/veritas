@@ -17,7 +17,8 @@ export const Route = createFileRoute("/scrutin/$id")({
 function useScrutin(id: string) {
   return useQuery({
     queryKey: ["scrutin", id],
-    queryFn: () => apiFetch<ScrutinDetail>(`/scrutins/${id}`),
+    queryFn: async () =>
+      (await apiFetch<ScrutinDetail>(`/scrutins/${id}`)).data,
     staleTime: 1000 * 60 * 30,
   });
 }

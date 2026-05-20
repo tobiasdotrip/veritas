@@ -88,10 +88,14 @@ export class CacheService {
     ttlSeconds: number,
     factory: () => Promise<T>
   ): Promise<T> {
-    const cached = await this.get<T>(namespace, key);
-    if (cached !== null) return cached;
-    const value = await factory();
-    await this.set(namespace, key, value, ttlSeconds);
-    return value;
+    try {
+      const cached = await this.get<T>(namespace, key);
+      if (cached !== null) return cached;
+      const value = await factory();
+      await this.set(namespace, key, value, ttlSeconds).catch(() => {});
+      return value;
+    } catch {
+      return factory();
+    }
   }
 }

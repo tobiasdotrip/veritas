@@ -8,6 +8,15 @@ import { NotFoundError } from "../common/errors.js";
 import { OffsetPaginationQuery, CursorPaginationQuery } from "../common/pagination.js";
 import { DateString, NullableDateString } from "../common/schemas.js";
 
+const DeputyStatsSchema = z.object({
+  totalScrutins: z.number(),
+  votesCast: z.number(),
+  participationRate: z.number(),
+  votesWithGroup: z.number(),
+  loyaltyRate: z.number(),
+  votesAgainstGroup: z.number(),
+});
+
 const DeputyResponseSchema = z.object({
   id: z.string(),
   firstName: z.string(),
@@ -23,31 +32,48 @@ const DeputyResponseSchema = z.object({
   profession: z.string().nullable(),
 });
 
-const DeputyDetailResponseSchema = DeputyResponseSchema.extend({
-  mandates: z.array(
-    z.object({
-      id: z.string(),
-      legislature: z.string(),
-      startDate: DateString,
-      endDate: NullableDateString,
-      departmentId: z.string().nullable(),
-      circoNumber: z.number().nullable(),
-      circoLabel: z.string().nullable(),
-      electionCause: z.string().nullable(),
-      endCause: z.string().nullable(),
-    })
-  ),
-  currentGroup: z
-    .object({
-      id: z.number(),
-      politicalGroupId: z.string(),
-      name: z.string(),
-      abbreviation: z.string().nullable(),
-      startDate: DateString,
-      endDate: NullableDateString,
-    })
-    .nullable(),
+const DeputyProfileResponseSchema = DeputyResponseSchema.extend({
+  groupName: z.string().nullable(),
+  groupAbbreviation: z.string().nullable(),
+  mandateStart: NullableDateString,
+  mandateEnd: NullableDateString,
+  stats: DeputyStatsSchema.nullable(),
 });
+
+function toIsoDateString(value: Date | string | null | undefined): string | null {
+  if (value == null) return null;
+  if (value instanceof Date) return value.toISOString();
+  return value;
+}
+
+function buildDeputyProfile(
+  deputy: NonNullable<Awaited<ReturnType<ReturnType<typeof createDeputyService>["getDeputyById"]>>>,
+  stats: Awaited<ReturnType<ReturnType<typeof createDeputyService>["getDeputyStats"]>>,
+  legislature: string
+) {
+  const mandate =
+    deputy.mandates.find((m) => m.legislature === legislature) ?? deputy.mandates[0];
+
+  return {
+    id: deputy.id,
+    firstName: deputy.firstName,
+    lastName: deputy.lastName,
+    slug: deputy.slug,
+    civility: deputy.civility,
+    dateOfBirth: toIsoDateString(deputy.dateOfBirth),
+    placeOfBirth: deputy.placeOfBirth,
+    departmentId: deputy.departmentId,
+    circoNumber: deputy.circoNumber,
+    circoLabel: deputy.circoLabel,
+    photoUrl: deputy.photoUrl,
+    profession: deputy.profession,
+    groupName: deputy.currentGroup?.name ?? null,
+    groupAbbreviation: deputy.currentGroup?.abbreviation ?? null,
+    mandateStart: toIsoDateString(mandate?.startDate),
+    mandateEnd: toIsoDateString(mandate?.endDate ?? null),
+    stats,
+  };
+}
 
 const DeputyVoteSchema = z.object({
   voteId: z.number(),
@@ -60,15 +86,8 @@ const DeputyVoteSchema = z.object({
   titre: z.string(),
   sortCode: z.enum(["adopté", "rejeté"]).nullable(),
   codeTypeVote: z.string().nullable(),
-});
-
-const DeputyStatsSchema = z.object({
-  totalScrutins: z.number(),
-  votesCast: z.number(),
-  participationRate: z.number(),
-  votesWithGroup: z.number(),
-  loyaltyRate: z.number(),
-  votesAgainstGroup: z.number(),
+  groupPosition: z.string().nullable(),
+  alignment: z.enum(["aligned", "opposed", "neutral"]),
 });
 
 async function resolveDeputyId(service: ReturnType<typeof createDeputyService>, idOrSlug: string) {
@@ -130,18 +149,27 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     schema: {
       tags: ["Députés"],
       params: z.object({ id: z.string() }),
+      querystring: z.object({
+        legislature: z.string().default("17"),
+      }),
       response: {
-        200: DeputyDetailResponseSchema,
+        200: z.object({
+          data: DeputyProfileResponseSchema,
+        }),
       },
     },
     handler: async (req, reply) => {
       const { id } = req.params;
+      const { legislature } = req.query;
       const deputyId = await resolveDeputyId(service, id);
       const deputy = await service.getDeputyById(deputyId);
       if (!deputy) {
         throw new NotFoundError("Deputy", id);
       }
-      return reply.send(deputy);
+      const stats = await service.getDeputyStats(deputyId, legislature);
+      return reply.send({
+        data: buildDeputyProfile(deputy, stats, legislature),
+      });
     },
   });
 
@@ -197,7 +225,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         legislature: z.string().default("17"),
       }),
       response: {
-        200: DeputyStatsSchema,
+        200: z.object({
+          data: DeputyStatsSchema,
+        }),
       },
     },
     handler: async (req, reply) => {
@@ -205,7 +235,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       const { legislature } = req.query;
       const deputyId = await resolveDeputyId(service, id);
       const stats = await service.getDeputyStats(deputyId, legislature);
-      return reply.send(stats);
+      return reply.send({ data: stats });
     },
   });
 };

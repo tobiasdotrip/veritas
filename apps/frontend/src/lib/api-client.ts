@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import type { ApiResponse } from "./api-types.js";
+import type { ApiResponse, ApiSuccess } from "./api-types.js";
 
 export class ApiError extends Error {
   constructor(
@@ -20,7 +20,7 @@ const API_BASE_URL =
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit
-): Promise<T> {
+): Promise<ApiSuccess<T>> {
   const url = new URL(path, API_BASE_URL).toString();
   const res = await fetch(url, {
     headers: {
@@ -54,7 +54,11 @@ export async function apiFetch<T>(
       body.error.message
     );
   }
-  return (body as { data: T }).data;
+  const success = body as ApiSuccess<T>;
+  if (success.meta !== undefined) {
+    return { data: success.data, meta: success.meta };
+  }
+  return { data: success.data };
 }
 
 export const queryClient = new QueryClient({

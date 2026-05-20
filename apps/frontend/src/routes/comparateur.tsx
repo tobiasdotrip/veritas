@@ -99,7 +99,12 @@ function ComparatorPage() {
             ))}
           </div>
 
-          {result.divergences.length > 0 ? (
+          {result.totalCommonVotes === 0 ? (
+            <EmptyState
+              title="Aucun vote commun"
+              description="Ces députés n'ont pas participé aux mêmes scrutins sur la période sélectionnée."
+            />
+          ) : result.divergences.length > 0 ? (
             <ComparisonTable result={result} />
           ) : (
             <EmptyState

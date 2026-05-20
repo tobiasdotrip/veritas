@@ -27,10 +27,9 @@ export function useDeputeVotes(
   return useQuery({
     queryKey: ["depute", slug, "votes", filters, cursor],
     queryFn: () =>
-      apiFetch<{
-        data: DeputeVoteItem[];
-        meta: { nextCursor: string | null; hasMore: boolean };
-      }>(`/deputies/${slug}/votes?${params.toString()}`),
+      apiFetch<DeputeVoteItem[]>(
+        `/deputies/${slug}/votes?${params.toString()}`
+      ),
     staleTime: 1000 * 60 * 10,
   });
 }

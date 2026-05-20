@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ValidationError } from "./errors.js";
 
 export const CursorPaginationQuery = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
@@ -43,9 +44,10 @@ export function decodeCursor(cursor: string): { date: string; id: string } {
     ) {
       return parsed as { date: string; id: string };
     }
-    throw new Error("Invalid cursor structure");
-  } catch {
-    throw new Error("Invalid cursor format");
+    throw new ValidationError("Invalid cursor structure");
+  } catch (err) {
+    if (err instanceof ValidationError) throw err;
+    throw new ValidationError("Invalid cursor format");
   }
 }
 

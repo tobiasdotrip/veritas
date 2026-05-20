@@ -5,7 +5,8 @@ import type { DeputeProfile } from "@/lib/api-types";
 export function deputeQueryOptions(slug: string) {
   return queryOptions({
     queryKey: ["depute", slug],
-    queryFn: () => apiFetch<DeputeProfile>(`/deputies/${slug}`),
+    queryFn: async () =>
+      (await apiFetch<DeputeProfile>(`/deputies/${slug}`)).data,
     staleTime: 1000 * 60 * 60,
   });
 }

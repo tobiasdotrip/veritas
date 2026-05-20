@@ -3,6 +3,7 @@ import type {
   Scrutin,
   VotePosition,
   DeputyStats,
+  IsoDateString,
 } from "@veritas/shared";
 
 export interface ApiSuccess<T> {
@@ -29,15 +30,15 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 export interface DeputeProfile extends Deputy {
   groupName: string | null;
   groupAbbreviation: string | null;
-  mandateStart: Date | null;
-  mandateEnd: Date | null;
+  mandateStart: IsoDateString | null;
+  mandateEnd: IsoDateString | null;
   stats: DeputyStats | null;
 }
 
 export interface DeputeVoteItem {
   scrutinId: string;
   numero: number;
-  dateScrutin: Date;
+  dateScrutin: IsoDateString;
   titre: string;
   codeTypeVote: string | null;
   sortCode: "adopté" | "rejeté" | null;
@@ -134,7 +135,7 @@ export interface SearchResultDepute {
 export interface SearchResultScrutin {
   id: string;
   numero: number;
-  dateScrutin: Date;
+  dateScrutin: IsoDateString;
   titre: string;
   sortCode: "adopté" | "rejeté" | null;
   nombrePour: number | null;
