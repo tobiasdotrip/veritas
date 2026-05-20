@@ -11,6 +11,7 @@ import {
 } from "../../db/schema.js";
 import { decodeCursor, buildCursorResponse } from "../common/pagination.js";
 import type { CursorPaginationInput, OffsetPaginationInput } from "../common/pagination.js";
+import { withTextSearchErrorHandling } from "../common/db-errors.js";
 
 export interface ScrutinSearchFilters {
   q?: string | undefined;
@@ -88,30 +89,34 @@ export function createScrutinRepository(db: Database) {
               ) DESC`]
             : [desc(scrutins.dateScrutin), desc(scrutins.id)];
 
-      const rows = await db
-        .select({
-          id: scrutins.id,
-          legislature: scrutins.legislature,
-          numero: scrutins.numero,
-          dateScrutin: scrutins.dateScrutin,
-          titre: scrutins.titre,
-          sortCode: scrutins.sortCode,
-          nombrePour: scrutins.nombrePour,
-          nombreContre: scrutins.nombreContre,
-          nombreAbstentions: scrutins.nombreAbstentions,
-          nombreNonVotants: scrutins.nombreNonVotants,
-          codeTypeVote: scrutins.codeTypeVote,
-          demandeur: scrutins.demandeur,
-        })
-        .from(scrutins)
-        .where(and(...conditions))
-        .orderBy(...orderBy)
-        .limit(limit + 1);
+      const runSearch = async () => {
+        const rows = await db
+          .select({
+            id: scrutins.id,
+            legislature: scrutins.legislature,
+            numero: scrutins.numero,
+            dateScrutin: scrutins.dateScrutin,
+            titre: scrutins.titre,
+            sortCode: scrutins.sortCode,
+            nombrePour: scrutins.nombrePour,
+            nombreContre: scrutins.nombreContre,
+            nombreAbstentions: scrutins.nombreAbstentions,
+            nombreNonVotants: scrutins.nombreNonVotants,
+            codeTypeVote: scrutins.codeTypeVote,
+            demandeur: scrutins.demandeur,
+          })
+          .from(scrutins)
+          .where(and(...conditions))
+          .orderBy(...orderBy)
+          .limit(limit + 1);
 
-      return buildCursorResponse(rows, limit, (item) => ({
-        date: (item.dateScrutin as Date).toISOString(),
-        id: item.id as string,
-      }));
+        return buildCursorResponse(rows, limit, (item) => ({
+          date: (item.dateScrutin as Date).toISOString(),
+          id: item.id as string,
+        }));
+      };
+
+      return filters.q ? withTextSearchErrorHandling(runSearch) : runSearch();
     },
 
     async getById(id: string) {

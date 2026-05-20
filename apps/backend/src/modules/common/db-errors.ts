@@ -14,3 +14,14 @@ export function rethrowTextSearchValidationError(err: unknown): void {
     throw new ValidationError("Invalid search query syntax");
   }
 }
+
+export async function withTextSearchErrorHandling<T>(
+  fn: () => Promise<T>
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    rethrowTextSearchValidationError(err);
+    throw err;
+  }
+}

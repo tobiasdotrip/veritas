@@ -13,6 +13,7 @@ import {
 } from "../../db/schema.js";
 import { decodeCursor, buildCursorResponse } from "../common/pagination.js";
 import type { CursorPaginationInput } from "../common/pagination.js";
+import { withTextSearchErrorHandling } from "../common/db-errors.js";
 
 export interface DeputySearchFilters {
   q?: string | undefined;
@@ -94,16 +95,20 @@ export function createDeputyRepository(db: Database) {
         .limit(limit)
         .offset(offset);
 
-      const items = await baseQuery;
+      const runSearch = async () => {
+        const items = await baseQuery;
 
-      const countResult = await db
-        .select({ total: count() })
-        .from(deputies)
-        .where(conditions.length > 0 ? and(...conditions) : undefined);
+        const countResult = await db
+          .select({ total: count() })
+          .from(deputies)
+          .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-      const total = countResult[0]?.total ?? 0;
+        const total = countResult[0]?.total ?? 0;
 
-      return { items, total };
+        return { items, total };
+      };
+
+      return filters.q ? withTextSearchErrorHandling(runSearch) : runSearch();
     },
 
     async getById(id: string) {
