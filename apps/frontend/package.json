@@ -29,11 +29,6 @@
     "tailwind-merge": "^3.2.0",
     "zustand": "^5.0.13"
   },
-  "pnpm": {
-    "overrides": {
-      "h3": "^1.15.9"
-    }
-  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
     "@tanstack/router-generator": "^1.167.5",

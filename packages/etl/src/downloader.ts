@@ -2,6 +2,7 @@ import { createWriteStream } from "node:fs";
 import { readFile, writeFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import fetch from "node-fetch";
@@ -118,14 +119,16 @@ export async function downloadZip(
       const nodeStream = Readable.fromWeb(body as any);
       const hash = createHash("sha256");
       let size = 0;
-
-      nodeStream.on("data", (chunk: Buffer) => {
-        hash.update(chunk);
-        size += chunk.length;
+      const hashTransform = new Transform({
+        transform(chunk: Buffer, _encoding, callback) {
+          hash.update(chunk);
+          size += chunk.length;
+          callback(null, chunk);
+        },
       });
 
       const fileStream = createWriteStream(outputPath);
-      await pipeline(nodeStream, fileStream);
+      await pipeline(nodeStream, hashTransform, fileStream);
 
       const finalHash = hash.digest("hex");
       await writeState(config, {

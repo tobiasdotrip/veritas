@@ -42,11 +42,16 @@ function DeputePage() {
 
   const { data: depute, isLoading, error, refetch } = useDepute(slug);
   const {
-    data: votesPage,
+    data: votesPages,
     isLoading: votesLoading,
     error: votesError,
     refetch: refetchVotes,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useDeputeVotes(slug, filters);
+
+  const votes = votesPages?.pages.flatMap((page) => page.data) ?? [];
 
   const navigate = useNavigate({ from: "/depute/$slug" });
   const setReference = useComparatorStore((s) => s.setReference);
@@ -143,20 +148,25 @@ function DeputePage() {
           />
         )}
 
-        {!votesLoading && !votesError && votesPage && (
+        {!votesLoading && !votesError && votesPages && (
           <>
-            {votesPage.data.length === 0 ? (
+            {votes.length === 0 ? (
               <EmptyState title="Aucun vote" description="Aucun vote ne correspond aux filtres sélectionnés." />
             ) : (
               <div className="space-y-3">
-                {votesPage.data.map((vote) => (
+                {votes.map((vote) => (
                   <VoteCard key={vote.scrutinId} vote={vote} />
                 ))}
               </div>
             )}
-            {votesPage.meta.hasMore && (
-              <Button variant="secondary" className="w-full">
-                Charger plus
+            {hasNextPage && (
+              <Button
+                variant="secondary"
+                className="w-full"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+              >
+                {isFetchingNextPage ? "Chargement…" : "Charger plus"}
               </Button>
             )}
           </>

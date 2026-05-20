@@ -19,6 +19,7 @@ interface ComparatorState {
   period: Period;
   view: ViewMode;
   setReference: (d: DeputeSummary) => void;
+  clearReference: () => void;
   addCompared: (d: DeputeSummary) => void;
   removeCompared: (slug: string) => void;
   setPeriod: (p: Period) => void;
@@ -34,6 +35,7 @@ export const useComparatorStore = create<ComparatorState>()(
       period: "legislature",
       view: "synthese",
       setReference: (d) => set({ reference: d }),
+      clearReference: () => set({ reference: null }),
       addCompared: (d) => {
         const current = get().compared;
         if (current.some((x) => x.slug === d.slug)) return;

@@ -16,6 +16,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
   const addCompared = useComparatorStore((s) => s.addCompared);
   const removeCompared = useComparatorStore((s) => s.removeCompared);
   const setReference = useComparatorStore((s) => s.setReference);
+  const clearReference = useComparatorStore((s) => s.clearReference);
 
   const { data, isLoading } = useSearch(query, 0, 10);
 
@@ -30,7 +31,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
             <span className="font-medium">Réf. : {reference.firstName} {reference.lastName}</span>
             <button
               type="button"
-              onClick={() => setReference(reference)}
+              onClick={() => clearReference()}
               className="rounded-full p-0.5 hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               aria-label="Retirer la référence"
             >
