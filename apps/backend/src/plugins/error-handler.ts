@@ -21,6 +21,62 @@ function isErrorWithStatusCode(err: unknown): err is { statusCode: number; name?
   );
 }
 
+function isErrorWithCode(err: unknown): err is { code: string } {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    typeof (err as { code: unknown }).code === "string"
+  );
+}
+
+const FASTIFY_CLIENT_ERROR_DETAILS: Record<string, string> = {
+  FST_ERR_VALIDATION: "Request validation failed",
+  FST_ERR_CTP_EMPTY_JSON_BODY: "Request body is empty",
+  FST_ERR_CTP_INVALID_MEDIA_TYPE: "Unsupported media type",
+  FST_ERR_CTP_INVALID_CONTENT_LENGTH: "Invalid content length",
+  FST_ERR_NOT_FOUND: "Route not found",
+  FST_ERR_BAD_URL: "Malformed URL",
+};
+
+const STATUS_CLIENT_ERROR_DETAILS: Record<number, string> = {
+  400: "Bad request",
+  401: "Unauthorized",
+  403: "Forbidden",
+  404: "Not found",
+  405: "Method not allowed",
+  409: "Conflict",
+  413: "Payload too large",
+  415: "Unsupported media type",
+  422: "Unprocessable entity",
+  429: "Too many requests",
+};
+
+const STATUS_CLIENT_ERROR_TITLES: Record<number, string> = {
+  400: "Bad Request",
+  401: "Unauthorized",
+  403: "Forbidden",
+  404: "Not Found",
+  405: "Method Not Allowed",
+  409: "Conflict",
+  413: "Payload Too Large",
+  415: "Unsupported Media Type",
+  422: "Unprocessable Entity",
+  429: "Too Many Requests",
+};
+
+function getSafeClientErrorDetail(err: unknown, statusCode: number): string {
+  if (isErrorWithCode(err)) {
+    const mapped = FASTIFY_CLIENT_ERROR_DETAILS[err.code];
+    if (mapped) return mapped;
+  }
+  return STATUS_CLIENT_ERROR_DETAILS[statusCode] ?? "Client error";
+}
+
+function getSafeClientErrorTitle(statusCode: number): string {
+  return STATUS_CLIENT_ERROR_TITLES[statusCode] ?? "Client Error";
+}
+
 export function registerErrorHandler(app: FastifyInstance): void {
   app.setErrorHandler((err: unknown, req, reply) => {
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -64,14 +120,15 @@ export function registerErrorHandler(app: FastifyInstance): void {
       return reply.status(err.statusCode).header("Content-Type", "application/problem+json").send(problem);
     }
 
-    // Fastify built-in errors (e.g. rate limit)
+    // Fastify / third-party client errors — never expose raw err.message
     if (isErrorWithStatusCode(err) && err.statusCode >= 400 && err.statusCode < 500) {
       const problem: ProblemDetails = {
         type: "https://veritas.fr/errors/client-error",
-        title: err.name ?? "Client Error",
+        title: getSafeClientErrorTitle(err.statusCode),
         status: err.statusCode,
-        detail: err.message ?? "Client error",
+        detail: getSafeClientErrorDetail(err, err.statusCode),
         instance: req.url,
+        ...(isErrorWithCode(err) && err.code.startsWith("FST_") ? { code: err.code } : {}),
       };
       return reply.status(err.statusCode).header("Content-Type", "application/problem+json").send(problem);
     }

@@ -13,8 +13,9 @@ import { ShareButton } from "@/components/ui/ShareButton";
 import type { VoteFiltersState } from "@/components/depute/VoteFilters";
 import { useComparatorStore } from "@/stores/comparator-store";
 import { Scale } from "lucide-react";
+import { type DeputeSearch } from "@/lib/route-search";
 
-function validateSearch(search: Record<string, unknown>) {
+function validateSearch(search: Record<string, unknown>): DeputeSearch {
   return {
     from: typeof search.from === "string" ? search.from : undefined,
     to: typeof search.to === "string" ? search.to : undefined,
@@ -119,14 +120,14 @@ function DeputePage() {
         <VoteFilters
           filters={filters}
           onChange={(next) => {
-            const nextSearch: Record<string, string | undefined> = {};
-            if (next.from) nextSearch.from = next.from;
-            if (next.to) nextSearch.to = next.to;
-            if (next.type) nextSearch.type = next.type;
-            if (next.theme) nextSearch.theme = next.theme;
-            if (next.position) nextSearch.position = next.position;
             navigate({
-              search: nextSearch,
+              search: {
+                from: next.from,
+                to: next.to,
+                type: next.type,
+                theme: next.theme,
+                position: next.position,
+              },
               replace: true,
             });
           }}

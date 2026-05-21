@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { BadgeResultat } from "@/components/ui/BadgeResultat";
 import { formatDateShort } from "@/lib/utils";
+import { defaultRechercheSearch } from "@/lib/route-search";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -30,7 +31,11 @@ function HeroSearch() {
         className="flex w-full max-w-md gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          if (q.trim()) navigate({ to: "/recherche", search: { q: q.trim() } });
+          if (q.trim())
+            navigate({
+              to: "/recherche",
+              search: { ...defaultRechercheSearch, q: q.trim() },
+            });
         }}
       >
         <Input
@@ -116,7 +121,7 @@ function ThemesSection() {
           <Link
             key={t.slug}
             to="/recherche"
-            search={{ theme: t.slug }}
+            search={{ ...defaultRechercheSearch, theme: t.slug }}
             className="inline-flex items-center rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
             preload="intent"
           >
@@ -134,6 +139,7 @@ function QuickLinks() {
       <Card variant="hoverable">
         <Link
           to="/recherche"
+          search={defaultRechercheSearch}
           className="flex flex-col items-center gap-2 p-4 text-center focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
           preload="intent"
         >
@@ -160,7 +166,7 @@ function QuickLinks() {
       <Card variant="hoverable">
         <Link
           to="/recherche"
-          search={{ type: "scrutin" }}
+          search={{ ...defaultRechercheSearch, type: "scrutin" }}
           className="flex flex-col items-center gap-2 p-4 text-center focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
           preload="intent"
         >

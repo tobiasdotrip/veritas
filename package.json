@@ -24,17 +24,22 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "audit:tanstack": "node scripts/audit-tanstack-packages.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "jsdom": "^26.0.0",
     "prettier": "^3.5.0",
     "turbo": "^2.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "pnpm": {
     "overrides": {
-      "h3": "^1.15.9"
+      "h3": "^1.15.9",
+      "zod": "^4.4.3"
     },
     "onlyBuiltDependencies": [
       "esbuild",

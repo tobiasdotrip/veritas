@@ -28,6 +28,9 @@ export function validateEtlUrl(url: string, label: string): string {
   if (parsed.hostname !== ALLOWED_ETL_HOST) {
     throw new Error(`${label} URL host must be ${ALLOWED_ETL_HOST}`);
   }
+  if (process.env.NODE_ENV !== "development" && parsed.port && parsed.port !== "443") {
+    throw new Error(`${label} URL must use standard HTTPS port`);
+  }
   return url;
 }
 
@@ -40,6 +43,7 @@ export interface EtlConfig {
   tempDir: string;
   downloadTimeoutMs: number;
   downloadRetries: number;
+  downloadMaxSizeBytes: number;
   batchSize: number;
   scrutinTransactionSize: number;
   legislature: string;
@@ -63,6 +67,7 @@ export const defaultConfig: EtlConfig = {
   tempDir: resolve(process.env.TEMP_DIR ?? "./tmp/etl"),
   downloadTimeoutMs: Number(process.env.DOWNLOAD_TIMEOUT_MS ?? 120_000),
   downloadRetries: Number(process.env.DOWNLOAD_RETRIES ?? 3),
+  downloadMaxSizeBytes: Number(process.env.DOWNLOAD_MAX_SIZE_BYTES ?? 500 * 1024 * 1024),
   batchSize: Number(process.env.BATCH_SIZE ?? 1_000),
   scrutinTransactionSize: Number(process.env.SCRUTIN_TX_SIZE ?? 100),
   legislature: process.env.LEGISLATURE ?? "17",

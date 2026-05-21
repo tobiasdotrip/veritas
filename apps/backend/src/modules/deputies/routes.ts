@@ -180,8 +180,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       tags: ["Députés"],
       params: z.object({ id: z.string() }),
       querystring: z.object({
-        from: z.string().date().optional(),
-        to: z.string().date().optional(),
+        from: z.iso.date().optional(),
+        to: z.iso.date().optional(),
         type: z.string().optional(),
         theme: z.string().optional(),
         position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),

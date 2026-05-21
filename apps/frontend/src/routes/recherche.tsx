@@ -8,13 +8,18 @@ import { SearchCombobox } from "@/components/ui/SearchCombobox";
 import { useSearch as useSearchData } from "@/hooks/useSearch";
 import { formatDateShort } from "@/lib/utils";
 import { Search } from "lucide-react";
+import {
+  defaultDeputeSearch,
+  defaultRechercheSearch,
+  type RechercheSearch,
+} from "@/lib/route-search";
 
-function validateSearch(search: Record<string, unknown>) {
+function validateSearch(search: Record<string, unknown>): RechercheSearch {
   return {
     q: typeof search.q === "string" ? search.q : undefined,
     type: ["depute", "scrutin", "all"].includes(search.type as string)
       ? (search.type as "depute" | "scrutin" | "all")
-      : "all",
+      : defaultRechercheSearch.type,
     theme: typeof search.theme === "string" ? search.theme : undefined,
   };
 }
@@ -66,11 +71,13 @@ function SearchPage() {
   }, [data]);
 
   const applySearch = (value: string) => {
-    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, q: value || undefined }) });
+    navigate({
+      search: (prev) => ({ ...prev, q: value || undefined }),
+    });
   };
 
   const setType = (type: "depute" | "scrutin" | "all") => {
-    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, type }) });
+    navigate({ search: (prev) => ({ ...prev, type }) });
   };
 
   return (
@@ -151,7 +158,11 @@ function SearchPage() {
                         className="flex items-center gap-3 focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
                         onClick={(e) => {
                           e.preventDefault();
-                          navigate({ to: "/depute/$slug", params: { slug: d.slug } });
+                          navigate({
+                            to: "/depute/$slug",
+                            params: { slug: d.slug },
+                            search: defaultDeputeSearch,
+                          });
                         }}
                       >
                         {d.photoUrl ? (

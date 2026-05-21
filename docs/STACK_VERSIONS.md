@@ -1,68 +1,96 @@
-# 📦 Stack Technique — Versions validées et corrigées
+# Stack technique — Versions et implémentation
 
-**Date de validation** : 2026-05-19
-**Statut** : ✅ Toutes les versions ont été vérifiées et auditées pour vulnérabilités
+**Dernière validation** : 2026-05-20  
+**Lockfile** : `pnpm-lock.yaml` (overrides racine : `zod`, `h3`)
+
+> **État du code** : voir [ETAT_PROJET.md](./ETAT_PROJET.md) pour ce qui est réellement branché dans le monorepo.
+
+**Overrides pnpm (racine)** : `zod ^4.4.3`, `h3 ^1.15.9` (monorepo entier, y compris `@tanstack/router-plugin` / `start-plugin-core` — un seul Zod 4 requis pour le build Vite).
+
+**Frontend build** : scripts `vite dev|build --configLoader native` ; `nanoid` en devDependency (peer implicite de PostCSS 8.5).
 
 ---
 
 ## Backend
 
-| Dépendance | Version proposée initialement | **Version corrigée 2026** | Raison du changement |
-|------------|------------------------------|---------------------------|---------------------|
-| **Node.js** | — | **24.x LTS** | LTS active, support jusqu'avril 2028 |
-| **Fastify** | 4.x | **5.8.x** | 🔴 v4 EOL juin 2025 + CVE HIGH |
-| **Drizzle ORM** | 0.30.x | **0.45.2** | 🔴 CVE SQL injection |
-| **Zod** | 3.x | **4.4.x** | Dernière stable, breaking changes documentés |
-| **PostgreSQL** | 15.x | **17.x** | 🔴 10 CVEs 2026, support long terme |
-| **Redis** | 7.x | **8.0.x** | 🔴 CVE CRITICAL RCE, modules intégrés |
-| **Meilisearch (serveur)** | 1.6 | **1.41.x** | 🔴 Path traversal + obsolète |
-| **Meilisearch (JS client)** | 0.40.x | **0.58.x** | Compatibilité serveur |
-| **BullMQ** | 4.x | **5.76.x** | Dernière stable active |
-| **ioredis** | 5.3.x | **5.10.x** | Support nouvelles commandes |
+| Dépendance | Version cible 2026 | Implémenté (`package.json`) |
+|------------|-------------------|----------------------------|
+| **Node.js** | 24.x LTS | `engines` racine `>=24` |
+| **Fastify** | 5.8.x | `^5.8.0` |
+| **Drizzle ORM** | 0.45.2 | `^0.45.2` |
+| **drizzle-zod** | 0.8.x (Zod 4) | `^0.8.3` |
+| **Zod** | 4.4.x | `^4.4.3` (+ override racine) |
+| **fastify-type-provider-zod** | 6.x (Zod ≥ 4.1.5) | `^6.1.0` |
+| **PostgreSQL** | 17.x | `postgres:17-alpine` (Compose) |
+| **Redis** | 8.0.x | `redis:8.0-alpine` |
+| **Meilisearch** | 1.41.x | `v1.41.0` image + client `^0.58.0` |
+| **BullMQ** | 5.76.x | `^5.76.8` |
+| **ioredis** | 5.10.x | `^5.10.1` |
 
 ## Frontend
 
-| Dépendance | Version proposée initialement | **Version corrigée 2026** | Raison du changement |
-|------------|------------------------------|---------------------------|---------------------|
-| **React** | 18.x | **19.2.x** | Stable active, React Compiler v1.0 |
-| **React DOM** | 18.x | **19.2.x** | Sync avec React |
-| **TanStack Start** | latest | **1.168.x (RC)** | Feature-complete, verrouiller version |
-| **TanStack Router** | — | **1.170.x** | Stable, mature |
-| **TanStack Query** | 5.x | **5.100.x** | Dernière stable |
-| **Tailwind CSS** | 3.4 | **4.3.x** | Réécriture Rust, CSS-first config |
-| **Radix UI** | latest | **1.4.x** | Primitives accessibles stables |
-| **Zustand** | 4.x | **5.0.x** | Dernière stable |
-| **TypeScript** | 5.x | **6.0.x** | Dernière version JS compiler |
-| **Satori** | — | **0.26.x** | OG images (risque 0.x accepté) |
-| **@resvg/resvg-js** | — | **2.6.2** | SVG→PNG (alpha 2.7 en cours) |
+| Dépendance | Version cible 2026 | Implémenté |
+|------------|-------------------|------------|
+| **React** | 19.2.x | `^19.2.0` |
+| **TanStack Start** | 1.168.x | `^1.168.7` |
+| **TanStack Router** | 1.170.x | `^1.170.5` |
+| **TanStack Query** | 5.100.x | `^5.100.11` |
+| **Vite** | 7.x | `^7.0.0` (aligné peer `@tanstack/react-start`) |
+| **Tailwind CSS** | 4.3.x | `^4.3.0` + `@tailwindcss/postcss` |
+| **Radix UI** | 1.x | `@radix-ui/react-*` ^1.1–1.2 |
+| **Zustand** | 5.0.x | `^5.0.13` |
+| **TypeScript** | 5.8–5.9 (monorepo ; pas 6) | `^5.8.3` → lockfile 5.9.x |
+| **Satori** | 0.26.x | `^0.26.0` (stubs OG) |
+
+## ETL
+
+| Dépendance | Notes |
+|------------|--------|
+| **Zod** | Non utilisé dans `packages/etl` (retiré des deps) |
+| **node-stream-zip** | Extraction avec garde zip-slip |
+| URLs | `validateEtlUrl` — HTTPS + `data.assemblee-nationale.fr` |
 
 ---
 
-## Breaking changes à anticiper
+## Zod 4 — conventions du projet
+
+```ts
+// Dates requête (query)
+z.iso.date().optional();
+
+// Datetimes réponse (sérialisation Date | string)
+z.preprocess(
+  (val) => (val instanceof Date ? val.toISOString() : val),
+  z.iso.datetime()
+);
+
+// Refinements / regex
+.refine(fn, { error: "message" });
+z.string().regex(/.../, { error: "message" });
+```
+
+Schémas partagés : `packages/shared/src/schemas/index.ts`  
+Schémas routes : inline dans `apps/backend/src/modules/*/routes.ts` + `common/schemas.ts`
+
+---
+
+## Breaking changes (référence migration)
 
 ### Fastify 4 → 5
-- Schémas JSON complets obligatoires (`querystring`, `params`, `body`, `response`)
-- `logger` → `loggerInstance`
-- `useSemicolonDelimiter` → `false` par défaut
-- Node.js ≥ 20 requis
+- Schémas JSON complets (`querystring`, `params`, `response`)
+- Node.js ≥ 20
 
-### Tailwind CSS 3 → 4
-- Plus de `tailwind.config.js` auto-détecté (CSS-first config)
-- Classes renommées (`shadow-sm` → `shadow-xs`)
-- `border-*` passe à `currentColor`
-- Migration via `npx @tailwindcss/upgrade`
+### Tailwind 3 → 4
+- Config CSS-first (`src/app.css` + `@theme`)
+- Plus de `tailwind.config.js` requis dans ce repo
 
 ### Zod 3 → 4
-- API erreurs unifiée (`error` au lieu de `errorMap`)
-- `z.number()` n'accepte plus `NaN`
-- Formats string : `z.uuid()` au lieu de `z.string().uuid()`
-- `.merge()`, `.strict()` dépréciés
+- `z.string().date()` → `z.iso.date()`
+- `z.string().datetime()` → `z.iso.datetime()`
+- Messages custom : `{ error: "…" }` plutôt que `{ message: "…" }` dans les refinements
 
-### TypeScript 5 → 6
-- Min target ES2015 (plus de ES5/ES3)
-- `moduleResolution: classic` supprimé
-- `--downlevelIteration` supprimé
-- `--baseUrl` / `outFile` dépréciés
+### TanStack Start : Vinxi → Vite
+- `vite.config.ts` + `tanstackStart()` — voir [ETAT_PROJET.md](./ETAT_PROJET.md)
 
 ---
 
@@ -70,12 +98,12 @@
 
 | Composant | Note |
 |-----------|------|
-| **TanStack Start** | En RC — verrouiller la version exacte en production. Attendre 1.0 stable si conservateur. |
-| **Satori** | En 0.x — API peut évoluer. Risque acceptable pour les OG images. |
-| **@resvg/resvg-js** | Stable 2.6.2 ancienne (mars 2024). Alpha 2.7 corrige fuites mémoire. Attendre stable 2.7. |
-| **Drizzle ORM v1** | En RC — préparer migration depuis 0.45.x quand v1.0 stable sortira. |
-| **Redis 8** | Nouvelle licence RSALv2/SSPLv1/AGPLv3 — vérifier compatibilité usage. |
+| **TanStack Start** | RC — verrouiller la version exacte en production |
+| **TypeScript 6** | Non adopté — monorepo en 5.9 ; migration quand l’écosystème (Drizzle Kit, plugins) suit |
+| **Tests / CI** | Vitest présent, 0 tests ; pas de GitHub Actions |
+| **Satori / OG** | Routes stub, non exposées au route tree |
+| **Redis 8** | Licence RSALv2/SSPL — vérifier conformité déploiement |
 
 ---
 
-*Document généré après audit complet des versions — 2026-05-19*
+*Document aligné sur le dépôt — 2026-05-20*

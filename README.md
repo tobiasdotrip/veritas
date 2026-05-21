@@ -4,82 +4,116 @@
 
 Veritas est une plateforme web citoyenne et open-source qui rend accessibles, vérifiables et comparables les votes des députés français à l'Assemblée Nationale.
 
-## 🎯 Vision
+## Vision
 
 Les données des votes existent (Open Data de l'Assemblée Nationale), mais elles sont techniques, fragmentées et difficilement utilisables par le grand public. Veritas les restructure en une interface simple, rapide et neutre — pour que chaque citoyen puisse vérifier en quelques clics comment votent ses représentants.
 
-## ✨ Fonctionnalités (MVP)
+## Fonctionnalités (MVP)
 
-- 🔍 **Recherche de députés** — Par nom, ville, code postal ou circonscription
-- 📊 **Fiche député** — Taux de participation, loyauté au groupe, historique complet des votes
-- 🗳️ **Recherche par scrutin** — Consulter un texte de loi et voir qui a voté pour, contre ou s'est abstenu
-- ⚖️ **Comparateur de votes** — Comparer 2 députés côte à côte avec un score de concordance
-- 📤 **Partage social** — Génération automatique de cards pour les réseaux sociaux
+- **Recherche de députés** — Par nom, circonscription, département
+- **Fiche député** — KPIs, historique des votes filtrable, pagination
+- **Scrutin** — Détail d'un vote de l'Assemblée
+- **Comparateur** — Jusqu'à 5 députés, score de concordance et divergences
+- **Méthodologie** — Page explicative
+- **Partage social** — OG images prévues (routes API en stub)
 
-## 🏗️ Architecture
+## Stack (implémentée)
 
-| Couche | Technologie | Version validée |
-|--------|-------------|-----------------|
-| **Frontend** | Tanstack Start (React 19, SSR/SSG) | 1.168.x |
-| **Backend API** | Fastify + TypeScript | 5.8.x |
-| **Base de données** | PostgreSQL 17 + Drizzle ORM | Drizzle 0.45.2 |
-| **Recherche** | Meilisearch | 1.41.x |
-| **Cache** | Redis | 8.0.x |
-| **ETL** | Node.js Streams |
+| Couche | Technologie |
+|--------|-------------|
+| **Frontend** | TanStack Start 1.168, TanStack Router, TanStack Query, **Vite 7**, Tailwind 4, Radix UI, Zustand |
+| **Backend API** | Fastify 5.8, Zod **4.4**, Drizzle 0.45, `fastify-type-provider-zod` 6 |
+| **Base de données** | PostgreSQL 17 |
+| **Recherche** | Meilisearch 1.41 |
+| **Cache** | Redis 8 |
+| **ETL** | Node.js streams, ZIP Open Data AN |
 
-## 📁 Structure du projet
+Voir le détail des versions et de l'état du code : **[État du projet](docs/ETAT_PROJET.md)** · **[Stack versions](docs/STACK_VERSIONS.md)**
+
+## Structure du projet
 
 ```
 veritas/
 ├── apps/
-│   ├── frontend/          # Tanstack Start — UI & routes
+│   ├── frontend/          # TanStack Start (Vite) — UI & routes
 │   └── backend/           # Fastify — API REST
 ├── packages/
-│   ├── etl/               # Pipeline de synchronisation Open Data
-│   └── shared/            # Types & utilitaires partagés
+│   ├── etl/               # Pipeline Open Data (ZIP → PostgreSQL)
+│   └── shared/            # Schéma Drizzle, types, schémas Zod
 ├── docs/
-│   ├── research/          # Étude des sources de données
-│   │   ├── api-officielles.md
-│   │   ├── plateformes-tierces.md
-│   │   ├── produit-specs.md
-│   │   └── ux-design.md
+│   ├── ETAT_PROJET.md     # État réel de l'implémentation
+│   ├── STACK_VERSIONS.md
+│   ├── SECURITY_AUDIT.md
+│   ├── AUDIT_SYNTHESIS.md
+│   ├── research/          # Produit, UX, sources de données
 │   └── architecture/      # Conception technique
-│       ├── architecture-technique.md
-│       ├── backend-design.md
-│       └── frontend-design.md
-└── README.md
+├── docker-compose.yml     # Postgres 17, Redis 8, Meilisearch
+└── package.json           # pnpm workspaces + overrides (zod, h3)
 ```
 
-## 📚 Documentation
-
-### Recherche & Analyse
+## Documentation
 
 | Document | Contenu |
 |----------|---------|
-| [Étude API officielles](docs/research/api-officielles.md) | data.assemblee-nationale.fr, data.senat.fr — formats, limitations |
-| [Plateformes tierces](docs/research/plateformes-tierces.md) | NosDéputés.fr, Datan.fr, Poligraph, CIVIX — comparatif complet |
-| [Cahier des charges produit](docs/research/produit-specs.md) | Personas, user stories, KPIs, roadmap |
-| [Conception UX](docs/research/ux-design.md) | Wireframes, parcours utilisateurs, design tokens, accessibilité |
+| [État du projet](docs/ETAT_PROJET.md) | Implémentation actuelle, écarts, structure des apps |
+| [Architecture globale](docs/architecture/architecture-technique.md) | Vue d'ensemble, flux, scaling |
+| [Design backend](docs/architecture/backend-design.md) | API, Drizzle, ETL |
+| [Design frontend](docs/architecture/frontend-design.md) | Routes, composants, comparateur (cible produit) |
+| [Audit synthèse](docs/AUDIT_SYNTHESIS.md) | Revue code / sécurité / QA |
 
-### Architecture Technique
+## Démarrage rapide
 
-| Document | Contenu |
-|----------|---------|
-| [Architecture globale](docs/architecture/architecture-technique.md) | Vue d'ensemble, flux de données, sécurité, scaling |
-| [Design backend](docs/architecture/backend-design.md) | Schéma Drizzle, API REST, requêtes SQL, ETL |
-| [Design frontend](docs/architecture/frontend-design.md) | Routes, composants, SEO, OG images, comparateur |
+**Prérequis** : Node.js ≥ 24, pnpm ≥ 10, Docker.
 
-## 🚀 Démarrage rapide
+```bash
+# Dépendances
+pnpm install
 
-> *À venir — Phase de développement en cours*
+# Infrastructure locale
+docker compose up -d
 
-## 🔒 Sécurité
+# Variables backend
+cp apps/backend/.env.example apps/backend/.env
+# Ajuster DATABASE_URL, REDIS_URL, MEILISEARCH_* si besoin
 
-Un [audit de sécurité complet](docs/SECURITY_AUDIT.md) a été réalisé sur l'ensemble du stack. Les versions proposées ont été corrigées pour éliminer toutes les vulnérabilités HIGH/CRITICAL identifiées.
+# Schéma BDD
+pnpm db:migrate
+pnpm db:seed   # optionnel
 
-Voir aussi : [Versions validées et corrigées](docs/STACK_VERSIONS.md)
+# Terminal 1 — API (port 3000)
+pnpm --filter @veritas/backend dev
 
-## 📜 Licence
+# Terminal 2 — Frontend (port 3001 par défaut)
+# Optionnel : apps/frontend/.env avec VITE_API_BASE_URL=http://localhost:3000
+pnpm --filter @veritas/frontend dev
+
+# Import Open Data (nécessite DATABASE_URL)
+pnpm etl:run
+```
+
+**Build production frontend** :
+
+```bash
+pnpm --filter @veritas/frontend build
+pnpm --filter @veritas/frontend start   # node dist/server/server.js
+```
+
+## Scripts racine
+
+| Commande | Action |
+|----------|--------|
+| `pnpm dev` | Dev parallèle (Turbo) |
+| `pnpm build` | Build tous les packages |
+| `pnpm typecheck` | Vérification TypeScript |
+| `pnpm docker:up` | Postgres + Redis + Meilisearch |
+| `pnpm db:migrate` | Migrations Drizzle |
+| `pnpm etl:run` | Pipeline ETL |
+
+## Sécurité
+
+Audit initial : [SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md). Mitigations applicatives (override `h3`, Zod 4, validation URLs ETL, anti zip-slip) : [État du projet](docs/ETAT_PROJET.md#sécurité-mitigations-en-place).
+
+## Licence
 
 Les données proviennent de l'[Open Data de l'Assemblée Nationale](https://data.assemblee-nationale.fr) sous Licence Ouverte 2.0.
 

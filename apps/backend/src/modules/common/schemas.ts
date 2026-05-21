@@ -7,7 +7,7 @@ import { z } from "zod";
  */
 export const DateString = z.preprocess(
   (val) => (val instanceof Date ? val.toISOString() : val),
-  z.string().datetime()
+  z.iso.datetime()
 );
 
 export const NullableDateString = DateString.nullable();

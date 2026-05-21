@@ -1,8 +1,7 @@
 import { createReadStream } from "node:fs";
-import { resolve } from "node:path";
 import { pipeline } from "node:stream/promises";
-import StreamZip from "node-stream-zip";
 import { parser } from "stream-json/Parser";
+import { extractJsonEntryFromZip } from "./zip-extract.js";
 import { pick } from "stream-json/filters/Pick";
 import { streamArray } from "stream-json/streamers/StreamArray";
 
@@ -230,16 +229,7 @@ export async function* parseScrutinsFromZip(
   zipPath: string,
   tempDir: string
 ): AsyncGenerator<ParsedScrutin> {
-  const zip = new (StreamZip as any).async({ file: zipPath });
-  const entries = await zip.entries();
-  const jsonEntry = Object.values(entries).find(
-    (e: any) => e.name.endsWith(".json")
-  );
-  if (!jsonEntry) throw new Error(`No JSON entry found in ${zipPath}`);
-
-  const extractedPath = resolve(tempDir, (jsonEntry as any).name);
-  await zip.extract((jsonEntry as any).name, extractedPath);
-  await zip.close();
+  const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
 
   const fileStream = createReadStream(extractedPath);
   const p = parser();

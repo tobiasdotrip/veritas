@@ -1,9 +1,10 @@
 # Rapport Technique Backend — Transparence des Votes des Députés
 
-**Date** : 2026-05-19  
-**Version** : 1.0  
-**Stack** : Fastify + TypeScript + PostgreSQL 16 + Drizzle ORM + Redis  
+**Date** : 2026-05-20  
+**Version** : 1.1  
+**Stack** : Fastify 5 + TypeScript + PostgreSQL 17 + Drizzle 0.45 + Zod 4 + Redis 8  
 **Scope** : MVP (Assemblée Nationale, législature courante)  
+**Implémentation** : [ETAT_PROJET.md](../ETAT_PROJET.md)  
 
 ---
 
@@ -535,8 +536,8 @@ export const SearchDeputiesQuery = z.object({
 });
 
 export const DeputyVotesQuery = z.object({
-  from: z.string().date().optional(),
-  to: z.string().date().optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
   type: z
     .enum(["solennel", "motion_censure", "amendement", "budget", "autre"])
     .optional(),
@@ -550,8 +551,8 @@ export const DeputyVotesQuery = z.object({
 // src/modules/scrutins/schema.ts
 export const SearchScrutinsQuery = z.object({
   q: z.string().min(1).max(200).optional(),
-  from: z.string().date().optional(),
-  to: z.string().date().optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
   type: z.string().optional(),
   theme: z.string().optional(),
   sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),
@@ -571,8 +572,8 @@ export const CompareQuery = z.object({
   deputies: z
     .string()
     .regex(/^PA\d+(,PA\d+){1,4}$/, "2 à 5 députés requis (séparés par des virgules)"),
-  from: z.string().date().optional(),
-  to: z.string().date().optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
 });
 ```
 
@@ -671,13 +672,15 @@ export async function deputyRoutes(app: FastifyInstance) {
 
 - URL cible : `Scrutins.json.zip` de la législature courante
 - Vérifier `Last-Modified` ou `ETag` avant téléchargement complet
-- Stocker le ZIP dans un répertoire temporaire (`/tmp/an-etl/`)
+- Stocker le ZIP dans `TEMP_DIR` (défaut `./tmp/etl`)
 - Calculer le SHA-256 du fichier ; si identique au dernier `syncLogs.fileHash`, arrêt
 
 #### Étape 2 — Décompression & Parsing streaming
 
-- Extraire le ZIP
-- Utiliser **`stream-json`** (ou `JSONStream`) pour parser `scrutins.scrutin[]` en streaming
+- Extraire le ZIP dans `TEMP_DIR` via `packages/etl/src/parser/zip-extract.ts`
+- **Sécurité** : `resolveSafeZipEntryPath` rejette les entrées avec `..`, chemins absolus ou hors répertoire cible (zip slip)
+- URLs de téléchargement validées au démarrage (`validateEtlUrl` — HTTPS, hôte `data.assemblee-nationale.fr` uniquement)
+- Utiliser **`stream-json`** pour parser `scrutins.scrutin[]` en streaming
 - Objectif : ne jamais charger les 400 Mo JSON entièrement en mémoire Node.js
 - Pour chaque objet `scrutin` :
   1. Calculer un hash SHA-256 de sa représentation JSON canonique

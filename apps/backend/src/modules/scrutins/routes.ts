@@ -75,8 +75,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       tags: ["Scrutins"],
       querystring: z.object({
         q: z.string().min(1).max(200).optional(),
-        from: z.string().date().optional(),
-        to: z.string().date().optional(),
+        from: z.iso.date().optional(),
+        to: z.iso.date().optional(),
         type: z.string().optional(),
         theme: z.string().optional(),
         sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),

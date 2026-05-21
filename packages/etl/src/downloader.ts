@@ -7,6 +7,7 @@ import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import fetch from "node-fetch";
 import type { EtlConfig } from "./config.js";
+import { assertPathWithinDir } from "./parser/safe-zip-path.js";
 
 export interface DownloadState {
   url: string;
@@ -59,6 +60,8 @@ export async function downloadZip(
   outputPath: string,
   config: EtlConfig
 ): Promise<DownloadResult> {
+  assertPathWithinDir(config.tempDir, outputPath);
+
   const state = await readState(config, url);
 
   const headController = new AbortController();
@@ -119,10 +122,15 @@ export async function downloadZip(
       const nodeStream = Readable.fromWeb(body as any);
       const hash = createHash("sha256");
       let size = 0;
+      const maxSize = config.downloadMaxSizeBytes;
       const hashTransform = new Transform({
         transform(chunk: Buffer, _encoding, callback) {
-          hash.update(chunk);
           size += chunk.length;
+          if (size > maxSize) {
+            callback(new Error(`Download exceeds maximum size of ${maxSize} bytes`));
+            return;
+          }
+          hash.update(chunk);
           callback(null, chunk);
         },
       });

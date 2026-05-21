@@ -80,10 +80,10 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
           .string()
           .min(3)
           .refine((val) => val.split(",").length >= 2 && val.split(",").length <= 5, {
-            message: "2 à 5 députés requis (séparés par des virgules)",
+            error: "2 à 5 députés requis (séparés par des virgules)",
           }),
-        from: z.string().date().optional(),
-        to: z.string().date().optional(),
+        from: z.iso.date().optional(),
+        to: z.iso.date().optional(),
         legislature: z.string().default("17"),
       }),
       response: {

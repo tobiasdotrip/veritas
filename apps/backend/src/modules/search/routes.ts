@@ -11,6 +11,11 @@ import {
 import { DateString } from "../common/schemas.js";
 import { rethrowTextSearchValidationError } from "../common/db-errors.js";
 
+function toPrefixTsQuery(q: string): string {
+  const safeQ = q.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+  return safeQ ? `${safeQ}:*` : "";
+}
+
 const SuggestionSchema = z.object({
   type: z.enum(["deputy", "scrutin"]),
   id: z.string(),
@@ -65,7 +70,10 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     },
     handler: async (req, reply) => {
       const { q, limit: maxResults } = req.query;
-      const tsQuery = `${q}:*`;
+      const tsQuery = toPrefixTsQuery(q);
+      if (!tsQuery) {
+        return reply.send({ data: [] });
+      }
 
       let deputyRows;
       let scrutinRows;

@@ -31,7 +31,12 @@ export function encodeCursor(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
+const MAX_CURSOR_LENGTH = 1024;
+
 export function decodeCursor(cursor: string): { date: string; id: string } {
+  if (cursor.length > MAX_CURSOR_LENGTH) {
+    throw new ValidationError("Cursor too large");
+  }
   try {
     const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8")) as unknown;
     if (

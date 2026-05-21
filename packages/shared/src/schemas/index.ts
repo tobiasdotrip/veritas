@@ -20,8 +20,8 @@ export const SearchDeputiesQuery = z.object({
 });
 
 export const DeputyVotesQuery = z.object({
-  from: z.string().date().optional(),
-  to: z.string().date().optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
   type: z
     .enum(["solennel", "motion_censure", "amendement", "budget", "autre"])
     .optional(),
@@ -32,8 +32,8 @@ export const DeputyVotesQuery = z.object({
 
 export const SearchScrutinsQuery = z.object({
   q: z.string().min(1).max(200).optional(),
-  from: z.string().date().optional(),
-  to: z.string().date().optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
   type: z.string().optional(),
   theme: z.string().optional(),
   sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),
@@ -49,10 +49,9 @@ export const ScrutinVotesQuery = z.object({
 export const CompareQuery = z.object({
   deputies: z
     .string()
-    .regex(
-      /^PA\d+(,PA\d+){1,4}$/,
-      "2 à 5 députés requis (séparés par des virgules)"
-    ),
-  from: z.string().date().optional(),
-  to: z.string().date().optional(),
+    .regex(/^PA\d+(,PA\d+){1,4}$/, {
+      error: "2 à 5 députés requis (séparés par des virgules)",
+    }),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
 });

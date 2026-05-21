@@ -1,6 +1,7 @@
 import { NotFoundError } from "../common/errors.js";
 import type { ScrutinRepository } from "./repository.js";
 import type { CacheService } from "../common/cache.js";
+import { hashCacheKeyPart } from "../common/cache.js";
 import type { CursorPaginationInput, OffsetPaginationInput } from "../common/pagination.js";
 import type { ScrutinSearchFilters, ScrutinVoteFilters } from "./repository.js";
 
@@ -17,7 +18,7 @@ export function createScrutinService(
       filters: ScrutinSearchFilters,
       pagination: CursorPaginationInput
     ) {
-      const cacheKey = `search:${legislature}:${JSON.stringify(filters)}:${JSON.stringify(pagination)}`;
+      const cacheKey = `search:${legislature}:${hashCacheKeyPart(filters)}:${hashCacheKeyPart(pagination)}`;
       return cache.getOrSet(
         CACHE_NS,
         cacheKey,
@@ -42,7 +43,7 @@ export function createScrutinService(
       filters: ScrutinVoteFilters,
       pagination: OffsetPaginationInput
     ) {
-      const cacheKey = `votes:${scrutinId}:${JSON.stringify(filters)}:${JSON.stringify(pagination)}`;
+      const cacheKey = `votes:${scrutinId}:${hashCacheKeyPart(filters)}:${hashCacheKeyPart(pagination)}`;
       return cache.getOrSet(
         CACHE_NS,
         cacheKey,

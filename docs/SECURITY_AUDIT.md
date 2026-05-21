@@ -1,8 +1,32 @@
 # 🔒 Rapport d'Audit Sécurité — Stack Veritas
 
-**Date** : 2026-05-19
-**Scope** : Dépendances runtime, transitives et infrastructure (12 derniers mois)
-**Méthodologie** : CVE database, npm audit, GitHub Security Advisories
+**Date** : 2026-05-19  
+**Mise à jour** : 2026-05-20  
+**Scope** : Dépendances runtime, transitives et infrastructure (12 derniers mois)  
+**Méthodologie** : CVE database, npm audit, GitHub Security Advisories  
+
+**Mitigations code (2026-05-20)** : voir [ETAT_PROJET.md](./ETAT_PROJET.md#sécurité-mitigations-en-place).
+
+---
+
+## Compromission supply-chain TanStack (CVE-2026-45321)
+
+**Date** : 2026-05-11 (fenêtre 19:20–19:26 UTC) · **Sévérité** : Critique (CVSS 9.6) · [GHSA-g7cv-rxg3-hmpx](https://github.com/TanStack/router/security/advisories/GHSA-g7cv-rxg3-hmpx)
+
+84 versions malveillantes de **42 paquets `@tanstack/*` Router/Start** (pas `@tanstack/react-query`). Malware au `npm install` via `optionalDependencies["@tanstack/setup"]` et fichier `router_init.js`.
+
+### Veritas (état du lockfile)
+
+| Paquet projet | Verdict |
+|---------------|---------|
+| `@tanstack/react-router`, `react-start`, `router-*`, `start-*` | Versions lockées **hors** la liste GHSA ; contrôle IOC **OK** (pas de `@tanstack/setup` / `router_init.js`) |
+| `@tanstack/react-query` | Famille **non touchée** par l’incident |
+
+**Versions minimales post-incident** (frontend) : `react-router >= 1.170.5`, `react-start >= 1.168.7`, `router-plugin >= 1.168.7`.
+
+**Vérification locale** : `pnpm audit:tanstack` (script `scripts/audit-tanstack-packages.mjs`).
+
+**Si install le 2026-05-11 entre 19:20 et 19:30 UTC** : considérer la machine compromise ; rotation AWS/GCP/K8s/Vault/GitHub/npm/SSH. TanStack [all-clear 2026-05-15](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem).
 
 ---
 
@@ -76,7 +100,8 @@
 
 | Package | Version | Statut |
 |---------|---------|--------|
-| Zod | 4.4.x | ✅ Approuvé |
+| Zod | 4.4.3 | ✅ Implémenté (override pnpm racine) |
+| h3 | ≥ 1.15.9 | ✅ Override pnpm racine (Vinxi retiré du frontend) |
 | BullMQ | 5.76.x | ✅ Approuvé |
 | React | 19.2.x | ✅ Approuvé |
 | TanStack Query | 5.100.x | ✅ Approuvé |

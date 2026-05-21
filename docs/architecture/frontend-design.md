@@ -1,9 +1,10 @@
 # Rapport Technique Frontend — Transparence des Votes des Députés Français
 
-> **Version** : 1.0  
-> **Date** : 2026-05-19  
-> **Framework** : TanStack Start (React, SSR/SSG)  
+> **Version** : 1.1  
+> **Date** : 2026-05-20  
+> **Framework** : TanStack Start (React, Vite 7)  
 > **Cible** : Mobile-first, WCAG 2.1 AA, FCP < 1.5s  
+> **Implémentation** : [ETAT_PROJET.md](../ETAT_PROJET.md) — ce document reste la spec produit cible.  
 
 ---
 
@@ -11,11 +12,11 @@
 
 Ce document définit l'architecture frontend complète pour la plateforme de transparence parlementaire. Il s'appuie sur le cahier des charges produit, les spécifications UX, et les contraintes des API officielles et tierces.
 
-**Choix technologiques clés :**
-- **Framework** : TanStack Start (file-system routing type-safe, SSR/SSG via Vinxi, Server Functions)
-- **Styling** : Tailwind CSS v3 + CSS Variables pour les design tokens
+**Choix technologiques clés (cible) :**
+- **Framework** : TanStack Start (file-system routing, build **Vite**, plugin `tanstackStart()`)
+- **Styling** : Tailwind CSS **v4** (`@theme` dans `src/app.css`, PostCSS `@tailwindcss/postcss`)
 - **Composants** : Radix UI primitives (headless, accessible) + composants métier maison
-- **Data fetching** : TanStack Query v5 (cache client) + TanStack Start Server Functions (SSR)
+- **Data fetching** : TanStack Query v5 vers l'API Fastify (`VITE_API_BASE_URL`) — Server Functions **non** branchées en V1 actuelle
 - **State UI** : URL-first pour les filtres ; Zustand pour le comparateur et les préférences
 - **OG Images** : Satori + resvg-js génération côté serveur (API route)
 
@@ -707,10 +708,12 @@ Injection de Schema.org dans chaque page critique :
 │   ├── hooks/                     # Tests hooks
 │   └── a11y/                      # Audits axe-core par page
 │
-├── tailwind.config.js
-├── vite.config.ts                 # Config Vinxi / TanStack Start
+├── postcss.config.mjs             # @tailwindcss/postcss
+├── vite.config.ts                 # tanstackStart() + @vitejs/plugin-react
+├── src/router.tsx                 # Point d'entrée router Start
+├── src/app.css                    # @import "tailwindcss" + @theme
 ├── tsconfig.json
-└── package.json
+└── package.json                   # scripts: vite dev | vite build
 ```
 
 ---
@@ -930,7 +933,7 @@ Si l'utilisateur compare 2 députés et que leurs votes sont déjà en cache (na
    - `GET /themes` (liste des thématiques)
 2. Les données de l'Assemblée nationale sont normalisées côté backend (nettoyage des `acteurRef`, jointure avec les noms, calcul des stats).
 3. Les photos des députés sont servies par notre propre CDN (proxy/resize) ou par l'AN avec des URLs stables.
-4. L'hébergement supporte Node.js ou un runtime compatible avec TanStack Start (Vinxi) + possibilité de déployer des fonctions serveur.
+4. L'hébergement supporte Node.js (SSR `dist/server/server.js` après `vite build`) + possibilité de déployer des fonctions serveur.
 
 ---
 
@@ -957,7 +960,7 @@ Avant installation, les packages suivants doivent être audités :
 - `recharts` (si graphiques complexes requis)
 - `zustand` (state management)
 - `@radix-ui/*` (primitives — audit léger, bien maintenu)
-- `tanstack/react-start` (framework — audit des sub-dependencies Vinxi)
+- `@tanstack/react-start` (plugin Vite — peer Vite ≥ 7, projet en Vite 6)
 
 ---
 

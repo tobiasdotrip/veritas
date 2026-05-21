@@ -1,9 +1,9 @@
 # Rapport d'Architecture Technique — Transparence des Votes des Députés Français
 
-**Version** : 1.0  
-**Date** : 2026-05-19  
-**Statut** : Approuvé pour implémentation MVP  
-**Stack cible** : Tanstack Start (Frontend) · Fastify (Backend API) · PostgreSQL · Redis · Meilisearch  
+**Version** : 1.1  
+**Date** : 2026-05-20  
+**Statut** : MVP en cours d'implémentation — voir [ETAT_PROJET.md](../ETAT_PROJET.md)  
+**Stack cible** : TanStack Start (Vite) · Fastify 5 · PostgreSQL 17 · Redis 8 · Meilisearch  
 
 ---
 
@@ -29,7 +29,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 
 **Décisions architecturales clés :**
 - **Données** : ingestion primaire depuis les fichiers ZIP JSON officiels de `data.assemblee-nationale.fr` via un pipeline ETL maison ; API Poligraph comme source de secours (fallback) et enrichissement.
-- **Frontend** : Tanstack Start (framework full-stack React sur Vinxi) exploitant le SSR/SSG pour des premiers rendus rapides et un SEO maximal.
+- **Frontend** : TanStack Start (plugin Vite) avec SSR via bundle `dist/server` et hydratation client TanStack Query.
 - **Backend** : Fastify (Node.js) exposant une API REST interne et publique (V1).
 - **Recherche** : Meilisearch dédié pour l'autocomplétion et la recherche full-text (< 20 ms sur les index en RAM).
 - **Persistance** : PostgreSQL 15+ pour le stockage relationnel structuré, Redis pour le cache distribué, les sessions et l'orchestration de jobs.
@@ -790,7 +790,7 @@ Si le trafic dépasse 300 000 visites mensuelles ou en cas de pic viral :
 **Infrastructure cible** :
 - **Hébergeur** : Hetzner Cloud (CPX31 pour les workers, CX51 pour la DB) ou Scaleway.
 - **K8s** : k3s léger (pas de GKE/EKS pour maîtriser les coûts).
-- **DB** : PostgreSQL 16 managed (Scaleway/Hetzner) ou self-hosted avec backups WAL-G vers S3.
+- **DB** : PostgreSQL 17 managed (Scaleway/Hetzner) ou self-hosted avec backups WAL-G vers S3.
 - **Observabilité** : Grafana + Prometheus + Loki (stack self-hosted) ou Datadog si budget.
 
 **Coûts estimés V1** :

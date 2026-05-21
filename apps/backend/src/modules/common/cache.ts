@@ -1,4 +1,5 @@
 import { Redis } from "ioredis";
+import { createHash } from "node:crypto";
 
 const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
 
@@ -22,6 +23,10 @@ export function getRedis(): Redis {
 export async function closeRedis(): Promise<void> {
   await redis?.quit();
   redis = undefined;
+}
+
+export function hashCacheKeyPart(value: unknown): string {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 16);
 }
 
 export class CacheService {

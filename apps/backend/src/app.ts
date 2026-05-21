@@ -1,11 +1,12 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import { createSerializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import { getRedis } from "./modules/common/cache.js";
 import { registerErrorHandler } from "./plugins/error-handler.js";
+import { registerJsonBodyParser } from "./plugins/json-body.js";
 import { registerRequestLogger } from "./plugins/request-logger.js";
+import { registerSecurityHeaders } from "./plugins/security-headers.js";
 import { registerSwagger } from "./plugins/swagger.js";
 
 import deputiesRoutes from "./modules/deputies/routes.js";
@@ -28,28 +29,25 @@ export async function buildApp() {
     logger: {
       level: process.env.LOG_LEVEL ?? "info",
     },
-    trustProxy: true,
+    trustProxy: process.env.TRUSTED_PROXIES
+      ? process.env.TRUSTED_PROXIES.split(",").map((s) => s.trim()).filter(Boolean)
+      : false,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(customSerializerCompiler);
+  registerJsonBodyParser(app);
 
   await app.register(cors, {
     origin: process.env.NODE_ENV === "production" ? false : true,
   });
 
-  await app.register(helmet);
+  await registerSecurityHeaders(app);
 
   await app.register(rateLimit, {
     max: 60,
     timeWindow: "1 minute",
-    keyGenerator: (req) => {
-      const forwarded = req.headers["x-forwarded-for"];
-      if (typeof forwarded === "string") {
-        return forwarded.split(",")[0]?.trim() ?? req.ip;
-      }
-      return req.ip;
-    },
+    keyGenerator: (req) => req.ips?.[0] ?? req.ip,
     redis: getRedis(),
     errorResponseBuilder: (_req, context) => ({
       type: "https://veritas.fr/errors/rate-limit",
@@ -71,7 +69,7 @@ export async function buildApp() {
   await app.register(searchRoutes, { prefix: "/api/v1" });
 
   app.get("/health", async () => {
-    return { status: "ok", timestamp: new Date().toISOString() };
+    return { status: "ok" };
   });
 
   return app;

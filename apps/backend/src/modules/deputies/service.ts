@@ -1,6 +1,7 @@
 import { NotFoundError } from "../common/errors.js";
 import type { DeputyRepository } from "./repository.js";
 import type { CacheService } from "../common/cache.js";
+import { hashCacheKeyPart } from "../common/cache.js";
 import type { CursorPaginationInput } from "../common/pagination.js";
 import type { DeputyVoteFilters } from "./repository.js";
 
@@ -23,7 +24,7 @@ export function createDeputyService(
       limit: number,
       offset: number
     ) {
-      const cacheKey = `search:${JSON.stringify(filters)}:${limit}:${offset}`;
+      const cacheKey = `search:${hashCacheKeyPart(filters)}:${limit}:${offset}`;
       return cache.getOrSet(
         CACHE_NS,
         cacheKey,
@@ -56,7 +57,7 @@ export function createDeputyService(
       filters: DeputyVoteFilters,
       pagination: CursorPaginationInput
     ) {
-      const cacheKey = `votes:${deputyId}:${legislature}:${JSON.stringify(filters)}:${JSON.stringify(pagination)}`;
+      const cacheKey = `votes:${deputyId}:${legislature}:${hashCacheKeyPart(filters)}:${hashCacheKeyPart(pagination)}`;
       return cache.getOrSet(
         CACHE_NS,
         cacheKey,
