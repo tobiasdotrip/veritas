@@ -8,10 +8,7 @@ describeIntegration("backend integration", () => {
   let app: FastifyInstance;
   let pool: Pool;
   let destroyTestApp: (app: FastifyInstance) => Promise<void>;
-  let injectJson: <T>(
-    app: FastifyInstance,
-    options: Parameters<FastifyInstance["inject"]>[0]
-  ) => Promise<{ status: number; body: T; headers: Record<string, string> }>;
+  let injectJson: typeof import("./test-utils/http.js").injectJson;
   let setupTestDatabase: () => Promise<Pool>;
   let teardownTestDatabase: (pool: Pool) => Promise<void>;
   let createTestApp: () => Promise<FastifyInstance>;
