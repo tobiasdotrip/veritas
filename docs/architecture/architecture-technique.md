@@ -3,7 +3,9 @@
 **Version** : 1.1  
 **Date** : 2026-05-20  
 **Statut** : MVP en cours d'implémentation — voir [ETAT_PROJET.md](../ETAT_PROJET.md)  
-**Stack cible** : TanStack Start (Vite) · Fastify 5 · PostgreSQL 17 · Redis 8 · Meilisearch  
+**Stack cible** : TanStack Start (Vite) · Fastify 5 · PostgreSQL 17 · Redis 8
+
+> **Note (2026-05-21)** : Meilisearch et BullMQ ont été retirés après étude. La recherche repose sur PostgreSQL (`to_tsvector` + GIN + `pg_trgm`). L'ETL utilise `node-cron`. Voir `docs/research/meilisearch-bullmq-analysis.md`.  
 
 ---
 
@@ -31,7 +33,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 - **Données** : ingestion primaire depuis les fichiers ZIP JSON officiels de `data.assemblee-nationale.fr` via un pipeline ETL maison ; API Poligraph comme source de secours (fallback) et enrichissement.
 - **Frontend** : TanStack Start (plugin Vite) avec SSR via bundle `dist/server` et hydratation client TanStack Query.
 - **Backend** : Fastify (Node.js) exposant une API REST interne et publique (V1).
-- **Recherche** : Meilisearch dédié pour l'autocomplétion et la recherche full-text (< 20 ms sur les index en RAM).
+- **Recherche** : PostgreSQL 17 nativement (`to_tsvector` + GIN + `pg_trgm`) pour l'autocomplétion et la recherche full-text.
 - **Persistance** : PostgreSQL 15+ pour le stockage relationnel structuré, Redis pour le cache distribué, les sessions et l'orchestration de jobs.
 - **Génération de images sociales** : worker Node.js + Satori/resvg pour les Open Graph cards à la volée (missive en cache S3/CDN).
 
@@ -79,26 +81,25 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
           │
           ├──────────────────┬──────────────────┬──────────────────┐
           ▼                  ▼                  ▼                  ▼
-┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│  PostgreSQL  │   │    Redis     │   │  Meilisearch │   │  Object Store│
-│   (BDD)      │   │   (Cache /   │   │   (Search)   │   │   (S3/R2)    │
-│              │   │    Queue)    │   │              │   │              │
-│  • Deputies  │   │              │   │  • Deputies  │   │  • ZIP AN    │
-│  • Scrutins  │   │  • Sessions  │   │  • Scrutins  │   │  • OG images │
-│  • Votes     │   │  • Rate Lim. │   │  • Themes    │   │  • Exports   │
-│  • Stats     │   │  • BullMQ    │   │  • Suggests  │   │              │
-└──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│  PostgreSQL  │   │    Redis     │   │  Object Store│
+│   (BDD)      │   │   (Cache /   │   │   (S3/R2)    │
+│              │   │   Sessions)  │   │              │
+│  • Deputies  │   │              │   │  • ZIP AN    │
+│  • Scrutins  │   │  • Rate Lim. │   │  • OG images │
+│  • Votes     │   │  • Pub/Sub   │   │  • Exports   │
+│  • Stats     │   │              │   │              │
+└──────────────┘   └──────────────┘   └──────────────┘
           ▲
           │ SQL / COPY
           │
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         ETL WORKER — Node.js                                │
-│  (Process indépendant, scalable à 0-N instances via BullMQ)                 │
+│  (Process indépendant, orchestré par `node-cron`)                           │
 │  • Téléchargement ZIP quotidien AN                                          │
 │  • Parsing incrémental JSON stream                                          │
 │  • Upsert batch PostgreSQL (COPY)                                           │
 │  • Recalcul des statistiques (matérialisées)                                │
-│  • Synchronisation Meilisearch                                              │
 │  • Fallback API Poligraph                                                   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -108,7 +109,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 | Flux | Source → Cible | Technologie | Fréquence |
 |------|----------------|-------------|-----------|
 | **Ingestion primaire** | ZIP AN → ETL Worker → PostgreSQL | Node.js Streams + `COPY` | Quotidienne (6h CET) |
-| **Indexation recherche** | PostgreSQL → Meilisearch | SDK Meilisearch (incremental) | Après chaque ETL |
+
 | **Cache chaud** | PostgreSQL → Redis | Fastify cache interceptors | À la volée (TTL 5-60 min) |
 | **Images sociales** | Fastify → S3/R2 + CDN | Satori + resvg | À la volée + cache 24h |
 | **Fallback données** | Poligraph API → PostgreSQL | Fetch REST | À la demande (alerte) |
@@ -120,8 +121,8 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 | **Frontend** | Tanstack Start | SSR/SSG natif, routing file-based, server functions (RPC-like) sans friction API, excellent support TypeScript, intégration Tanstack Query. |
 | **Backend** | Fastify | Très hautes performances (throughput JSON supérieur à Express), écosystème mature (cors, helmet, swagger), faible overhead mémoire. |
 | **Base de données** | PostgreSQL 15+ | ACID, excellente gestion JSONB, `COPY` pour imports massifs, support des trigrammes pour recherche basique, réplication native. |
-| **Search Engine** | Meilisearch | Latence < 20 ms, typo-tolerance native, géosearch future-proof, faceting (filtres groupes/thématiques), API REST simple. |
-| **Cache & Queue** | Redis 7+ | Structure clé-valeur pour sessions, rate limiter (Sliding Window), Pub/Sub pour invalidations, BullMQ pour jobs ETL fiables. |
+| **Search** | PostgreSQL 17+ | `to_tsvector` + GIN pour full-text, `pg_trgm` pour typo-tolerance, `unaccent` pour recherche sans accent. Aucun service externe requis pour le MVP. |
+| **Cache & Sessions** | Redis 8+ | Structure clé-valeur pour cache applicatif, rate limiter (Sliding Window), Pub/Sub pour invalidations de cache. |
 | **Stockage objets** | Cloudflare R2 (ou S3) | Pas de frais de sortie (egress), compatible S3, idéal pour stocker les ZIP sources et les OG images générées. |
 | **OG Images** | Satori + @resvg/resvg-js | Génération SVG→PNG côté serveur, taille binaire raisonnable, caching agressif au niveau CDN. |
 
@@ -310,10 +311,10 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 | Requête métier | Index clé | Type | Objectif |
 |----------------|-----------|------|----------|
 | Fiche député + stats | `deputy.slug` | B-Tree unique | Lookup par URL |
-| Autocomplétion recherche | Meilisearch (pas SQL) | Inverted + Trie | < 20 ms |
+| Autocomplétion recherche | PostgreSQL `pg_trgm` + GIN | Trigramme + tsvector | < 20 ms |
 | Liste votes d'un député | `vote(deputy_id, scrutin_id)` | B-Tree | Filtrage + jointure |
 | Liste votes d'un scrutin | `vote(scrutin_id)` | B-Tree | Agrégation groupe |
-| Recherche par texte de loi | `scrutin.titre_search` | GIN (tsvector) | Fallback si Meilisearch down |
+| Recherche par texte de loi | `scrutin.titre_search` | GIN (tsvector) | Principal |
 | Dashboard thématique V1 | `scrutin_theme(theme_id)` | B-Tree | Agrégation par thème |
 | Comparateur de députés | `vote(deputy_id, scrutin_id)` + `scrutin.date` | Composite | Jointure rapide 2 députés |
 
@@ -338,7 +339,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 #### Santé & Méta
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| `GET` | `/api/health` | Healthcheck (DB, Redis, Meilisearch) |
+| `GET` | `/api/health` | Healthcheck (DB, Redis) |
 | `GET` | `/api/v1/openapi.json` | Spécification OpenAPI 3.1 |
 
 #### Députés
@@ -368,7 +369,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 | `GET` | `/api/v1/groups/:uid` | — | Détail groupe + effectif |
 | `GET` | `/api/v1/groups/:uid/stats` | `period` | Stats de cohésion et participation du groupe |
 
-#### Recherche (proxy Meilisearch contrôlé)
+#### Recherche
 | Méthode | Route | Query Params | Description |
 |---------|-------|--------------|-------------|
 | `GET` | `/api/v1/search/suggestions` | `q` (3+ caractères) | Autocomplétion rapide (députés + scrutins) |
@@ -496,13 +497,13 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  Scheduler  │────▶│  Download Worker │────▶│  Parse Worker   │
-│  (BullMQ)   │     │  (Node.js)       │     │  (Node Streams) │
+│ (node-cron) │     │  (Node.js)       │     │  (Node Streams) │
 └─────────────┘     └──────────────────┘     └────────┬────────┘
                                                       │
                            ┌──────────────────────────┼──────────┐
                            ▼                          ▼          ▼
                     ┌─────────────┐            ┌─────────────┐  ┌────────────┐
-                    │ PostgreSQL  │            │  Meilisearch│  │   Redis    │
+                    │ PostgreSQL  │            │             │  │   Redis    │
                     │   (COPY)    │            │   (Index)   │  │ (Cache inv)│
                     └─────────────┘            └─────────────┘  └────────────┘
 ```
@@ -510,7 +511,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 ### 5.3. Étapes détaillées
 
 #### Étape 1 — Ordonnancement
-- BullMQ Repeatable Job : **tous les jours à 06h00 CET** (heure où l'archive AN est généralement reconstruite).
+- `node-cron` : **tous les jours à 06h00 CET** (heure où l'archive AN est généralement reconstruite).
 - Job idempotant : clé de lock Redis (`etl:running`) pour éviter les exécutions concurrentes.
 
 #### Étape 2 — Téléchargement
@@ -538,7 +539,7 @@ Ce document définit l'architecture technique complète d'une plateforme de tran
 - Utilisation de requêtes SQL analytiques (CTE + `GROUP BY`) plutôt que code applicatif pour la performance.
 
 #### Étape 6 — Synchronisation recherche
-- Indexation incrémentale Meilisearch : envoi des nouveaux documents (scrutins + députés) via batch de 500.
+
 - Mise à jour des paramètres de typo-tolerance et des synonymes si nécessaire.
 
 #### Étape 7 — Invalidation cache
@@ -568,7 +569,7 @@ Si le ZIP AN est indisponible, corrompu, ou si la latence dépasse 4h :
 
 | Scénario | Objectif | Méthode |
 |----------|----------|---------|
-| Recherche autocomplétion | < 50 ms | Meilisearch (RAM) + cache Redis 1h |
+| Recherche autocomplétion | < 50 ms | PostgreSQL `pg_trgm` + GIN + cache Redis 1h |
 | Fiche député ( première visite) | < 200 ms | SSR + cache CDN 1h |
 | Fiche député (répétée) | < 50 ms | CDN cache-hit |
 | Historique votes (20 items) | < 150 ms | SQL index couvrant + Redis 10 min |
@@ -742,10 +743,10 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
                     ┌────────────────────┼────────────────────┐
                     ▼                    ▼                    ▼
             ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-            │  PostgreSQL  │    │    Redis     │    │  Meilisearch │
-            │  (Railway)   │    │  (Railway)   │    │  (Railway    │
-            │              │    │              │    │   or Cloud)  │
-            └──────────────┘    └──────────────┘    └──────────────┘
+            │  PostgreSQL  │    │    Redis     │
+            │  (Railway)   │    │  (Railway)   │
+            │              │    │              │
+            └──────────────┘    └──────────────┘
                     ▲
                     │
             ┌──────────────┐
@@ -758,7 +759,6 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 **Coûts estimés MVP :**
 - Vercel Pro : 20 €/mois
 - Railway (API + PostgreSQL + Redis) : ~80–120 €/mois
-- Meilisearch Cloud (10k docs, gratuit) : 0 €/mois
 - Cloudflare Pro : 20 €/mois
 - R2 (stockage ZIP + OG) : ~5 €/mois
 - **Total** : ~150 €/mois
@@ -781,10 +781,10 @@ Si le trafic dépasse 300 000 visites mensuelles ou en cas de pic viral :
           ├──────────────┬──────────────┬──────────────┐
           ▼              ▼              ▼              ▼
    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-   │  PostgreSQL  │ │    Redis     │ │  Meilisearch │ │  Object Store│
-   │  Primary     │ │   Cluster    │ │   Cluster    │ │   (R2/S3)    │
-   │  + 1 Replica │ │  (3 nodes)   │ │  (3 nodes)   │ │              │
-   └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
+   │  PostgreSQL  │ │    Redis     │ │  Object Store│
+   │  Primary     │ │   Cluster    │ │   (R2/S3)    │
+   │  + 1 Replica │ │  (3 nodes)   │ │              │
+   └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
 **Infrastructure cible** :
@@ -796,7 +796,7 @@ Si le trafic dépasse 300 000 visites mensuelles ou en cas de pic viral :
 **Coûts estimés V1** :
 - 3× CPX31 (4 vCPU / 8 Go) : ~60 €/mois
 - PostgreSQL managed (2 vCPU / 4 Go) : ~50 €/mois
-- Redis + Meilisearch (self-hosted sur les workers) : inclus
+- Redis (self-hosted sur les workers) : inclus
 - Cloudflare Pro + R2 : ~25 €/mois
 - **Total** : ~150–200 €/mois (mais scalable à l'infini horizontalement)
 
@@ -831,10 +831,10 @@ Si le trafic dépasse 300 000 visites mensuelles ou en cas de pic viral :
 
 | Jalon | Semaine | Livrables | Validation |
 |-------|---------|-----------|------------|
-| **J1 — Fondations** | S1 | Setup repo monorepo (pnpm workspaces), Docker Compose local (Postgres, Redis, Meilisearch), CI/CD GitHub Actions | Build vert + tests passent |
+| **J1 — Fondations** | S1 | Setup repo monorepo (pnpm workspaces), Docker Compose local (Postgres, Redis), CI/CD GitHub Actions | Build vert + tests passent |
 | **J2 — ETL & Données** | S1-S2 | Worker ETL, parsing ZIP AN, upsert PostgreSQL, premiers indexes, ingestion 17e législature | 100 % des scrutins intégrés, logs ETL verts |
 | **J3 — API Core** | S2-S3 | Fastify + routes députés, scrutins, votes, pagination, validation Zod, OpenAPI | Tests d'intégration passent, latence < 200 ms |
-| **J4 — Search** | S3 | Meilisearch configuré, indexation députés/scrutins, endpoint `/search/suggestions` | Autocomplétion < 50 ms |
+| **J4 — Search** | S3 | Recherche full-text PostgreSQL (`to_tsvector` + `pg_trgm`), endpoint `/search/suggestions` | Autocomplétion < 50 ms |
 | **J5 — Frontend MVP** | S3-S5 | Tanstack Start, pages Accueil, Recherche, Fiche député, Page scrutin, Comparateur | Lighthouse > 90, a11y > 90 |
 | **J6 — OG & Partage** | S5 | Génération images OG, meta tags dynamiques, Web Share API | Cards Twitter/FB valides |
 | **J7 — Cache & Perf** | S6 | Redis cache, CDN Cloudflare, SSG fiches députés, ISR | Charge test 1000 req/s OK |
@@ -860,8 +860,8 @@ Si le trafic dépasse 300 000 visites mensuelles ou en cas de pic viral :
 | Backend | Fastify | 4.x | Serveur HTTP API |
 | Backend | Zod | 3.22+ | Validation schémas |
 | Backend | Prisma ORM | 5.x | Accès PostgreSQL (option : Drizzle pour perf) |
-| Search | Meilisearch | 1.6+ | Moteur de recherche |
-| Cache/Queue | Redis | 7.x | BullMQ + cache sessions |
+| Search | PostgreSQL 17+ | native | `to_tsvector` + GIN + `pg_trgm` |
+| Cache/Sessions | Redis | 8.x | Cache applicatif, rate limiting, Pub/Sub |
 | BDD | PostgreSQL | 15+ | Stockage relationnel |
 | ETL | Node.js + Streams | 20 LTS | Parsing ZIP/JSON |
 | OG Images | Satori + resvg | latest | SVG → PNG |
@@ -888,7 +888,7 @@ Si le trafic dépasse 300 000 visites mensuelles ou en cas de pic viral :
 - [Asone — assemblee-data-interfaces/schemas](https://github.com/Asone/assemblee-data-interfaces)
 - [Poligraph API Docs](https://poligraph.fr/api/docs)
 - [Datan — data.gouv.fr](https://www.data.gouv.fr/fr/organizations/datan/)
-- [Meilisearch Documentation](https://www.meilisearch.com/docs)
+
 - [Tanstack Start](https://tanstack.com/start/latest)
 - [Fastify Documentation](https://fastify.dev/)
 

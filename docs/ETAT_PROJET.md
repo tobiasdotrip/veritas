@@ -30,7 +30,9 @@ Ce document décrit l’**implémentation réelle** du dépôt. Les specs de con
 | Styling | Tailwind CSS v4 (`@theme` dans `app.css`) | 4.3 |
 | Backend | Fastify 5 + `fastify-type-provider-zod` 6 | Zod **4.4.3** |
 | ORM | Drizzle 0.45 + `drizzle-zod` 0.8 | Schéma dans `@veritas/shared` |
-| BDD / cache / search | PostgreSQL 17, Redis 8, Meilisearch 1.41 | `docker-compose.yml` |
+| BDD / cache | PostgreSQL 17, Redis 8 | `docker-compose.yml` |
+
+> **Note** : Meilisearch et BullMQ ont été retirés de la stack après étude (`docs/research/meilisearch-bullmq-analysis.md`). La recherche repose sur PostgreSQL (`to_tsvector` + GIN + `pg_trgm`).
 | ETL | Node streams, `node-stream-zip`, `stream-json` | Pas de Zod runtime (validation URLs au boot) |
 
 **Abandonné** : Vinxi (`app.config.ts` supprimé) — build frontend via **Vite** + plugin `@tanstack/react-start/plugin/vite`.
@@ -96,7 +98,7 @@ apps/frontend/
 | `/scrutins` | `scrutins` | Liste, détail, votes individuels |
 | `/groups` | `groups` | Groupes politiques + stats |
 | `/compare` | `compare` | Concordance multi-députés |
-| `/search` | `search` | Suggestions + recherche (Meilisearch si configuré) |
+| `/search` | `search` | Suggestions + recherche full-text PostgreSQL (`to_tsvector` + GIN) |
 
 ### Validation
 
@@ -142,7 +144,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 | CVE-2026-45321 (TanStack Router/Start) | Versions hors fenêtre malveillante ; `pnpm audit:tanstack` ; deps `>= 1.170.5` / `>= 1.168.7` |
 | SSRF ETL | `validateEtlUrl` (HTTPS + hôte AN) |
 | Zip slip | `resolveSafeZipEntryPath` avant extraction |
-| Dépendances | Voir `docs/SECURITY_AUDIT.md` + `docs/STACK_VERSIONS.md` |
+| Dépendances | Voir `docs/STACK_VERSIONS.md` |
 
 ---
 
@@ -150,13 +152,13 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 | Élément | État |
 |---------|------|
-| Tests automatisés | Vitest installé, **aucun** fichier `*.test.ts` |
-| GitHub Actions | **Non** configuré |
+| Tests automatisés | Vitest installé, 8 fichiers de test, ~67 tests, couverture 3,58 % |
+| GitHub Actions | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests |
 | `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend |
 
 ---
 
-## Écarts connus vs audit initial (`docs/AUDIT_SYNTHESIS.md`)
+## Écarts connus vs audits récents
 
 Corrigés récemment (voir historique PR / agents) :
 
@@ -166,8 +168,17 @@ Corrigés récemment (voir historique PR / agents) :
 - Zod 4 sur backend + shared
 - ETL : zip slip, validation URLs, hash téléchargement (stream unique)
 
-**Toujours ouverts** (à traiter) : couverture tests, CI, points fonctionnels listés dans `AUDIT_SYNTHESIS.md` non recoupés ci-dessus (ex. route `/scrutins/:id/groups`, ratio affiché, Meilisearch sous-utilisé, etc.) — vérifier au fil de l’eau avec le code.
+**Toujours ouverts** (à traiter) : couverture tests, intégration/E2E, biais suggestions recherche, filtre thématique croisé, route OG non branchée. Voir rapports d'audit récents pour le détail.
 
 ---
 
-*Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour l’audit sécurité initial : `docs/SECURITY_AUDIT.md`.*
+*Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits récents : rapports QA, Security et Tech Lead (voir historique agents).*
+
+---
+
+## Notes 2026-05-21
+
+- **Meilisearch retiré** : la recherche full-text utilise PostgreSQL nativement (`to_tsvector`, GIN, `pg_trgm`).
+- **BullMQ retiré** : l'ETL reste sur `node-cron` ; pas de jobs asynchrones divers pour l'instant.
+- **Docs obsolètes supprimés** : `AUDIT_SYNTHESIS.md`, `SECURITY_AUDIT.md`, `AUDIT_COMPLET_2026-05-21.md`.
+- **Étude** : `docs/research/meilisearch-bullmq-analysis.md` justifie ces retraits.

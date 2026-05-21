@@ -130,16 +130,19 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
           id: d.id,
           label: `${d.firstName} ${d.lastName}`,
           slug: d.slug,
+          rank: d.rank,
         })),
         ...scrutinRows.map((s) => ({
           type: "scrutin" as const,
           id: s.id,
           label: s.titre,
           slug: s.slug,
+          rank: s.rank,
         })),
       ]
-        .sort(() => 0) // keep original DB ordering per type
-        .slice(0, maxResults);
+        .sort((a, b) => b.rank - a.rank)
+        .slice(0, maxResults)
+        .map(({ rank: _rank, ...item }) => item);
 
       return reply.send({ data: suggestions });
     },

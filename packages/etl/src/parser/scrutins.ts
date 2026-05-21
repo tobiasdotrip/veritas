@@ -57,6 +57,7 @@ interface RawVotant {
   acteurRef?: string;
   mandatRef?: string;
   parDelegation?: string;
+  causePositionVote?: string;
 }
 
 export interface ParsedVote {
@@ -65,6 +66,7 @@ export interface ParsedVote {
   politicalGroupId: string;
   position: "pour" | "contre" | "abstention" | "nonVotant";
   parDelegation: boolean;
+  causePositionVote?: string | undefined;
 }
 
 export interface ParsedGroupVote {
@@ -132,6 +134,7 @@ function parseVotants(votants?: RawVotant | RawVotant[]): ParsedVote[] {
       politicalGroupId: "UNKNOWN",
       position: "nonVotant" as const,
       parDelegation: v.parDelegation === "oui",
+      causePositionVote: v.causePositionVote,
     }))
     .filter((v) => v.deputyId !== "UNKNOWN" && v.mandateId !== "UNKNOWN");
 }
@@ -147,7 +150,15 @@ function* extractVotesFromGroup(raw: RawScrutin): Generator<ParsedVote> {
 
     const emit = function* (pos: ParsedVote["position"], list?: { votant?: RawVotant | RawVotant[] }) {
       const votes = parseVotants(list?.votant);
-      for (const v of votes) yield { ...v, politicalGroupId: groupId, position: pos };
+      for (const v of votes) {
+        yield {
+          ...v,
+          politicalGroupId: groupId,
+          position: pos,
+          causePositionVote:
+            pos === "nonVotant" ? v.causePositionVote : undefined,
+        };
+      }
     };
 
     yield* emit("pour", dn.pours);
@@ -176,7 +187,7 @@ function* extractGroupVotes(raw: RawScrutin): Generator<ParsedGroupVote> {
   }
 }
 
-function parseScrutin(raw: RawScrutin): ParsedScrutin {
+export function parseScrutin(raw: RawScrutin): ParsedScrutin {
   const sortCode = raw.sort?.code;
   const votes = Array.from(extractVotesFromGroup(raw));
   const groupVotes = Array.from(extractGroupVotes(raw));

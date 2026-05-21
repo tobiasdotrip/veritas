@@ -34,28 +34,9 @@ services:
     networks:
       - veritas
 
-  meilisearch:
-    image: getmeili/meilisearch:v1.41.0
-    container_name: veritas-meilisearch
-    environment:
-      MEILI_MASTER_KEY: veritas_meili_master_key
-      MEILI_ENV: development
-    ports:
-      - "7700:7700"
-    volumes:
-      - meilisearch_data:/meili_data
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - veritas
-
 volumes:
   postgres_data:
   redis_data:
-  meilisearch_data:
 
 networks:
   veritas:

@@ -8,7 +8,7 @@
     "start": "node dist/server/server.js",
     "typecheck": "tsc --noEmit",
     "routes:generate": "node --input-type=module -e \"import { Generator, getConfig } from '@tanstack/router-generator'; const c=getConfig({}, process.cwd()); await new Generator({ root: process.cwd(), config: c }).run();\"",
-    "lint": "eslint src",
+    "lint": "eslint src --config ../../eslint.config.mjs",
     "test": "vitest run"
   },
   "dependencies": {

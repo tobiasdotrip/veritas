@@ -4,6 +4,7 @@ export default defineProject({
   test: {
     name: "@veritas/backend",
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.integration.test.ts"],
+    testTimeout: 30_000,
   },
 });

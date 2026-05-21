@@ -107,8 +107,8 @@ function ThemesSection() {
     { label: "Économie", slug: "economie" },
     { label: "Éducation", slug: "education" },
     { label: "Santé", slug: "sante" },
-    { label: "Justice", slug: "justice" },
-    { label: "Budget", slug: "budget" },
+    { label: "Sécurité", slug: "securite" },
+    { label: "Travail", slug: "travail" },
   ];
 
   return (

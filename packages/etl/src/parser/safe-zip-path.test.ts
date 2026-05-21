@@ -40,7 +40,7 @@ describe("resolveSafeZipEntryPath", () => {
   });
 
   it("throws on backslash absolute path", () => {
-    expect(() => resolveSafeZipEntryPath(tempDir, "\\etc\passwd")).toThrow(
+    expect(() => resolveSafeZipEntryPath(tempDir, "\\etc\\passwd")).toThrow(
       "Invalid ZIP entry name: absolute path"
     );
   });

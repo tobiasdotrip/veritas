@@ -24,6 +24,7 @@ export interface DownloadResult {
   skipped: boolean;
 }
 
+
 function getStatePath(config: EtlConfig, url: string): string {
   const hash = createHash("sha256").update(url).digest("hex").slice(0, 16);
   return resolve(config.tempDir, `download-state-${hash}.json`);
@@ -55,6 +56,32 @@ function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+function assertNoRedirect(response: { status: number }, url: string): void {
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error(
+      `Redirect not allowed for ${url} (HTTP ${response.status})`
+    );
+  }
+}
+
+async function fetchWithTimeout(
+  url: string,
+  method: "GET" | "HEAD",
+  timeoutMs: number
+): Promise<Awaited<ReturnType<typeof fetch>>> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      method,
+      redirect: "manual",
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function downloadZip(
   url: string,
   outputPath: string,
@@ -64,13 +91,13 @@ export async function downloadZip(
 
   const state = await readState(config, url);
 
-  const headController = new AbortController();
-  const headTimeout = setTimeout(() => headController.abort(), config.downloadTimeoutMs);
-  const headResponse = await fetch(url, {
-    method: "HEAD",
-    signal: headController.signal,
-  });
-  clearTimeout(headTimeout);
+  const headResponse = await fetchWithTimeout(
+    url,
+    "HEAD",
+    config.downloadTimeoutMs
+  );
+  assertNoRedirect(headResponse, url);
+
   const etag = headResponse.headers.get("etag") ?? undefined;
   const lastModified = headResponse.headers.get("last-modified") ?? undefined;
 
@@ -108,10 +135,12 @@ export async function downloadZip(
   let attempt = 0;
   while (true) {
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), config.downloadTimeoutMs);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
+      const response = await fetchWithTimeout(
+        url,
+        "GET",
+        config.downloadTimeoutMs
+      );
+      assertNoRedirect(response, url);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status} ${response.statusText}`);
       }
@@ -119,7 +148,7 @@ export async function downloadZip(
       const body = response.body;
       if (!body) throw new Error("Empty response body");
 
-      const nodeStream = Readable.fromWeb(body as any);
+      const nodeStream = Readable.fromWeb(body as never);
       const hash = createHash("sha256");
       let size = 0;
       const maxSize = config.downloadMaxSizeBytes;

@@ -1,18 +1,35 @@
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
 import { Search, Menu, X } from "lucide-react";
 import { Container } from "./Container.js";
+import { defaultRechercheSearch } from "@/lib/route-search.js";
 
 export interface HeaderProps {
   onSearch?: (query: string) => void;
   searchValue?: string;
 }
 
-export function Header({ onSearch, searchValue = "" }: HeaderProps) {
+export function Header({ onSearch, searchValue: controlledValue }: HeaderProps) {
+  const navigate = useNavigate();
+  const [internalQuery, setInternalQuery] = React.useState("");
+  const searchValue = controlledValue ?? internalQuery;
   const [scrolled, setScrolled] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+
+  const submitSearch = (query: string) => {
+    const trimmed = query.trim();
+    if (trimmed.length === 0) return;
+    if (onSearch) {
+      onSearch(trimmed);
+      return;
+    }
+    navigate({
+      to: "/recherche",
+      search: { ...defaultRechercheSearch, q: trimmed },
+    });
+  };
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -43,16 +60,21 @@ export function Header({ onSearch, searchValue = "" }: HeaderProps) {
               className="mx-auto max-w-md"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (onSearch && searchValue.trim().length > 0) {
-                  onSearch(searchValue);
-                }
+                submitSearch(searchValue);
               }}
             >
               <Input
                 type="search"
                 placeholder="Rechercher un député ou un scrutin…"
                 value={searchValue}
-                onChange={(e) => onSearch?.(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (onSearch || controlledValue !== undefined) {
+                    onSearch?.(value);
+                  } else {
+                    setInternalQuery(value);
+                  }
+                }}
                 iconLeft={<Search className="h-4 w-4" />}
                 clearable
                 aria-label="Rechercher"
@@ -99,17 +121,22 @@ export function Header({ onSearch, searchValue = "" }: HeaderProps) {
               role="search"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (onSearch && searchValue.trim().length > 0) {
-                  onSearch(searchValue);
-                  setMobileOpen(false);
-                }
+                submitSearch(searchValue);
+                setMobileOpen(false);
               }}
             >
               <Input
                 type="search"
                 placeholder="Rechercher…"
                 value={searchValue}
-                onChange={(e) => onSearch?.(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (onSearch || controlledValue !== undefined) {
+                    onSearch?.(value);
+                  } else {
+                    setInternalQuery(value);
+                  }
+                }}
                 iconLeft={<Search className="h-4 w-4" />}
                 clearable
                 aria-label="Rechercher"

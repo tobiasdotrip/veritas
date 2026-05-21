@@ -23,9 +23,9 @@
 | **fastify-type-provider-zod** | 6.x (Zod ≥ 4.1.5) | `^6.1.0` |
 | **PostgreSQL** | 17.x | `postgres:17-alpine` (Compose) |
 | **Redis** | 8.0.x | `redis:8.0-alpine` |
-| **Meilisearch** | 1.41.x | `v1.41.0` image + client `^0.58.0` |
-| **BullMQ** | 5.76.x | `^5.76.8` |
 | **ioredis** | 5.10.x | `^5.10.1` |
+
+> **Note** : Meilisearch et BullMQ ont été retirés de la stack. Voir `docs/research/meilisearch-bullmq-analysis.md`.
 
 ## Frontend
 

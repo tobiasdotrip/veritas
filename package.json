@@ -15,6 +15,7 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:e2e": "pnpm --filter @veritas/e2e test:e2e",
     "db:generate": "pnpm --filter backend db:generate",
     "db:migrate": "pnpm --filter backend db:migrate",
     "db:studio": "pnpm --filter backend db:studio",
@@ -28,12 +29,16 @@
     "audit:tanstack": "node scripts/audit-tanstack-packages.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.28.0",
+    "globals": "^16.2.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.0",
     "turbo": "^2.5.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.0",
     "vitest": "^3.2.4"
   },
   "pnpm": {

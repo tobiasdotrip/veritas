@@ -57,3 +57,11 @@ meili_data/
 
 # PostgreSQL
 postgres_data/
+
+# Audit artifacts (subagent outputs)
+*-audit-report.md
+progress.md
+
+# E2E test artifacts
+e2e/test-results/
+playwright-report/

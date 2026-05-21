@@ -132,11 +132,20 @@ function normalizeDate(value: unknown): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
+export function buildDeputySlug(
+  firstName: string,
+  lastName: string,
+  id: string
+): string {
+  const base = `${lastName.toLowerCase().replace(/\s+/g, "-")}-${firstName.toLowerCase().replace(/\s+/g, "-")}`;
+  return `${base}-${id.toLowerCase()}`;
+}
+
 export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
   const id = raw.uid?.["#text"] ?? "UNKNOWN";
   const firstName = raw.etatCivil?.ident?.prenom ?? "";
   const lastName = raw.etatCivil?.ident?.nom ?? "";
-  const slug = `${lastName.toLowerCase().replace(/\s+/g, "-")}-${firstName.toLowerCase().replace(/\s+/g, "-")}`;
+  const slug = buildDeputySlug(firstName, lastName, id);
 
   const mandates: ParsedMandate[] = [];
   const affiliations: ParsedAffiliation[] = [];

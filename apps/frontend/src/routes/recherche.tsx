@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { BadgeResultat } from "@/components/ui/BadgeResultat";
 import { SearchCombobox } from "@/components/ui/SearchCombobox";
 import { useSearch as useSearchData } from "@/hooks/useSearch";
+import { useThemeScrutins } from "@/hooks/useThemeScrutins";
 import { formatDateShort } from "@/lib/utils";
 import { Search } from "lucide-react";
 import {
@@ -34,20 +35,56 @@ function SearchPage() {
   const navigate = useNavigate({ from: "/recherche" });
   const [input, setInput] = React.useState(search.q ?? "");
 
-  const { data: rawData, isLoading, error, refetch } = useSearchData(
-    search.q ?? "",
-    0,
-    20
-  );
+  React.useEffect(() => {
+    setInput(search.q ?? "");
+  }, [search.q]);
+
+  React.useEffect(() => {
+    const trimmed = input.trim();
+    if (trimmed === (search.q ?? "")) return;
+
+    const timer = window.setTimeout(() => {
+      navigate({
+        search: (prev) => ({ ...prev, q: trimmed || undefined }),
+        replace: true,
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [input, search.q, navigate]);
+
+  const query = search.q ?? "";
+  const { data: rawData, isLoading: isSearchLoading, error, refetch } =
+    useSearchData(query, 0, 20);
+  const {
+    data: themeScrutins,
+    isLoading: isThemeLoading,
+    error: themeError,
+  } = useThemeScrutins(search.theme, 20);
+
+  const isLoading = isSearchLoading || (!!search.theme && isThemeLoading);
+  const loadError = error ?? themeError;
 
   const data = React.useMemo(() => {
-    if (!rawData) return undefined;
     const type = search.type ?? "all";
+    const searchDeputies =
+      query.length >= 2 && type !== "scrutin" ? (rawData?.deputies ?? []) : [];
+    const searchScrutins =
+      query.length >= 2 && type !== "depute" ? (rawData?.scrutins ?? []) : [];
+    const themedScrutins =
+      search.theme && type !== "depute" ? (themeScrutins ?? []) : [];
+
+    const scrutinIds = new Set(searchScrutins.map((s) => s.id));
+    const mergedScrutins = [
+      ...searchScrutins,
+      ...themedScrutins.filter((s) => !scrutinIds.has(s.id)),
+    ];
+
     return {
-      deputies: type === "scrutin" ? [] : rawData.deputies,
-      scrutins: type === "depute" ? [] : rawData.scrutins,
+      deputies: searchDeputies,
+      scrutins: mergedScrutins,
     };
-  }, [rawData, search.type]);
+  }, [rawData, search.type, search.theme, themeScrutins, query]);
 
   const options = React.useMemo(() => {
     const list: { id: string; label: string; group: string; meta: string }[] = [];
@@ -71,8 +108,9 @@ function SearchPage() {
   }, [data]);
 
   const applySearch = (value: string) => {
+    setInput(value);
     navigate({
-      search: (prev) => ({ ...prev, q: value || undefined }),
+      search: (prev) => ({ ...prev, q: value.trim() || undefined }),
     });
   };
 
@@ -86,12 +124,8 @@ function SearchPage() {
         <h1 className="text-2xl font-bold text-text-primary">Recherche</h1>
         <SearchCombobox
           value={input}
-          onChange={(v) => {
-            setInput(v);
-            applySearch(v);
-          }}
+          onChange={setInput}
           onSelect={(opt) => {
-            setInput(opt.label);
             applySearch(opt.label);
           }}
           options={options}
@@ -118,6 +152,13 @@ function SearchPage() {
         ))}
       </div>
 
+      {search.theme && (
+        <p className="text-sm text-text-secondary">
+          Thématique :{" "}
+          <span className="font-medium text-text-primary">{search.theme}</span>
+        </p>
+      )}
+
       {isLoading && (
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -126,7 +167,7 @@ function SearchPage() {
         </div>
       )}
 
-      {error && (
+      {loadError && (
         <EmptyState
           title="Erreur de chargement"
           description="Impossible de récupérer les résultats."
@@ -142,7 +183,7 @@ function SearchPage() {
         />
       )}
 
-      {!isLoading && !error && data && (
+      {!isLoading && !loadError && (
         <div className="space-y-6">
           {(search.type === "all" || search.type === "depute") &&
             data.deputies.length > 0 && (

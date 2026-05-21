@@ -12,6 +12,38 @@ export class ApiError extends Error {
   }
 }
 
+interface ProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  code?: string;
+  instance?: string;
+}
+
+function parseErrorBody(
+  body: Record<string, unknown>,
+  statusText: string
+): { code: string; message: string } {
+  if ("error" in body && body.error && typeof body.error === "object") {
+    const err = body.error as { code?: string; message?: string };
+    return {
+      code: err.code ?? "UNKNOWN",
+      message: err.message ?? statusText,
+    };
+  }
+
+  if ("detail" in body || "title" in body) {
+    const problem = body as ProblemDetails;
+    return {
+      code: problem.code ?? "UNKNOWN",
+      message: problem.detail ?? problem.title ?? statusText,
+    };
+  }
+
+  return { code: "UNKNOWN", message: statusText };
+}
+
 const API_BASE_URL =
   typeof import.meta.env !== "undefined" && import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL
@@ -35,15 +67,8 @@ export async function apiFetch<T>(
       string,
       unknown
     >;
-    const errorPayload =
-      "error" in body && body.error && typeof body.error === "object"
-        ? (body.error as { code?: string; message?: string })
-        : { code: "UNKNOWN", message: res.statusText };
-    throw new ApiError(
-      res.status,
-      errorPayload.code ?? "UNKNOWN",
-      errorPayload.message ?? res.statusText
-    );
+    const { code, message } = parseErrorBody(body, res.statusText);
+    throw new ApiError(res.status, code, message);
   }
 
   const body = (await res.json()) as ApiResponse<T>;

@@ -1,8 +1,14 @@
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { eq, and, sql, count, countDistinct } from "drizzle-orm";
+import { eq, and, sql, count } from "drizzle-orm";
 import { getDb } from "../../db/client.js";
-import { politicalGroups, scrutinVotes, scrutins, scrutinGroupVotes } from "../../db/schema.js";
+import {
+  politicalGroups,
+  scrutinVotes,
+  scrutins,
+  scrutinGroupVotes,
+  deputyGroupAffiliations,
+} from "../../db/schema.js";
 import { NotFoundError } from "../common/errors.js";
 import { NullableDateString } from "../common/schemas.js";
 
@@ -98,15 +104,13 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         .where(eq(scrutins.legislature, legislature));
       const totalScrutins = totalScrutinsResult[0]?.total ?? 0;
 
-      // Count distinct members who voted in this legislature
       const membersResult = await db
-        .select({ total: countDistinct(scrutinVotes.deputyId) })
-        .from(scrutinVotes)
-        .innerJoin(scrutins, eq(scrutinVotes.scrutinId, scrutins.id))
+        .select({ total: count() })
+        .from(deputyGroupAffiliations)
         .where(
           and(
-            eq(scrutinVotes.politicalGroupId, id),
-            eq(scrutins.legislature, legislature)
+            eq(deputyGroupAffiliations.politicalGroupId, id),
+            sql`${deputyGroupAffiliations.endDate} IS NULL`
           )
         );
       const totalMembers = membersResult[0]?.total ?? 0;

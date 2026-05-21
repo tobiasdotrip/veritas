@@ -128,23 +128,28 @@ export async function loadAffiliations(
   let inserted = 0;
 
   for await (const a of affiliations) {
+    const values = {
+      deputyId: a.deputyId,
+      politicalGroupId: a.politicalGroupId,
+      mandateId: a.mandateId,
+      startDate: a.startDate,
+      endDate: a.endDate ?? null,
+      createdAt: new Date(),
+    };
+
     await deps.db
       .insert(schema.deputyGroupAffiliations)
-      .values({
-        deputyId: a.deputyId,
-        politicalGroupId: a.politicalGroupId,
-        mandateId: a.mandateId,
-        startDate: a.startDate,
-        endDate: a.endDate ?? null,
-        createdAt: new Date(),
-      })
-      .onConflictDoNothing({
+      .values(values)
+      .onConflictDoUpdate({
         target: [
           schema.deputyGroupAffiliations.deputyId,
           schema.deputyGroupAffiliations.politicalGroupId,
           schema.deputyGroupAffiliations.mandateId,
           schema.deputyGroupAffiliations.startDate,
         ],
+        set: {
+          endDate: values.endDate,
+        },
       });
     inserted++;
   }
@@ -209,7 +214,7 @@ export async function loadScrutins(
   onProgress?: (processed: number) => void
 ): Promise<{ inserted: number; updated: number; errors: number }> {
   let inserted = 0;
-  let updated = 0;
+  const updated = 0;
   let errors = 0;
   let processed = 0;
 
@@ -316,7 +321,7 @@ export async function loadScrutins(
                 politicalGroupId: v.politicalGroupId,
                 position: v.position,
                 parDelegation: v.parDelegation,
-                causePositionVote: null,
+                causePositionVote: v.causePositionVote ?? null,
                 createdAt: new Date(),
               }))
             )
@@ -330,6 +335,7 @@ export async function loadScrutins(
                 parDelegation: sql`excluded.par_delegation`,
                 politicalGroupId: sql`excluded.political_group_id`,
                 mandateId: sql`excluded.mandate_id`,
+                causePositionVote: sql`excluded.cause_position_vote`,
               },
             });
         }

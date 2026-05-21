@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "@veritas/shared";
 
@@ -135,10 +135,22 @@ export async function runClassification(
   let processed = 0;
   let classified = 0;
 
+  const batchSize = limit ?? 10_000;
+
   const scrutinsToClassify = await db
-    .select()
+    .select({
+      id: schema.scrutins.id,
+      titre: schema.scrutins.titre,
+      objet: schema.scrutins.objet,
+    })
     .from(schema.scrutins)
-    .limit(limit ?? 10_000);
+    .where(
+      sql`NOT EXISTS (
+        SELECT 1 FROM ${schema.scrutinThemes}
+        WHERE ${schema.scrutinThemes.scrutinId} = ${schema.scrutins.id}
+      )`
+    )
+    .limit(batchSize);
 
   for (const s of scrutinsToClassify) {
     const text = `${s.titre ?? ""} ${s.objet ?? ""}`;

@@ -24,7 +24,7 @@ Les données des votes existent (Open Data de l'Assemblée Nationale), mais elle
 | **Frontend** | TanStack Start 1.168, TanStack Router, TanStack Query, **Vite 7**, Tailwind 4, Radix UI, Zustand |
 | **Backend API** | Fastify 5.8, Zod **4.4**, Drizzle 0.45, `fastify-type-provider-zod` 6 |
 | **Base de données** | PostgreSQL 17 |
-| **Recherche** | Meilisearch 1.41 |
+| **Recherche** | PostgreSQL 17 (`to_tsvector` + GIN + `pg_trgm`) |
 | **Cache** | Redis 8 |
 | **ETL** | Node.js streams, ZIP Open Data AN |
 
@@ -43,11 +43,9 @@ veritas/
 ├── docs/
 │   ├── ETAT_PROJET.md     # État réel de l'implémentation
 │   ├── STACK_VERSIONS.md
-│   ├── SECURITY_AUDIT.md
-│   ├── AUDIT_SYNTHESIS.md
-│   ├── research/          # Produit, UX, sources de données
+│   ├── research/          # Produit, UX, études techniques
 │   └── architecture/      # Conception technique
-├── docker-compose.yml     # Postgres 17, Redis 8, Meilisearch
+├── docker-compose.yml     # Postgres 17, Redis 8
 └── package.json           # pnpm workspaces + overrides (zod, h3)
 ```
 
@@ -59,7 +57,7 @@ veritas/
 | [Architecture globale](docs/architecture/architecture-technique.md) | Vue d'ensemble, flux, scaling |
 | [Design backend](docs/architecture/backend-design.md) | API, Drizzle, ETL |
 | [Design frontend](docs/architecture/frontend-design.md) | Routes, composants, comparateur (cible produit) |
-| [Audit synthèse](docs/AUDIT_SYNTHESIS.md) | Revue code / sécurité / QA |
+
 
 ## Démarrage rapide
 
@@ -74,7 +72,7 @@ docker compose up -d
 
 # Variables backend
 cp apps/backend/.env.example apps/backend/.env
-# Ajuster DATABASE_URL, REDIS_URL, MEILISEARCH_* si besoin
+# Ajuster DATABASE_URL, REDIS_URL si besoin
 
 # Schéma BDD
 pnpm db:migrate
@@ -105,13 +103,13 @@ pnpm --filter @veritas/frontend start   # node dist/server/server.js
 | `pnpm dev` | Dev parallèle (Turbo) |
 | `pnpm build` | Build tous les packages |
 | `pnpm typecheck` | Vérification TypeScript |
-| `pnpm docker:up` | Postgres + Redis + Meilisearch |
+| `pnpm docker:up` | Postgres + Redis |
 | `pnpm db:migrate` | Migrations Drizzle |
 | `pnpm etl:run` | Pipeline ETL |
 
 ## Sécurité
 
-Audit initial : [SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md). Mitigations applicatives (override `h3`, Zod 4, validation URLs ETL, anti zip-slip) : [État du projet](docs/ETAT_PROJET.md#sécurité-mitigations-en-place).
+Mitigations applicatives (override `h3`, Zod 4, validation URLs ETL, anti zip-slip) : voir [État du projet](docs/ETAT_PROJET.md).
 
 ## Licence
 
