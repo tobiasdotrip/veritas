@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("API smoke", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "api-smoke",
+      "API smoke tests only run in the api-smoke project"
+    );
+  });
+
   test("health endpoint responds", async ({ request }) => {
     const response = await request.get("/health");
     expect(response.ok()).toBeTruthy();
@@ -19,6 +26,13 @@ test.describe("API smoke", () => {
 });
 
 test.describe("Frontend smoke", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "frontend-smoke",
+      "Frontend smoke tests only run in the frontend-smoke project"
+    );
+  });
+
   test.skip(
     !process.env.E2E_FRONTEND_BASE_URL,
     "Set E2E_FRONTEND_BASE_URL to run frontend smoke tests"
