@@ -44,17 +44,19 @@ export interface CompareResult {
 
 export function createCompareService(
   repo: CompareRepository,
-  cache: CacheService
+  cache: CacheService,
 ) {
   return {
     async compareDeputies(
       deputyIds: string[],
       legislature: string,
       from?: string,
-      to?: string
+      to?: string,
     ): Promise<CompareResult> {
       if (deputyIds.length < 2 || deputyIds.length > 5) {
-        throw new ValidationError("Le comparateur nécessite entre 2 et 5 députés");
+        throw new ValidationError(
+          "Le comparateur nécessite entre 2 et 5 députés",
+        );
       }
 
       const cacheKey = `compare:${deputyIds.sort().join(",")}:${legislature}:${from ?? ""}:${to ?? ""}`;
@@ -112,7 +114,9 @@ export function createCompareService(
 
         for (const [scrutinId, scrutin] of scrutinMap) {
           const positions = Array.from(scrutin.positions.values());
-          const allSame = positions.every((p) => p.position === positions[0]!.position);
+          const allSame = positions.every(
+            (p) => p.position === positions[0]!.position,
+          );
 
           if (allSame) {
             identicalVotes++;
@@ -123,10 +127,12 @@ export function createCompareService(
               dateScrutin: scrutin.dateScrutin.toISOString(),
               titre: scrutin.titre,
               sortCode: scrutin.sortCode,
-              positions: Array.from(scrutin.positions.entries()).map(([deputyId, p]) => ({
-                deputyId,
-                ...p,
-              })),
+              positions: Array.from(scrutin.positions.entries()).map(
+                ([deputyId, p]) => ({
+                  deputyId,
+                  ...p,
+                }),
+              ),
             });
           }
         }
@@ -151,12 +157,18 @@ export function createCompareService(
 
             pairwise.push({
               deputyAId: idA,
-              deputyAName: briefA ? `${briefA.firstName} ${briefA.lastName}` : idA,
+              deputyAName: briefA
+                ? `${briefA.firstName} ${briefA.lastName}`
+                : idA,
               deputyBId: idB,
-              deputyBName: briefB ? `${briefB.firstName} ${briefB.lastName}` : idB,
+              deputyBName: briefB
+                ? `${briefB.firstName} ${briefB.lastName}`
+                : idB,
               concordanceRate:
                 totalCommonVotes > 0
-                  ? Number(((pairIdentical / totalCommonVotes) * 100).toFixed(2))
+                  ? Number(
+                      ((pairIdentical / totalCommonVotes) * 100).toFixed(2),
+                    )
                   : 0,
               identicalVotes: pairIdentical,
               totalCommon: totalCommonVotes,

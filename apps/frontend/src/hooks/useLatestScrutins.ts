@@ -7,7 +7,7 @@ export function useLatestScrutins(limit = 6) {
     queryKey: ["scrutins", "latest", limit],
     queryFn: async () => {
       const res = await apiFetch<SearchResultScrutin[]>(
-        `/scrutins?limit=${limit}&sort=date_desc`
+        `/scrutins?limit=${limit}&sort=date_desc`,
       );
       return res.data;
     },

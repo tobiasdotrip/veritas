@@ -16,7 +16,7 @@ export function rethrowTextSearchValidationError(err: unknown): void {
 }
 
 export async function withTextSearchErrorHandling<T>(
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   try {
     return await fn();

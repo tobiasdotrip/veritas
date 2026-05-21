@@ -29,8 +29,7 @@ function ComparatorPage() {
     refetch,
   } = useComparison(reference?.slug ?? "", compareSlugs, period);
 
-  const currentUrl =
-    typeof window !== "undefined" ? window.location.href : "";
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
   if (!reference) {
     return (
@@ -87,7 +86,10 @@ function ComparatorPage() {
               votesCommuns={result.totalCommonVotes}
             />
             {result.pairwise.map((pair) => (
-              <div key={`${pair.deputyAId}-${pair.deputyBId}`} className="text-center">
+              <div
+                key={`${pair.deputyAId}-${pair.deputyBId}`}
+                className="text-center"
+              >
                 <p className="mb-2 text-xs text-text-muted">
                   {pair.deputyAName} / {pair.deputyBName}
                 </p>

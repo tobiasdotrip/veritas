@@ -24,7 +24,6 @@ export interface DownloadResult {
   skipped: boolean;
 }
 
-
 function getStatePath(config: EtlConfig, url: string): string {
   const hash = createHash("sha256").update(url).digest("hex").slice(0, 16);
   return resolve(config.tempDir, `download-state-${hash}.json`);
@@ -32,7 +31,7 @@ function getStatePath(config: EtlConfig, url: string): string {
 
 async function readState(
   config: EtlConfig,
-  url: string
+  url: string,
 ): Promise<DownloadState | undefined> {
   try {
     const raw = await readFile(getStatePath(config, url), "utf-8");
@@ -44,11 +43,11 @@ async function readState(
 
 async function writeState(
   config: EtlConfig,
-  state: DownloadState
+  state: DownloadState,
 ): Promise<void> {
   await writeFile(
     getStatePath(config, state.url),
-    JSON.stringify(state, null, 2)
+    JSON.stringify(state, null, 2),
   );
 }
 
@@ -59,7 +58,7 @@ function delay(ms: number): Promise<void> {
 function assertNoRedirect(response: { status: number }, url: string): void {
   if (response.status >= 300 && response.status < 400) {
     throw new Error(
-      `Redirect not allowed for ${url} (HTTP ${response.status})`
+      `Redirect not allowed for ${url} (HTTP ${response.status})`,
     );
   }
 }
@@ -67,7 +66,7 @@ function assertNoRedirect(response: { status: number }, url: string): void {
 async function fetchWithTimeout(
   url: string,
   method: "GET" | "HEAD",
-  timeoutMs: number
+  timeoutMs: number,
 ): Promise<Awaited<ReturnType<typeof fetch>>> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -85,7 +84,7 @@ async function fetchWithTimeout(
 export async function downloadZip(
   url: string,
   outputPath: string,
-  config: EtlConfig
+  config: EtlConfig,
 ): Promise<DownloadResult> {
   assertPathWithinDir(config.tempDir, outputPath);
 
@@ -94,7 +93,7 @@ export async function downloadZip(
   const headResponse = await fetchWithTimeout(
     url,
     "HEAD",
-    config.downloadTimeoutMs
+    config.downloadTimeoutMs,
   );
   assertNoRedirect(headResponse, url);
 
@@ -138,7 +137,7 @@ export async function downloadZip(
       const response = await fetchWithTimeout(
         url,
         "GET",
-        config.downloadTimeoutMs
+        config.downloadTimeoutMs,
       );
       assertNoRedirect(response, url);
       if (!response.ok) {
@@ -156,7 +155,9 @@ export async function downloadZip(
         transform(chunk: Buffer, _encoding, callback) {
           size += chunk.length;
           if (size > maxSize) {
-            callback(new Error(`Download exceeds maximum size of ${maxSize} bytes`));
+            callback(
+              new Error(`Download exceeds maximum size of ${maxSize} bytes`),
+            );
             return;
           }
           hash.update(chunk);
@@ -181,7 +182,7 @@ export async function downloadZip(
       attempt++;
       if (attempt >= config.downloadRetries) {
         throw new Error(
-          `Failed to download ${url} after ${config.downloadRetries} attempts: ${err instanceof Error ? err.message : String(err)}`
+          `Failed to download ${url} after ${config.downloadRetries} attempts: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
       const backoff = Math.min(1_000 * 2 ** attempt, 30_000);

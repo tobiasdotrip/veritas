@@ -3,7 +3,7 @@ export class AppError extends Error {
     message: string,
     public readonly code: string,
     public readonly statusCode: number,
-    public readonly details?: Record<string, unknown>
+    public readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -14,9 +14,11 @@ export class AppError extends Error {
 export class NotFoundError extends AppError {
   constructor(resource: string, identifier?: string) {
     super(
-      identifier ? `${resource} '${identifier}' not found` : `${resource} not found`,
+      identifier
+        ? `${resource} '${identifier}' not found`
+        : `${resource} not found`,
       "NOT_FOUND",
-      404
+      404,
     );
   }
 }

@@ -21,7 +21,7 @@ export interface InjectedResponse<T> {
 
 export async function injectJson<T>(
   app: FastifyInstance,
-  options: InjectOptions
+  options: InjectOptions,
 ): Promise<InjectedResponse<T>> {
   const response = await app.inject(options);
   const contentType = response.headers["content-type"] ?? "";

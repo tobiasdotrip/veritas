@@ -110,8 +110,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         .where(
           and(
             eq(deputyGroupAffiliations.politicalGroupId, id),
-            sql`${deputyGroupAffiliations.endDate} IS NULL`
-          )
+            sql`${deputyGroupAffiliations.endDate} IS NULL`,
+          ),
         );
       const totalMembers = membersResult[0]?.total ?? 0;
 
@@ -126,8 +126,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         .where(
           and(
             eq(scrutinGroupVotes.politicalGroupId, id),
-            eq(scrutins.legislature, legislature)
-          )
+            eq(scrutins.legislature, legislature),
+          ),
         )
         .groupBy(scrutinGroupVotes.positionMajoritaire);
 
@@ -160,7 +160,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         SELECT COALESCE(AVG(participation_rate), 0) AS avg_participation
         FROM member_stats
       `);
-      const avgParticipationRate = Number(participationResult.rows[0]?.["avg_participation"] ?? 0);
+      const avgParticipationRate = Number(
+        participationResult.rows[0]?.["avg_participation"] ?? 0,
+      );
 
       // Average loyalty rate across group members
       const loyaltyResult = await db.execute(sql`
@@ -181,7 +183,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         SELECT COALESCE(AVG(loyalty_rate), 0) AS avg_loyalty
         FROM member_loyalty
       `);
-      const avgLoyaltyRate = Number(loyaltyResult.rows[0]?.["avg_loyalty"] ?? 0);
+      const avgLoyaltyRate = Number(
+        loyaltyResult.rows[0]?.["avg_loyalty"] ?? 0,
+      );
 
       return reply.send({
         data: {

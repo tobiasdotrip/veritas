@@ -13,12 +13,12 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           "rounded-lg border border-border bg-surface p-4 shadow-sm transition-colors",
           variant === "hoverable" && "hover:bg-surface-raised hover:shadow-md",
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 Card.displayName = "Card";
 

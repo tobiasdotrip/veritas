@@ -130,7 +130,7 @@ export function classifyText(text: string): string[] {
 
 export async function runClassification(
   db: NodePgDatabase<typeof schema>,
-  limit?: number
+  limit?: number,
 ): Promise<{ processed: number; classified: number }> {
   let processed = 0;
   let classified = 0;
@@ -148,7 +148,7 @@ export async function runClassification(
       sql`NOT EXISTS (
         SELECT 1 FROM ${schema.scrutinThemes}
         WHERE ${schema.scrutinThemes.scrutinId} = ${schema.scrutins.id}
-      )`
+      )`,
     )
     .limit(batchSize);
 

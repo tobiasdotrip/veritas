@@ -4,7 +4,7 @@ test.describe("API smoke", () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(
       testInfo.project.name !== "api-smoke",
-      "API smoke tests only run in the api-smoke project"
+      "API smoke tests only run in the api-smoke project",
     );
   });
 
@@ -17,7 +17,9 @@ test.describe("API smoke", () => {
   });
 
   test("search suggestions endpoint responds", async ({ request }) => {
-    const response = await request.get("/api/v1/search/suggestions?q=test&limit=5");
+    const response = await request.get(
+      "/api/v1/search/suggestions?q=test&limit=5",
+    );
     expect(response.ok()).toBeTruthy();
 
     const body = (await response.json()) as { data: unknown[] };
@@ -29,18 +31,20 @@ test.describe("Frontend smoke", () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(
       testInfo.project.name !== "frontend-smoke",
-      "Frontend smoke tests only run in the frontend-smoke project"
+      "Frontend smoke tests only run in the frontend-smoke project",
     );
   });
 
   test.skip(
     !process.env.E2E_FRONTEND_BASE_URL,
-    "Set E2E_FRONTEND_BASE_URL to run frontend smoke tests"
+    "Set E2E_FRONTEND_BASE_URL to run frontend smoke tests",
   );
 
   test("homepage loads", async ({ page }) => {
     const response = await page.goto("/");
     expect(response?.ok()).toBeTruthy();
-    await expect(page.getByRole("heading", { name: "Transparence des votes" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Transparence des votes" }),
+    ).toBeVisible();
   });
 });

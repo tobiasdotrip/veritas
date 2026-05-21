@@ -24,9 +24,15 @@ function KPICard({
       </dt>
       <dd className="text-2xl font-bold text-text-primary">
         {value}
-        {unit && <span className="ml-1 text-sm font-medium text-text-secondary">{unit}</span>}
+        {unit && (
+          <span className="ml-1 text-sm font-medium text-text-secondary">
+            {unit}
+          </span>
+        )}
       </dd>
-      {description && <p className="text-xs text-text-secondary">{description}</p>}
+      {description && (
+        <p className="text-xs text-text-secondary">{description}</p>
+      )}
     </div>
   );
 }
@@ -36,7 +42,10 @@ export function KPIGrid({ stats, className }: KPIGridProps) {
     return (
       <div className={cn("grid grid-cols-2 gap-3 lg:grid-cols-4", className)}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 animate-pulse rounded-lg bg-neutral-bg" />
+          <div
+            key={i}
+            className="h-24 animate-pulse rounded-lg bg-neutral-bg"
+          />
         ))}
       </div>
     );

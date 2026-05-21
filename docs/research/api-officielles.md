@@ -12,15 +12,15 @@ L'Assemblée nationale met à disposition des **fichiers bulk XML/JSON** contena
 
 #### 1.1 Endpoints et formats disponibles
 
-L'Assemblée nationale publie les votes sous le jeu de données **« Votes »** (catégorie *Travaux parlementaires*).
+L'Assemblée nationale publie les votes sous le jeu de données **« Votes »** (catégorie _Travaux parlementaires_).
 
-| Ressource | URL | Format |
-|-----------|-----|--------|
-| Votes législature courante (17e) — JSON | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip` | ZIP + JSON |
-| Votes législature courante (17e) — XML | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.xml.zip` | ZIP + XML |
-| Archives 16e législature | `https://data.assemblee-nationale.fr/static/openData/repository/16/loi/scrutins/Scrutins.json.zip` | ZIP + JSON |
-| Archives 15e législature | `https://data.assemblee-nationale.fr/archives-anterieures/archives-15e/scrutins` | ZIP + JSON/XML |
-| Archives 14e législature | `https://data.assemblee-nationale.fr/archives-anterieures/archives-14e/scrutins` | ZIP + JSON/XML |
+| Ressource                               | URL                                                                                                | Format         |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------- |
+| Votes législature courante (17e) — JSON | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip` | ZIP + JSON     |
+| Votes législature courante (17e) — XML  | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.xml.zip`  | ZIP + XML      |
+| Archives 16e législature                | `https://data.assemblee-nationale.fr/static/openData/repository/16/loi/scrutins/Scrutins.json.zip` | ZIP + JSON     |
+| Archives 15e législature                | `https://data.assemblee-nationale.fr/archives-anterieures/archives-15e/scrutins`                   | ZIP + JSON/XML |
+| Archives 14e législature                | `https://data.assemblee-nationale.fr/archives-anterieures/archives-14e/scrutins`                   | ZIP + JSON/XML |
 
 [Source : data.assemblee-nationale.fr — Votes](https://data.assemblee-nationale.fr/travaux-parlementaires/votes)
 
@@ -38,25 +38,25 @@ Le schéma officiel a pu être extrait du projet communautaire `Asone/assemblee-
 
 Chaque scrutin contient :
 
-| Champ | Description |
-|-------|-------------|
-| `uid` | Identifiant unique du scrutin |
-| `numero` | Numéro de scrutin dans la législature |
-| `organeRef` | Référence de l'organe ayant procédé au vote |
-| `legislature` | Numéro de la législature (ex. "17") |
-| `sessionRef` | Référence de la session parlementaire |
-| `seanceRef` | Référence de la séance publique |
-| `dateScrutin` | Date du scrutin (ISO) |
-| `quantiemeJourSeance` | Quantrième jour de la séance |
-| `typeVote` | `codeTypeVote`, `libelleTypeVote`, `typeMajorite` |
-| `sort` | `code` (adopté/rejeté) et `libelle` |
-| `titre` | Objet du scrutin |
-| `demandeur` | Texte décrivant qui a demandé le scrutin |
-| `objet` | Libellé détaillé de l'objet |
-| `modePublicationDesVotes` | Mode de publication |
-| `syntheseVote` | Nombre de votants, suffrages exprimés, seuil requis, décompte global (pour/contre/abstentions/nonVotants/nonVotantsVolontaires) |
-| `ventilationVotes` | Répartition par **groupe politique**, avec pour chaque groupe : `organeRef`, `nombreMembresGroupe`, `vote.positionMajoritaire`, `vote.decompteVoix`, `vote.decompteNominatif` |
-| `miseAuPoint` | Éventuelles corrections post-scrutin |
+| Champ                     | Description                                                                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uid`                     | Identifiant unique du scrutin                                                                                                                                                 |
+| `numero`                  | Numéro de scrutin dans la législature                                                                                                                                         |
+| `organeRef`               | Référence de l'organe ayant procédé au vote                                                                                                                                   |
+| `legislature`             | Numéro de la législature (ex. "17")                                                                                                                                           |
+| `sessionRef`              | Référence de la session parlementaire                                                                                                                                         |
+| `seanceRef`               | Référence de la séance publique                                                                                                                                               |
+| `dateScrutin`             | Date du scrutin (ISO)                                                                                                                                                         |
+| `quantiemeJourSeance`     | Quantrième jour de la séance                                                                                                                                                  |
+| `typeVote`                | `codeTypeVote`, `libelleTypeVote`, `typeMajorite`                                                                                                                             |
+| `sort`                    | `code` (adopté/rejeté) et `libelle`                                                                                                                                           |
+| `titre`                   | Objet du scrutin                                                                                                                                                              |
+| `demandeur`               | Texte décrivant qui a demandé le scrutin                                                                                                                                      |
+| `objet`                   | Libellé détaillé de l'objet                                                                                                                                                   |
+| `modePublicationDesVotes` | Mode de publication                                                                                                                                                           |
+| `syntheseVote`            | Nombre de votants, suffrages exprimés, seuil requis, décompte global (pour/contre/abstentions/nonVotants/nonVotantsVolontaires)                                               |
+| `ventilationVotes`        | Répartition par **groupe politique**, avec pour chaque groupe : `organeRef`, `nombreMembresGroupe`, `vote.positionMajoritaire`, `vote.decompteVoix`, `vote.decompteNominatif` |
+| `miseAuPoint`             | Éventuelles corrections post-scrutin                                                                                                                                          |
 
 **Votes individuels** : se trouvent dans `ventilationVotes.organe.groupes.groupe[].vote.decompteNominatif` :
 
@@ -100,10 +100,32 @@ Chaque scrutin contient :
                   "nombreMembresGroupe": "142",
                   "vote": {
                     "positionMajoritaire": "pour",
-                    "decompteVoix": { "pour": "140", "contre": "0", "abstentions": "0", "nonVotants": "2", "nonVotantsVolontaires": "0" },
+                    "decompteVoix": {
+                      "pour": "140",
+                      "contre": "0",
+                      "abstentions": "0",
+                      "nonVotants": "2",
+                      "nonVotantsVolontaires": "0"
+                    },
                     "decompteNominatif": {
-                      "pours": { "votant": [ { "acteurRef": "PA123", "mandatRef": "PM456", "parDelegation": "false" } ] },
-                      "nonVotants": { "votant": [ { "acteurRef": "PA789", "mandatRef": "PM012", "causePositionVote": "absence" } ] }
+                      "pours": {
+                        "votant": [
+                          {
+                            "acteurRef": "PA123",
+                            "mandatRef": "PM456",
+                            "parDelegation": "false"
+                          }
+                        ]
+                      },
+                      "nonVotants": {
+                        "votant": [
+                          {
+                            "acteurRef": "PA789",
+                            "mandatRef": "PM012",
+                            "causePositionVote": "absence"
+                          }
+                        ]
+                      }
                     }
                   }
                 }
@@ -135,14 +157,14 @@ Selon la fiche de synthèse n°56 de l'Assemblée nationale :
 
 #### 1.7 Limitations techniques (AN)
 
-| Limitation | Détail |
-|------------|--------|
-| **Pas d'API REST** | Seuls des fichiers ZIP bulk sont disponibles ; pas de pagination, pas de filtres par requête HTTP |
-| **Pas de endpoint unitaire pour les votes** | Contrairement aux amendements, il n'existe pas d'URL unitaire `/dyn/opendata/ scrutin.json` |
-| **Métadonnées erronées** | Le fichier de la 17e législature porte encore la description "XV législature" dans ses métadonnées |
-| **Complétude historique** | Votes individuels par député : systématiques depuis avril 2014 ; avant = principalement agrégats par groupe |
-| **Rate limiting** | Non documenté ; usage raisonnable recommandé. Licence Ouverte 2.0 |
-| **Latence** | L'archive semble reconstruite quotidiennement, mais sans SLA officiel |
+| Limitation                                  | Détail                                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Pas d'API REST**                          | Seuls des fichiers ZIP bulk sont disponibles ; pas de pagination, pas de filtres par requête HTTP           |
+| **Pas de endpoint unitaire pour les votes** | Contrairement aux amendements, il n'existe pas d'URL unitaire `/dyn/opendata/ scrutin.json`                 |
+| **Métadonnées erronées**                    | Le fichier de la 17e législature porte encore la description "XV législature" dans ses métadonnées          |
+| **Complétude historique**                   | Votes individuels par député : systématiques depuis avril 2014 ; avant = principalement agrégats par groupe |
+| **Rate limiting**                           | Non documenté ; usage raisonnable recommandé. Licence Ouverte 2.0                                           |
+| **Latence**                                 | L'archive semble reconstruite quotidiennement, mais sans SLA officiel                                       |
 
 ---
 
@@ -152,15 +174,15 @@ Selon la fiche de synthèse n°56 de l'Assemblée nationale :
 
 La plateforme `data.senat.fr` propose les catégories suivantes, **mais aucun jeu dédié aux votes ou scrutins** :
 
-| Base | Contenu | Format |
-|------|---------|--------|
-| **Comptes rendus** | CR intégraux de séance publique depuis janvier 2003 | PostgreSQL 8.4 dump + XML |
-| **Ameli** | Amendements déposés en commission (depuis 2010) et séance (depuis 2001) | PostgreSQL 8.4 dump |
-| **Dosleg** | Dossiers législatifs depuis octobre 1977 | PostgreSQL 8.4 dump |
-| **Questions** | Questions écrites/orales depuis avril 1978 | PostgreSQL 8.4 dump + CSV |
-| **Sénateurs** | Mandats, appartenances, présences | ZIP (XLS/JSON/CSV selon extracts) |
-| **Dispositifs des textes** | Textes depuis décembre 2019 | XML (Akoma Ntoso) |
-| **Dotation d'action parlementaire** | Dotations | PostgreSQL 8.4 dump |
+| Base                                | Contenu                                                                 | Format                            |
+| ----------------------------------- | ----------------------------------------------------------------------- | --------------------------------- |
+| **Comptes rendus**                  | CR intégraux de séance publique depuis janvier 2003                     | PostgreSQL 8.4 dump + XML         |
+| **Ameli**                           | Amendements déposés en commission (depuis 2010) et séance (depuis 2001) | PostgreSQL 8.4 dump               |
+| **Dosleg**                          | Dossiers législatifs depuis octobre 1977                                | PostgreSQL 8.4 dump               |
+| **Questions**                       | Questions écrites/orales depuis avril 1978                              | PostgreSQL 8.4 dump + CSV         |
+| **Sénateurs**                       | Mandats, appartenances, présences                                       | ZIP (XLS/JSON/CSV selon extracts) |
+| **Dispositifs des textes**          | Textes depuis décembre 2019                                             | XML (Akoma Ntoso)                 |
+| **Dotation d'action parlementaire** | Dotations                                                               | PostgreSQL 8.4 dump               |
 
 [Source : data.senat.fr — Données](https://data.senat.fr/donnees/)
 
@@ -205,30 +227,30 @@ Au Sénat, les scrutins sont organisés par **année parlementaire** (session). 
 
 #### 2.5 Limitations techniques (Sénat)
 
-| Limitation | Détail |
-|------------|--------|
-| **Pas de jeu de données votes** | Aucun export Open Data dédié aux scrutins sur `data.senat.fr` |
-| **Pas d'API REST officielle** | L'organisation Sénat sur data.gouv.fr indique "API 0" |
-| **SQL dumps uniquement** | Les données structurées sont fournies en dumps PostgreSQL 8.4, nécessitant une infrastructure locale |
-| **Fréquence** | Copie quotidienne des bases (`pg_dump`) ; données brutes supprimées (brouillons, champs obsolètes) |
-| **Votes dans Comptes rendus** | Les CR intégraux (XML) contiennent le verbatim des scrutins mais pas de structure normalisée facilement extractible pour les votes individuels |
-| **Licence** | Licence Ouverte (comme l'AN) |
+| Limitation                      | Détail                                                                                                                                         |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pas de jeu de données votes** | Aucun export Open Data dédié aux scrutins sur `data.senat.fr`                                                                                  |
+| **Pas d'API REST officielle**   | L'organisation Sénat sur data.gouv.fr indique "API 0"                                                                                          |
+| **SQL dumps uniquement**        | Les données structurées sont fournies en dumps PostgreSQL 8.4, nécessitant une infrastructure locale                                           |
+| **Fréquence**                   | Copie quotidienne des bases (`pg_dump`) ; données brutes supprimées (brouillons, champs obsolètes)                                             |
+| **Votes dans Comptes rendus**   | Les CR intégraux (XML) contiennent le verbatim des scrutins mais pas de structure normalisée facilement extractible pour les votes individuels |
+| **Licence**                     | Licence Ouverte (comme l'AN)                                                                                                                   |
 
 ---
 
 ### 3. Complétude et comparatif
 
-| Critère | Assemblée Nationale | Sénat |
-|---------|---------------------|-------|
-| **Format principal** | ZIP JSON/XML | PostgreSQL dump / XML |
-| **API REST** | ❌ Non | ❌ Non |
-| **Accès unitaire** | ❌ Non (sauf amendements/textes) | ❌ Non |
-| **Votes individuels** | ✅ Oui (depuis 2014) | ⚠️ Via HTML / outils tiers |
-| **Fréquence MAJ** | Quotidienne (approx.) | Quotidienne (dump SQL) |
-| **Rate limit documenté** | ❌ Non | ❌ Non |
-| **Licence** | Licence Ouverte 2.0 | Licence Ouverte |
-| **Publicité des votes** | Tous publics sauf nominations | Tous publics sauf nominations |
-| **Votes à main levée** | ❌ Non enregistrés nominativement | ❌ Non enregistrés nominativement |
+| Critère                  | Assemblée Nationale               | Sénat                             |
+| ------------------------ | --------------------------------- | --------------------------------- |
+| **Format principal**     | ZIP JSON/XML                      | PostgreSQL dump / XML             |
+| **API REST**             | ❌ Non                            | ❌ Non                            |
+| **Accès unitaire**       | ❌ Non (sauf amendements/textes)  | ❌ Non                            |
+| **Votes individuels**    | ✅ Oui (depuis 2014)              | ⚠️ Via HTML / outils tiers        |
+| **Fréquence MAJ**        | Quotidienne (approx.)             | Quotidienne (dump SQL)            |
+| **Rate limit documenté** | ❌ Non                            | ❌ Non                            |
+| **Licence**              | Licence Ouverte 2.0               | Licence Ouverte                   |
+| **Publicité des votes**  | Tous publics sauf nominations     | Tous publics sauf nominations     |
+| **Votes à main levée**   | ❌ Non enregistrés nominativement | ❌ Non enregistrés nominativement |
 
 ---
 
@@ -268,6 +290,7 @@ Au Sénat, les scrutins sont organisés par **année parlementaire** (session). 
 ## Recommandations pour l'intégration
 
 ### Assemblée Nationale
+
 1. **Téléchargement initial** : récupérer le ZIP JSON de la législature courante (`Scrutins.json.zip`) et le décompresser.
 2. **Mise à jour incrémentale** : comparer la date du fichier ou son MD5 (quand publié) pour re-télécharger quotidiennement ; parser l'intégralité du JSON car il n'y a pas de delta.
 3. **Jointure** : croiser `acteurRef` et `mandatRef` avec le fichier **« Députés en exercice »** (JSON/XML) pour obtenir les nom, prénom, groupe, circonscription.
@@ -275,6 +298,7 @@ Au Sénat, les scrutins sont organisés par **année parlementaire** (session). 
 5. **Alternative API** : si un accès plus simple est nécessaire, utiliser l'**API CIVIX** (`https://www.civix.fr`) ou **NosDéputés.fr** (`/json`, `/xml`) qui restructurent ces données en endpoints REST.
 
 ### Sénat
+
 1. **Méthode la plus fiable** : utiliser **senapy** (Python) pour scraper les pages de scrutins et extraire les votes en JSON structuré.
 2. **Alternative web** : utiliser l'**API de NosSénateurs.fr** pour obtenir les votes par sénateur ou par scrutin en JSON/XML.
 3. **Pour une intégration SQL** : importer le dump **Comptes rendus** PostgreSQL et parser les champs textuels contenant les résultats de vote (approche lourde, non recommandée sauf pour des besoins très spécifiques).

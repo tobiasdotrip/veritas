@@ -20,12 +20,12 @@ declare module "node-stream-zip" {
     entry(name: string): ZipEntry | undefined;
     stream(
       entryName: string,
-      callback: (err: Error | null, stream: NodeJS.ReadableStream) => void
+      callback: (err: Error | null, stream: NodeJS.ReadableStream) => void,
     ): void;
     extract(
       entryName: string | null,
       targetPath: string,
-      callback?: (err?: Error | null) => void
+      callback?: (err?: Error | null) => void,
     ): void;
     close(): void;
   }

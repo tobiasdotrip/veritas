@@ -2,15 +2,26 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   iconLeft?: React.ReactNode;
   clearable?: boolean;
   wrapperClassName?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, iconLeft, clearable, wrapperClassName, type = "text", value, onChange, ...props }, ref) => {
+  (
+    {
+      className,
+      iconLeft,
+      clearable,
+      wrapperClassName,
+      type = "text",
+      value,
+      onChange,
+      ...props
+    },
+    ref,
+  ) => {
     const hasValue = String(value ?? "").length > 0;
 
     return (
@@ -27,7 +38,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             "flex h-11 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50",
             iconLeft && "pl-10",
             clearable && "pr-10",
-            className
+            className,
           )}
           value={value}
           onChange={onChange}
@@ -37,7 +48,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <button
             type="button"
             onClick={() => {
-              const input = (ref as React.RefObject<HTMLInputElement | null>)?.current;
+              const input = (ref as React.RefObject<HTMLInputElement | null>)
+                ?.current;
               if (input) {
                 input.value = "";
                 input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -55,7 +67,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
       </div>
     );
-  }
+  },
 );
 Input.displayName = "Input";
 

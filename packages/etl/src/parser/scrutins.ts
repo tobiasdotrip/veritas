@@ -113,7 +113,8 @@ function normalizeText(value: unknown): string | undefined {
   if (typeof value === "string") return value;
   if (value && typeof value === "object") {
     if ("texte" in value) return String((value as { texte?: string }).texte);
-    if ("libelle" in value) return String((value as { libelle?: string }).libelle);
+    if ("libelle" in value)
+      return String((value as { libelle?: string }).libelle);
   }
   return undefined;
 }
@@ -148,7 +149,10 @@ function* extractVotesFromGroup(raw: RawScrutin): Generator<ParsedVote> {
 
     const groupId = g.organeRef ?? "UNKNOWN";
 
-    const emit = function* (pos: ParsedVote["position"], list?: { votant?: RawVotant | RawVotant[] }) {
+    const emit = function* (
+      pos: ParsedVote["position"],
+      list?: { votant?: RawVotant | RawVotant[] },
+    ) {
       const votes = parseVotants(list?.votant);
       for (const v of votes) {
         yield {
@@ -218,7 +222,8 @@ export function parseScrutin(raw: RawScrutin): ParsedScrutin {
     codeTypeVote: raw.codeTypeVote,
     libelleTypeVote: raw.libelleTypeVote,
     typeMajorite: raw.typeVote?.typeMajorite,
-    sortCode: sortCode === "adopté" || sortCode === "rejeté" ? sortCode : undefined,
+    sortCode:
+      sortCode === "adopté" || sortCode === "rejeté" ? sortCode : undefined,
     sortLibelle: raw.sort?.libelle,
     titre: normalizeText(raw.titre) ?? raw.uid,
     demandeur: normalizeText(raw.demandeur),
@@ -238,7 +243,7 @@ export function parseScrutin(raw: RawScrutin): ParsedScrutin {
 
 export async function* parseScrutinsFromZip(
   zipPath: string,
-  tempDir: string
+  tempDir: string,
 ): AsyncGenerator<ParsedScrutin> {
   const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
 

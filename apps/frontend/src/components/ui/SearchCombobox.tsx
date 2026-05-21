@@ -85,7 +85,9 @@ export function SearchCombobox({
 
   React.useEffect(() => {
     if (activeIndex >= 0 && listRef.current) {
-      const el = listRef.current.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
+      const el = listRef.current.querySelector<HTMLElement>(
+        `[data-index="${activeIndex}"]`,
+      );
       el?.scrollIntoView({ block: "nearest" });
     }
   }, [activeIndex]);
@@ -93,7 +95,10 @@ export function SearchCombobox({
   return (
     <div className={cn("relative", className)}>
       {label && (
-        <label htmlFor={id} className="mb-1 block text-sm font-medium text-text-primary">
+        <label
+          htmlFor={id}
+          className="mb-1 block text-sm font-medium text-text-primary"
+        >
           {label}
         </label>
       )}
@@ -105,7 +110,9 @@ export function SearchCombobox({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
-          aria-activedescendant={activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
+          aria-activedescendant={
+            activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined
+          }
           placeholder={placeholder}
           value={value}
           onChange={(e) => {
@@ -132,7 +139,9 @@ export function SearchCombobox({
             className="max-h-72 overflow-auto py-1"
           >
             {totalOptions === 0 && !isLoading ? (
-              <li className="px-3 py-2 text-sm text-text-muted">{emptyMessage}</li>
+              <li className="px-3 py-2 text-sm text-text-muted">
+                {emptyMessage}
+              </li>
             ) : (
               groups.map(([group, items]) => (
                 <React.Fragment key={group}>
@@ -152,7 +161,7 @@ export function SearchCombobox({
                         data-index={globalIndex}
                         className={cn(
                           "cursor-pointer px-3 py-2 text-sm text-text-primary",
-                          globalIndex === activeIndex && "bg-primary/10"
+                          globalIndex === activeIndex && "bg-primary/10",
                         )}
                         onMouseEnter={() => setActiveIndex(globalIndex)}
                         onClick={() => {
@@ -163,7 +172,9 @@ export function SearchCombobox({
                       >
                         <span className="block">{opt.label}</span>
                         {opt.meta && (
-                          <span className="block text-xs text-text-muted">{opt.meta}</span>
+                          <span className="block text-xs text-text-muted">
+                            {opt.meta}
+                          </span>
                         )}
                       </li>
                     );

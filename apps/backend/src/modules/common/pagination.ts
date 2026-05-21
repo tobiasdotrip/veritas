@@ -38,7 +38,9 @@ export function decodeCursor(cursor: string): { date: string; id: string } {
     throw new ValidationError("Cursor too large");
   }
   try {
-    const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8")) as unknown;
+    const parsed = JSON.parse(
+      Buffer.from(cursor, "base64url").toString("utf-8"),
+    ) as unknown;
     if (
       typeof parsed === "object" &&
       parsed !== null &&
@@ -59,7 +61,7 @@ export function decodeCursor(cursor: string): { date: string; id: string } {
 export function buildCursorResponse<T extends Record<string, unknown>>(
   items: T[],
   limit: number,
-  cursorBuilder: (item: T) => { date: string; id: string }
+  cursorBuilder: (item: T) => { date: string; id: string },
 ): CursorPaginationResult<T> {
   const hasMore = items.length > limit;
   const data = hasMore ? items.slice(0, limit) : items;
@@ -77,7 +79,7 @@ export function buildOffsetResponse<T>(
   items: T[],
   total: number,
   limit: number,
-  offset: number
+  offset: number,
 ): OffsetPaginationResult<T> {
   return {
     data: items,

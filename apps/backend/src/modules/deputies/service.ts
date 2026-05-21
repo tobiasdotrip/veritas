@@ -10,7 +10,7 @@ const DEFAULT_TTL = 300; // 5 minutes
 
 export function createDeputyService(
   repo: DeputyRepository,
-  cache: CacheService
+  cache: CacheService,
 ) {
   return {
     async searchDeputies(
@@ -22,28 +22,25 @@ export function createDeputyService(
         legislature?: string | undefined;
       },
       limit: number,
-      offset: number
+      offset: number,
     ) {
       const cacheKey = `search:${hashCacheKeyPart(filters)}:${limit}:${offset}`;
-      return cache.getOrSet(
-        CACHE_NS,
-        cacheKey,
-        DEFAULT_TTL,
-        () => repo.search(filters, limit, offset)
+      return cache.getOrSet(CACHE_NS, cacheKey, DEFAULT_TTL, () =>
+        repo.search(filters, limit, offset),
       );
     },
 
     async getDeputyById(id: string) {
       const cacheKey = `id:${id}`;
       return cache.getOrSet(CACHE_NS, cacheKey, DEFAULT_TTL, () =>
-        repo.getWithDetails(id)
+        repo.getWithDetails(id),
       );
     },
 
     async getDeputyBySlug(slug: string) {
       const cacheKey = `slug:${slug}`;
       const deputy = await cache.getOrSet(CACHE_NS, cacheKey, DEFAULT_TTL, () =>
-        repo.getBySlug(slug)
+        repo.getBySlug(slug),
       );
       if (!deputy) {
         throw new NotFoundError("Deputy", slug);
@@ -55,21 +52,18 @@ export function createDeputyService(
       deputyId: string,
       legislature: string,
       filters: DeputyVoteFilters,
-      pagination: CursorPaginationInput
+      pagination: CursorPaginationInput,
     ) {
       const cacheKey = `votes:${deputyId}:${legislature}:${hashCacheKeyPart(filters)}:${hashCacheKeyPart(pagination)}`;
-      return cache.getOrSet(
-        CACHE_NS,
-        cacheKey,
-        DEFAULT_TTL,
-        () => repo.getVotes(deputyId, legislature, filters, pagination)
+      return cache.getOrSet(CACHE_NS, cacheKey, DEFAULT_TTL, () =>
+        repo.getVotes(deputyId, legislature, filters, pagination),
       );
     },
 
     async getDeputyStats(deputyId: string, legislature: string) {
       const cacheKey = `stats:${deputyId}:${legislature}`;
       return cache.getOrSet(CACHE_NS, cacheKey, DEFAULT_TTL, () =>
-        repo.getStats(deputyId, legislature)
+        repo.getStats(deputyId, legislature),
       );
     },
   };

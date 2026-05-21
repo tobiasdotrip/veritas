@@ -141,7 +141,7 @@ describe("CompareQuery", () => {
 
   it("rejects 6 deputies", () => {
     expect(() =>
-      CompareQuery.parse({ deputies: "PA1,PA2,PA3,PA4,PA5,PA6" })
+      CompareQuery.parse({ deputies: "PA1,PA2,PA3,PA4,PA5,PA6" }),
     ).toThrow();
   });
 
@@ -164,7 +164,7 @@ describe("CompareQuery", () => {
       CompareQuery.parse({
         deputies: "PA123,PA456",
         from: "not-a-date",
-      })
+      }),
     ).toThrow();
   });
 });

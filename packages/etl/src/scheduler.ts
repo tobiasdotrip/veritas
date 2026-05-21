@@ -13,7 +13,9 @@ export function startScheduler(config: EtlConfig): SchedulerHandle {
     "0 6 * * *",
     () => {
       if (runningJob) {
-        console.warn("[scheduler] Previous ETL job still running, skipping tick");
+        console.warn(
+          "[scheduler] Previous ETL job still running, skipping tick",
+        );
         return;
       }
 
@@ -25,7 +27,7 @@ export function startScheduler(config: EtlConfig): SchedulerHandle {
         } catch (err) {
           console.error(
             "[scheduler] Daily ETL job failed:",
-            err instanceof Error ? err.message : String(err)
+            err instanceof Error ? err.message : String(err),
           );
         } finally {
           runningJob = null;
@@ -35,7 +37,7 @@ export function startScheduler(config: EtlConfig): SchedulerHandle {
     {
       timezone: "Europe/Paris",
       scheduled: true,
-    }
+    },
   );
 
   console.log("[scheduler] Scheduled daily ETL at 06:00 Europe/Paris");

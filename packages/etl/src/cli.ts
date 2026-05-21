@@ -14,7 +14,7 @@ function registerGracefulShutdown(shutdown: () => Promise<void>): void {
       .catch((err) => {
         console.error(
           "[etl] Shutdown failed:",
-          err instanceof Error ? err.message : String(err)
+          err instanceof Error ? err.message : String(err),
         );
         process.exit(1);
       });
@@ -37,7 +37,10 @@ async function main() {
     await runEtlPipeline();
     process.exit(0);
   } catch (err) {
-    console.error("ETL failed:", err instanceof Error ? err.message : String(err));
+    console.error(
+      "ETL failed:",
+      err instanceof Error ? err.message : String(err),
+    );
     process.exit(1);
   }
 }

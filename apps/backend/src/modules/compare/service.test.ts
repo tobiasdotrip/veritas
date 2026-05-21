@@ -4,7 +4,9 @@ import { ValidationError } from "../common/errors.js";
 import type { CompareRepository } from "./repository.js";
 import type { CacheService } from "../common/cache.js";
 
-function createMockRepo(partial: Partial<CompareRepository> = {}): CompareRepository {
+function createMockRepo(
+  partial: Partial<CompareRepository> = {},
+): CompareRepository {
   return {
     getCommonVotes: vi.fn().mockResolvedValue([]),
     getDeputiesBrief: vi.fn().mockResolvedValue([]),
@@ -20,7 +22,9 @@ function createMockCache(): CacheService {
     set: vi.fn().mockResolvedValue(undefined),
     del: vi.fn().mockResolvedValue(undefined),
     invalidateNamespace: vi.fn().mockResolvedValue(undefined),
-    getOrSet: vi.fn().mockImplementation(async (_ns, _key, _ttl, factory) => factory()),
+    getOrSet: vi
+      .fn()
+      .mockImplementation(async (_ns, _key, _ttl, factory) => factory()),
   } as unknown as CacheService;
 }
 
@@ -28,14 +32,14 @@ describe("createCompareService.compareDeputies", () => {
   it("throws ValidationError with fewer than 2 deputies", async () => {
     const service = createCompareService(createMockRepo(), createMockCache());
     await expect(service.compareDeputies(["PA1"], "17")).rejects.toThrow(
-      ValidationError
+      ValidationError,
     );
   });
 
   it("throws ValidationError with more than 5 deputies", async () => {
     const service = createCompareService(createMockRepo(), createMockCache());
     await expect(
-      service.compareDeputies(["PA1", "PA2", "PA3", "PA4", "PA5", "PA6"], "17")
+      service.compareDeputies(["PA1", "PA2", "PA3", "PA4", "PA5", "PA6"], "17"),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -43,8 +47,20 @@ describe("createCompareService.compareDeputies", () => {
     const repo = createMockRepo({
       getCommonVotes: vi.fn().mockResolvedValue([]),
       getDeputiesBrief: vi.fn().mockResolvedValue([
-        { id: "PA1", firstName: "Jean", lastName: "Dupont", slug: "jean-dupont", photoUrl: null },
-        { id: "PA2", firstName: "Marie", lastName: "Durand", slug: "marie-durand", photoUrl: null },
+        {
+          id: "PA1",
+          firstName: "Jean",
+          lastName: "Dupont",
+          slug: "jean-dupont",
+          photoUrl: null,
+        },
+        {
+          id: "PA2",
+          firstName: "Marie",
+          lastName: "Durand",
+          slug: "marie-durand",
+          photoUrl: null,
+        },
       ]),
     });
     const service = createCompareService(repo, createMockCache());
@@ -90,8 +106,20 @@ describe("createCompareService.compareDeputies", () => {
         },
       ]),
       getDeputiesBrief: vi.fn().mockResolvedValue([
-        { id: "PA1", firstName: "Jean", lastName: "Dupont", slug: "jean-dupont", photoUrl: null },
-        { id: "PA2", firstName: "Marie", lastName: "Durand", slug: "marie-durand", photoUrl: null },
+        {
+          id: "PA1",
+          firstName: "Jean",
+          lastName: "Dupont",
+          slug: "jean-dupont",
+          photoUrl: null,
+        },
+        {
+          id: "PA2",
+          firstName: "Marie",
+          lastName: "Durand",
+          slug: "marie-durand",
+          photoUrl: null,
+        },
       ]),
     });
     const service = createCompareService(repo, createMockCache());
@@ -136,8 +164,20 @@ describe("createCompareService.compareDeputies", () => {
         },
       ]),
       getDeputiesBrief: vi.fn().mockResolvedValue([
-        { id: "PA1", firstName: "Jean", lastName: "Dupont", slug: "jean-dupont", photoUrl: null },
-        { id: "PA2", firstName: "Marie", lastName: "Durand", slug: "marie-durand", photoUrl: null },
+        {
+          id: "PA1",
+          firstName: "Jean",
+          lastName: "Dupont",
+          slug: "jean-dupont",
+          photoUrl: null,
+        },
+        {
+          id: "PA2",
+          firstName: "Marie",
+          lastName: "Durand",
+          slug: "marie-durand",
+          photoUrl: null,
+        },
       ]),
     });
     const service = createCompareService(repo, createMockCache());
@@ -148,8 +188,12 @@ describe("createCompareService.compareDeputies", () => {
     expect(result.concordanceRate).toBe(0);
     expect(result.divergences).toHaveLength(1);
     expect(result.divergences[0]!.positions).toHaveLength(2);
-    expect(result.divergences[0]!.positions.map((p) => p.position)).toContain("pour");
-    expect(result.divergences[0]!.positions.map((p) => p.position)).toContain("contre");
+    expect(result.divergences[0]!.positions.map((p) => p.position)).toContain(
+      "pour",
+    );
+    expect(result.divergences[0]!.positions.map((p) => p.position)).toContain(
+      "contre",
+    );
   });
 
   it("computes pairwise concordance for 3 deputies", async () => {
@@ -208,13 +252,19 @@ describe("createCompareService.compareDeputies", () => {
     // 3 deputies = 3 pairwise combinations
     expect(result.pairwise).toHaveLength(3);
 
-    const pa1pa2 = result.pairwise.find((p) => p.deputyAId === "PA1" && p.deputyBId === "PA2");
+    const pa1pa2 = result.pairwise.find(
+      (p) => p.deputyAId === "PA1" && p.deputyBId === "PA2",
+    );
     expect(pa1pa2!.concordanceRate).toBe(100); // both "pour"
 
-    const pa1pa3 = result.pairwise.find((p) => p.deputyAId === "PA1" && p.deputyBId === "PA3");
+    const pa1pa3 = result.pairwise.find(
+      (p) => p.deputyAId === "PA1" && p.deputyBId === "PA3",
+    );
     expect(pa1pa3!.concordanceRate).toBe(0); // "pour" vs "contre"
 
-    const pa2pa3 = result.pairwise.find((p) => p.deputyAId === "PA2" && p.deputyBId === "PA3");
+    const pa2pa3 = result.pairwise.find(
+      (p) => p.deputyAId === "PA2" && p.deputyBId === "PA3",
+    );
     expect(pa2pa3!.concordanceRate).toBe(0); // "pour" vs "contre"
   });
 
@@ -224,13 +274,18 @@ describe("createCompareService.compareDeputies", () => {
     const repo = createMockRepo({ getCommonVotes, getDeputiesBrief });
     const service = createCompareService(repo, createMockCache());
 
-    await service.compareDeputies(["PA1", "PA2"], "17", "2024-01-01", "2024-12-31");
+    await service.compareDeputies(
+      ["PA1", "PA2"],
+      "17",
+      "2024-01-01",
+      "2024-12-31",
+    );
 
     expect(getCommonVotes).toHaveBeenCalledWith(
       ["PA1", "PA2"],
       "17",
       "2024-01-01",
-      "2024-12-31"
+      "2024-12-31",
     );
   });
 

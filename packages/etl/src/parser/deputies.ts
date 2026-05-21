@@ -135,7 +135,7 @@ function normalizeDate(value: unknown): Date | undefined {
 export function buildDeputySlug(
   firstName: string,
   lastName: string,
-  id: string
+  id: string,
 ): string {
   const base = `${lastName.toLowerCase().replace(/\s+/g, "-")}-${firstName.toLowerCase().replace(/\s+/g, "-")}`;
   return `${base}-${id.toLowerCase()}`;
@@ -207,7 +207,7 @@ export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
 
 export function parseOrgane(
   raw: RawOrgane,
-  legislature: string
+  legislature: string,
 ): ParsedPoliticalGroup | undefined {
   if (raw.codeType !== "GP") return undefined;
   return {
@@ -223,7 +223,7 @@ export function parseOrgane(
 export async function* parseDeputiesFromZip(
   zipPath: string,
   tempDir: string,
-  legislature: string
+  legislature: string,
 ): AsyncGenerator<ParsedDeputy> {
   const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
 
@@ -242,7 +242,7 @@ export async function* parseDeputiesFromZip(
 export async function* parseOrganesFromZip(
   zipPath: string,
   tempDir: string,
-  legislature: string
+  legislature: string,
 ): AsyncGenerator<ParsedPoliticalGroup> {
   const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
 

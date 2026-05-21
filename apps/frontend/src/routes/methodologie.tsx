@@ -11,7 +11,9 @@ function MethodologiePage() {
       <h1 className="text-2xl font-bold text-text-primary">Méthodologie</h1>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-text-primary">Sources des données</h2>
+        <h2 className="text-lg font-semibold text-text-primary">
+          Sources des données
+        </h2>
         <p className="text-text-secondary">
           Les données sont issues des fichiers ouverts de l'Assemblée nationale
           (licence Ouverte 2.0). Les scrutins, votes nominatifs, députés et
@@ -31,8 +33,8 @@ function MethodologiePage() {
                 Taux de participation
               </dt>
               <dd className="text-sm text-text-secondary">
-                Nombre de votes exprimés (pour, contre, abstention) divisé par le
-                nombre total de scrutins éligibles sur la période.
+                Nombre de votes exprimés (pour, contre, abstention) divisé par
+                le nombre total de scrutins éligibles sur la période.
               </dd>
             </div>
             <div>
@@ -69,8 +71,8 @@ function MethodologiePage() {
             du scrutin (MVP). Une revue manuelle peut être nécessaire.
           </li>
           <li>
-            Les changements d'affiliation en cours de législature peuvent affecter
-            le calcul de la loyauté sur la période complète.
+            Les changements d'affiliation en cours de législature peuvent
+            affecter le calcul de la loyauté sur la période complète.
           </li>
           <li>
             Les votes par délégation sont comptabilisés comme des votes exprimés

@@ -80,7 +80,10 @@ function ScrutinPage() {
           Votes par groupe
         </h2>
         {scrutin.groupVotes.length === 0 ? (
-          <EmptyState title="Aucun groupe" description="Les données par groupe ne sont pas disponibles pour ce scrutin." />
+          <EmptyState
+            title="Aucun groupe"
+            description="Les données par groupe ne sont pas disponibles pour ce scrutin."
+          />
         ) : (
           <GroupAccordion groups={scrutin.groupVotes} />
         )}

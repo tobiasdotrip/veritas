@@ -9,7 +9,8 @@ export function Footer() {
           <div className="space-y-1">
             <p className="text-sm font-medium text-text-primary">Veritas</p>
             <p className="text-xs text-text-muted">
-              Transparence des votes parlementaires — Données Assemblée nationale.
+              Transparence des votes parlementaires — Données Assemblée
+              nationale.
             </p>
           </div>
           <nav className="flex flex-wrap gap-4 text-sm text-text-secondary">

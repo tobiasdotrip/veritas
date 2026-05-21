@@ -33,19 +33,18 @@ export interface DeputyVoteFilters {
 
 export function createDeputyRepository(db: Database) {
   return {
-    async search(
-      filters: DeputySearchFilters,
-      limit: number,
-      offset: number
-    ) {
-      const conditions: (ReturnType<typeof eq> | ReturnType<typeof sql<boolean>>)[] = [];
+    async search(filters: DeputySearchFilters, limit: number, offset: number) {
+      const conditions: (
+        | ReturnType<typeof eq>
+        | ReturnType<typeof sql<boolean>>
+      )[] = [];
 
       if (filters.q) {
         conditions.push(
           sql`
             to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
             @@ plainto_tsquery('french', ${filters.q})
-          `
+          `,
         );
       }
       if (filters.department) {
@@ -61,7 +60,7 @@ export function createDeputyRepository(db: Database) {
             WHERE ${deputyGroupAffiliations.deputyId} = ${deputies.id}
               AND ${deputyGroupAffiliations.politicalGroupId} = ${filters.group}
               AND ${deputyGroupAffiliations.endDate} IS NULL
-          )`
+          )`,
         );
       }
       if (filters.legislature) {
@@ -70,7 +69,7 @@ export function createDeputyRepository(db: Database) {
             SELECT 1 FROM ${deputyMandates}
             WHERE ${deputyMandates.deputyId} = ${deputies.id}
               AND ${deputyMandates.legislature} = ${filters.legislature}
-          )`
+          )`,
         );
       }
 
@@ -157,12 +156,15 @@ export function createDeputyRepository(db: Database) {
           endDate: deputyGroupAffiliations.endDate,
         })
         .from(deputyGroupAffiliations)
-        .innerJoin(politicalGroups, eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id))
+        .innerJoin(
+          politicalGroups,
+          eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
+        )
         .where(
           and(
             eq(deputyGroupAffiliations.deputyId, id),
-            sql`${deputyGroupAffiliations.endDate} IS NULL`
-          )
+            sql`${deputyGroupAffiliations.endDate} IS NULL`,
+          ),
         )
         .orderBy(desc(deputyGroupAffiliations.startDate))
         .limit(1);
@@ -178,10 +180,13 @@ export function createDeputyRepository(db: Database) {
       deputyId: string,
       legislature: string,
       filters: DeputyVoteFilters,
-      pagination: CursorPaginationInput
+      pagination: CursorPaginationInput,
     ) {
       const { limit, cursor } = pagination;
-      const conditions = [eq(scrutinVotes.deputyId, deputyId), eq(scrutins.legislature, legislature)];
+      const conditions = [
+        eq(scrutinVotes.deputyId, deputyId),
+        eq(scrutins.legislature, legislature),
+      ];
 
       if (filters.from) {
         conditions.push(gte(scrutins.dateScrutin, new Date(filters.from)));
@@ -202,13 +207,13 @@ export function createDeputyRepository(db: Database) {
             INNER JOIN ${themes} ON ${scrutinThemes.themeId} = ${themes.id}
             WHERE ${scrutinThemes.scrutinId} = ${scrutins.id}
               AND ${themes.slug} = ${filters.theme}
-          )`
+          )`,
         );
       }
       if (cursor) {
         const decoded = decodeCursor(cursor);
         conditions.push(
-          sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`
+          sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`,
         );
       }
 
@@ -241,8 +246,11 @@ export function createDeputyRepository(db: Database) {
           scrutinGroupVotes,
           and(
             eq(scrutinGroupVotes.scrutinId, scrutinVotes.scrutinId),
-            eq(scrutinGroupVotes.politicalGroupId, scrutinVotes.politicalGroupId)
-          )
+            eq(
+              scrutinGroupVotes.politicalGroupId,
+              scrutinVotes.politicalGroupId,
+            ),
+          ),
         )
         .where(and(...conditions))
         .orderBy(desc(scrutins.dateScrutin), desc(scrutins.id))
@@ -269,8 +277,8 @@ export function createDeputyRepository(db: Database) {
           and(
             eq(scrutinVotes.deputyId, deputyId),
             eq(scrutins.legislature, legislature),
-            sql`${scrutinVotes.position} != 'nonVotant'`
-          )
+            sql`${scrutinVotes.position} != 'nonVotant'`,
+          ),
         );
       const votesCast = votesCastResult[0]?.total ?? 0;
 
@@ -282,16 +290,19 @@ export function createDeputyRepository(db: Database) {
           scrutinGroupVotes,
           and(
             eq(scrutinVotes.scrutinId, scrutinGroupVotes.scrutinId),
-            eq(scrutinVotes.politicalGroupId, scrutinGroupVotes.politicalGroupId)
-          )
+            eq(
+              scrutinVotes.politicalGroupId,
+              scrutinGroupVotes.politicalGroupId,
+            ),
+          ),
         )
         .where(
           and(
             eq(scrutinVotes.deputyId, deputyId),
             eq(scrutins.legislature, legislature),
             sql`${scrutinVotes.position} != 'nonVotant'`,
-            sql`${scrutinVotes.position} = ${scrutinGroupVotes.positionMajoritaire}`
-          )
+            sql`${scrutinVotes.position} = ${scrutinGroupVotes.positionMajoritaire}`,
+          ),
         );
       const votesWithGroup = loyaltyResult[0]?.total ?? 0;
 
@@ -303,8 +314,11 @@ export function createDeputyRepository(db: Database) {
           scrutinGroupVotes,
           and(
             eq(scrutinVotes.scrutinId, scrutinGroupVotes.scrutinId),
-            eq(scrutinVotes.politicalGroupId, scrutinGroupVotes.politicalGroupId)
-          )
+            eq(
+              scrutinVotes.politicalGroupId,
+              scrutinGroupVotes.politicalGroupId,
+            ),
+          ),
         )
         .where(
           and(
@@ -312,17 +326,23 @@ export function createDeputyRepository(db: Database) {
             eq(scrutins.legislature, legislature),
             sql`${scrutinVotes.position} != 'nonVotant'`,
             sql`${scrutinVotes.position} != ${scrutinGroupVotes.positionMajoritaire}`,
-            sql`${scrutinGroupVotes.positionMajoritaire} IS NOT NULL`
-          )
+            sql`${scrutinGroupVotes.positionMajoritaire} IS NOT NULL`,
+          ),
         );
       const votesAgainstGroup = againstGroupResult[0]?.total ?? 0;
 
       return {
         totalScrutins,
         votesCast,
-        participationRate: totalScrutins > 0 ? Number(((votesCast / totalScrutins) * 100).toFixed(2)) : 0,
+        participationRate:
+          totalScrutins > 0
+            ? Number(((votesCast / totalScrutins) * 100).toFixed(2))
+            : 0,
         votesWithGroup,
-        loyaltyRate: votesCast > 0 ? Number(((votesWithGroup / votesCast) * 100).toFixed(2)) : 0,
+        loyaltyRate:
+          votesCast > 0
+            ? Number(((votesWithGroup / votesCast) * 100).toFixed(2))
+            : 0,
         votesAgainstGroup,
       };
     },

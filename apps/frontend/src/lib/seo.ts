@@ -18,7 +18,10 @@ export function buildSEOTags(meta: SEOMeta) {
     tags.push({ tag: "meta", attrs: { name: "robots", content: "noindex" } });
   }
   if (meta.canonical) {
-    tags.push({ tag: "link", attrs: { rel: "canonical", href: meta.canonical } });
+    tags.push({
+      tag: "link",
+      attrs: { rel: "canonical", href: meta.canonical },
+    });
   }
   tags.push({
     tag: "meta",

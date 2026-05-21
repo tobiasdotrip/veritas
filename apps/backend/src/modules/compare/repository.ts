@@ -1,6 +1,11 @@
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 import type { Database } from "../../db/client.js";
-import { scrutinVotes, scrutins, deputies, politicalGroups } from "../../db/schema.js";
+import {
+  scrutinVotes,
+  scrutins,
+  deputies,
+  politicalGroups,
+} from "../../db/schema.js";
 
 export function createCompareRepository(db: Database) {
   return {
@@ -8,11 +13,9 @@ export function createCompareRepository(db: Database) {
       deputyIds: string[],
       legislature: string,
       from?: string,
-      to?: string
+      to?: string,
     ) {
-      const dateConditions = [
-        eq(scrutins.legislature, legislature),
-      ];
+      const dateConditions = [eq(scrutins.legislature, legislature)];
       if (from) {
         dateConditions.push(sql`${scrutins.dateScrutin} >= ${new Date(from)}`);
       }
@@ -32,11 +35,13 @@ export function createCompareRepository(db: Database) {
             and(
               inArray(scrutinVotes.deputyId, deputyIds),
               ...dateConditions,
-              sql`${scrutinVotes.position} != 'nonVotant'`
-            )
+              sql`${scrutinVotes.position} != 'nonVotant'`,
+            ),
           )
           .groupBy(scrutinVotes.scrutinId)
-          .having(sql`count(distinct ${scrutinVotes.deputyId}) = ${deputyIds.length}`)
+          .having(
+            sql`count(distinct ${scrutinVotes.deputyId}) = ${deputyIds.length}`,
+          ),
       );
 
       // Get vote details for common scrutins
@@ -57,9 +62,15 @@ export function createCompareRepository(db: Database) {
         })
         .from(commonScrutins)
         .innerJoin(scrutins, eq(commonScrutins.scrutinId, scrutins.id))
-        .innerJoin(scrutinVotes, eq(scrutinVotes.scrutinId, commonScrutins.scrutinId))
+        .innerJoin(
+          scrutinVotes,
+          eq(scrutinVotes.scrutinId, commonScrutins.scrutinId),
+        )
         .innerJoin(deputies, eq(scrutinVotes.deputyId, deputies.id))
-        .innerJoin(politicalGroups, eq(scrutinVotes.politicalGroupId, politicalGroups.id))
+        .innerJoin(
+          politicalGroups,
+          eq(scrutinVotes.politicalGroupId, politicalGroups.id),
+        )
         .where(inArray(scrutinVotes.deputyId, deputyIds))
         .orderBy(desc(scrutins.dateScrutin), desc(scrutins.id));
 

@@ -40,14 +40,18 @@ export interface BadgeVoteProps {
   className?: string;
 }
 
-export function BadgeVote({ position, showLabel = true, className }: BadgeVoteProps) {
+export function BadgeVote({
+  position,
+  showLabel = true,
+  className,
+}: BadgeVoteProps) {
   const c = config[position] ?? config.nonVotant;
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
         c.classes,
-        className
+        className,
       )}
       aria-label={`Vote : ${c.label}`}
       title={`Vote : ${c.label}`}

@@ -26,7 +26,10 @@ export async function closeRedis(): Promise<void> {
 }
 
 export function hashCacheKeyPart(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 16);
+  return createHash("sha256")
+    .update(JSON.stringify(value))
+    .digest("hex")
+    .slice(0, 16);
 }
 
 export class CacheService {
@@ -68,13 +71,13 @@ export class CacheService {
     namespace: string,
     key: string,
     value: T,
-    ttlSeconds: number
+    ttlSeconds: number,
   ): Promise<void> {
     const gen = await this.getGeneration(namespace);
     await this.redis.setex(
       this.cacheKey(namespace, gen, key),
       ttlSeconds,
-      JSON.stringify(value)
+      JSON.stringify(value),
     );
   }
 
@@ -91,7 +94,7 @@ export class CacheService {
     namespace: string,
     key: string,
     ttlSeconds: number,
-    factory: () => Promise<T>
+    factory: () => Promise<T>,
   ): Promise<T> {
     try {
       const cached = await this.get<T>(namespace, key);

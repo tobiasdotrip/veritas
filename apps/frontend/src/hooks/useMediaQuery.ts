@@ -15,6 +15,6 @@ export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
     (cb) => subscribe(cb, query),
     () => getSnapshot(query),
-    () => false
+    () => false,
   );
 }

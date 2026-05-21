@@ -1,5 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } from "fastify-type-provider-zod";
+import {
+  hasZodFastifySchemaValidationErrors,
+  isResponseSerializationError,
+} from "fastify-type-provider-zod";
 import { AppError } from "../modules/common/errors.js";
 
 interface ProblemDetails {
@@ -12,7 +15,9 @@ interface ProblemDetails {
   errors?: unknown[];
 }
 
-function isErrorWithStatusCode(err: unknown): err is { statusCode: number; name?: string; message?: string } {
+function isErrorWithStatusCode(
+  err: unknown,
+): err is { statusCode: number; name?: string; message?: string } {
   return (
     typeof err === "object" &&
     err !== null &&
@@ -93,7 +98,10 @@ export function registerErrorHandler(app: FastifyInstance): void {
         code: "VALIDATION_ERROR",
         errors: err.validation,
       };
-      return reply.status(400).header("Content-Type", "application/problem+json").send(problem);
+      return reply
+        .status(400)
+        .header("Content-Type", "application/problem+json")
+        .send(problem);
     }
 
     if (isResponseSerializationError(err)) {
@@ -105,7 +113,10 @@ export function registerErrorHandler(app: FastifyInstance): void {
         instance: req.url,
         code: "SERIALIZATION_ERROR",
       };
-      return reply.status(500).header("Content-Type", "application/problem+json").send(problem);
+      return reply
+        .status(500)
+        .header("Content-Type", "application/problem+json")
+        .send(problem);
     }
 
     if (err instanceof AppError) {
@@ -117,20 +128,32 @@ export function registerErrorHandler(app: FastifyInstance): void {
         instance: req.url,
         code: err.code,
       };
-      return reply.status(err.statusCode).header("Content-Type", "application/problem+json").send(problem);
+      return reply
+        .status(err.statusCode)
+        .header("Content-Type", "application/problem+json")
+        .send(problem);
     }
 
     // Fastify / third-party client errors — never expose raw err.message
-    if (isErrorWithStatusCode(err) && err.statusCode >= 400 && err.statusCode < 500) {
+    if (
+      isErrorWithStatusCode(err) &&
+      err.statusCode >= 400 &&
+      err.statusCode < 500
+    ) {
       const problem: ProblemDetails = {
         type: "https://veritas.fr/errors/client-error",
         title: getSafeClientErrorTitle(err.statusCode),
         status: err.statusCode,
         detail: getSafeClientErrorDetail(err, err.statusCode),
         instance: req.url,
-        ...(isErrorWithCode(err) && err.code.startsWith("FST_") ? { code: err.code } : {}),
+        ...(isErrorWithCode(err) && err.code.startsWith("FST_")
+          ? { code: err.code }
+          : {}),
       };
-      return reply.status(err.statusCode).header("Content-Type", "application/problem+json").send(problem);
+      return reply
+        .status(err.statusCode)
+        .header("Content-Type", "application/problem+json")
+        .send(problem);
     }
 
     // Unknown server errors
@@ -143,6 +166,9 @@ export function registerErrorHandler(app: FastifyInstance): void {
       code: "INTERNAL_ERROR",
     };
 
-    return reply.status(500).header("Content-Type", "application/problem+json").send(problem);
+    return reply
+      .status(500)
+      .header("Content-Type", "application/problem+json")
+      .send(problem);
   });
 }

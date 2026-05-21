@@ -8,150 +8,150 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as RechercheRouteImport } from './routes/recherche'
-import { Route as MethodologieRouteImport } from './routes/methodologie'
-import { Route as ComparateurRouteImport } from './routes/comparateur'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ScrutinIdRouteImport } from './routes/scrutin/$id'
-import { Route as DeputeSlugRouteImport } from './routes/depute/$slug'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as RechercheRouteImport } from "./routes/recherche";
+import { Route as MethodologieRouteImport } from "./routes/methodologie";
+import { Route as ComparateurRouteImport } from "./routes/comparateur";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as ScrutinIdRouteImport } from "./routes/scrutin/$id";
+import { Route as DeputeSlugRouteImport } from "./routes/depute/$slug";
 
 const RechercheRoute = RechercheRouteImport.update({
-  id: '/recherche',
-  path: '/recherche',
+  id: "/recherche",
+  path: "/recherche",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const MethodologieRoute = MethodologieRouteImport.update({
-  id: '/methodologie',
-  path: '/methodologie',
+  id: "/methodologie",
+  path: "/methodologie",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ComparateurRoute = ComparateurRouteImport.update({
-  id: '/comparateur',
-  path: '/comparateur',
+  id: "/comparateur",
+  path: "/comparateur",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ScrutinIdRoute = ScrutinIdRouteImport.update({
-  id: '/scrutin/$id',
-  path: '/scrutin/$id',
+  id: "/scrutin/$id",
+  path: "/scrutin/$id",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DeputeSlugRoute = DeputeSlugRouteImport.update({
-  id: '/depute/$slug',
-  path: '/depute/$slug',
+  id: "/depute/$slug",
+  path: "/depute/$slug",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/comparateur': typeof ComparateurRoute
-  '/methodologie': typeof MethodologieRoute
-  '/recherche': typeof RechercheRoute
-  '/depute/$slug': typeof DeputeSlugRoute
-  '/scrutin/$id': typeof ScrutinIdRoute
+  "/": typeof IndexRoute;
+  "/comparateur": typeof ComparateurRoute;
+  "/methodologie": typeof MethodologieRoute;
+  "/recherche": typeof RechercheRoute;
+  "/depute/$slug": typeof DeputeSlugRoute;
+  "/scrutin/$id": typeof ScrutinIdRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/comparateur': typeof ComparateurRoute
-  '/methodologie': typeof MethodologieRoute
-  '/recherche': typeof RechercheRoute
-  '/depute/$slug': typeof DeputeSlugRoute
-  '/scrutin/$id': typeof ScrutinIdRoute
+  "/": typeof IndexRoute;
+  "/comparateur": typeof ComparateurRoute;
+  "/methodologie": typeof MethodologieRoute;
+  "/recherche": typeof RechercheRoute;
+  "/depute/$slug": typeof DeputeSlugRoute;
+  "/scrutin/$id": typeof ScrutinIdRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/comparateur': typeof ComparateurRoute
-  '/methodologie': typeof MethodologieRoute
-  '/recherche': typeof RechercheRoute
-  '/depute/$slug': typeof DeputeSlugRoute
-  '/scrutin/$id': typeof ScrutinIdRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/comparateur": typeof ComparateurRoute;
+  "/methodologie": typeof MethodologieRoute;
+  "/recherche": typeof RechercheRoute;
+  "/depute/$slug": typeof DeputeSlugRoute;
+  "/scrutin/$id": typeof ScrutinIdRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/comparateur'
-    | '/methodologie'
-    | '/recherche'
-    | '/depute/$slug'
-    | '/scrutin/$id'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/comparateur"
+    | "/methodologie"
+    | "/recherche"
+    | "/depute/$slug"
+    | "/scrutin/$id";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/comparateur'
-    | '/methodologie'
-    | '/recherche'
-    | '/depute/$slug'
-    | '/scrutin/$id'
+    | "/"
+    | "/comparateur"
+    | "/methodologie"
+    | "/recherche"
+    | "/depute/$slug"
+    | "/scrutin/$id";
   id:
-    | '__root__'
-    | '/'
-    | '/comparateur'
-    | '/methodologie'
-    | '/recherche'
-    | '/depute/$slug'
-    | '/scrutin/$id'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/comparateur"
+    | "/methodologie"
+    | "/recherche"
+    | "/depute/$slug"
+    | "/scrutin/$id";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ComparateurRoute: typeof ComparateurRoute
-  MethodologieRoute: typeof MethodologieRoute
-  RechercheRoute: typeof RechercheRoute
-  DeputeSlugRoute: typeof DeputeSlugRoute
-  ScrutinIdRoute: typeof ScrutinIdRoute
+  IndexRoute: typeof IndexRoute;
+  ComparateurRoute: typeof ComparateurRoute;
+  MethodologieRoute: typeof MethodologieRoute;
+  RechercheRoute: typeof RechercheRoute;
+  DeputeSlugRoute: typeof DeputeSlugRoute;
+  ScrutinIdRoute: typeof ScrutinIdRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/recherche': {
-      id: '/recherche'
-      path: '/recherche'
-      fullPath: '/recherche'
-      preLoaderRoute: typeof RechercheRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/methodologie': {
-      id: '/methodologie'
-      path: '/methodologie'
-      fullPath: '/methodologie'
-      preLoaderRoute: typeof MethodologieRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comparateur': {
-      id: '/comparateur'
-      path: '/comparateur'
-      fullPath: '/comparateur'
-      preLoaderRoute: typeof ComparateurRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scrutin/$id': {
-      id: '/scrutin/$id'
-      path: '/scrutin/$id'
-      fullPath: '/scrutin/$id'
-      preLoaderRoute: typeof ScrutinIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/depute/$slug': {
-      id: '/depute/$slug'
-      path: '/depute/$slug'
-      fullPath: '/depute/$slug'
-      preLoaderRoute: typeof DeputeSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/recherche": {
+      id: "/recherche";
+      path: "/recherche";
+      fullPath: "/recherche";
+      preLoaderRoute: typeof RechercheRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/methodologie": {
+      id: "/methodologie";
+      path: "/methodologie";
+      fullPath: "/methodologie";
+      preLoaderRoute: typeof MethodologieRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/comparateur": {
+      id: "/comparateur";
+      path: "/comparateur";
+      fullPath: "/comparateur";
+      preLoaderRoute: typeof ComparateurRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/scrutin/$id": {
+      id: "/scrutin/$id";
+      path: "/scrutin/$id";
+      fullPath: "/scrutin/$id";
+      preLoaderRoute: typeof ScrutinIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/depute/$slug": {
+      id: "/depute/$slug";
+      path: "/depute/$slug";
+      fullPath: "/depute/$slug";
+      preLoaderRoute: typeof DeputeSlugRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
@@ -162,16 +162,16 @@ const rootRouteChildren: RootRouteChildren = {
   RechercheRoute: RechercheRoute,
   DeputeSlugRoute: DeputeSlugRoute,
   ScrutinIdRoute: ScrutinIdRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { getRouter } from "./router.tsx";
+import type { createStart } from "@tanstack/react-start";
+declare module "@tanstack/react-start" {
   interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
+    ssr: true;
+    router: Awaited<ReturnType<typeof getRouter>>;
   }
 }

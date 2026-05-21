@@ -10,7 +10,7 @@ export function SkeletonCard({ lines = 3, className }: SkeletonCardProps) {
     <div
       className={cn(
         "rounded-lg border border-border bg-surface p-4 shadow-sm",
-        className
+        className,
       )}
       aria-busy="true"
       aria-live="polite"
@@ -28,7 +28,7 @@ export function SkeletonCard({ lines = 3, className }: SkeletonCardProps) {
             key={i}
             className={cn(
               "h-3 animate-pulse rounded bg-neutral-bg",
-              i === lines - 1 ? "w-2/3" : "w-full"
+              i === lines - 1 ? "w-2/3" : "w-full",
             )}
           />
         ))}

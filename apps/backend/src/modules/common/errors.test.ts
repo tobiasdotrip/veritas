@@ -11,7 +11,9 @@ import {
 
 describe("AppError", () => {
   it("sets all properties correctly", () => {
-    const err = new AppError("Something failed", "ERR_CODE", 500, { extra: true });
+    const err = new AppError("Something failed", "ERR_CODE", 500, {
+      extra: true,
+    });
     expect(err.message).toBe("Something failed");
     expect(err.code).toBe("ERR_CODE");
     expect(err.statusCode).toBe(500);

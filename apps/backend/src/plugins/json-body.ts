@@ -40,7 +40,7 @@ function parseJsonWithDepthLimit(raw: string, maxDepth: number): unknown {
 
 export function registerJsonBodyParser(
   app: FastifyInstance,
-  maxDepth = DEFAULT_MAX_JSON_DEPTH
+  maxDepth = DEFAULT_MAX_JSON_DEPTH,
 ): void {
   app.removeContentTypeParser("application/json");
   app.addContentTypeParser(
@@ -57,6 +57,6 @@ export function registerJsonBodyParser(
       } catch (err) {
         done(err as Error, undefined);
       }
-    }
+    },
   );
 }

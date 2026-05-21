@@ -21,7 +21,7 @@ describe("parseDeputy", () => {
           ident: { prenom: "Marie", nom: "Dupont" },
         },
       },
-      "17"
+      "17",
     );
 
     expect(parsed.slug).toBe("dupont-marie-pa1234");

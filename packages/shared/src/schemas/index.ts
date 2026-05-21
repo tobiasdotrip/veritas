@@ -47,11 +47,9 @@ export const ScrutinVotesQuery = z.object({
 });
 
 export const CompareQuery = z.object({
-  deputies: z
-    .string()
-    .regex(/^PA\d+(,PA\d+){1,4}$/, {
-      error: "2 à 5 députés requis (séparés par des virgules)",
-    }),
+  deputies: z.string().regex(/^PA\d+(,PA\d+){1,4}$/, {
+    error: "2 à 5 députés requis (séparés par des virgules)",
+  }),
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
 });

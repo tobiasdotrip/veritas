@@ -4,7 +4,10 @@ import { createScrutinRepository } from "./repository.js";
 import { createScrutinService } from "./service.js";
 import { CacheService, getRedis } from "../common/cache.js";
 import { getDb } from "../../db/client.js";
-import { CursorPaginationQuery, OffsetPaginationQuery } from "../common/pagination.js";
+import {
+  CursorPaginationQuery,
+  OffsetPaginationQuery,
+} from "../common/pagination.js";
 import { DateString } from "../common/schemas.js";
 
 const ScrutinSchema = z.object({
@@ -30,7 +33,7 @@ const ScrutinDetailSchema = ScrutinSchema.extend({
       slug: z.string(),
       label: z.string(),
       confidence: z.string().nullable(),
-    })
+    }),
   ),
   groupVotes: z.array(
     z.object({
@@ -44,7 +47,7 @@ const ScrutinDetailSchema = ScrutinSchema.extend({
       nombreContre: z.number().nullable(),
       nombreAbstentions: z.number().nullable(),
       nombreNonVotants: z.number().nullable(),
-    })
+    }),
   ),
 });
 
@@ -79,7 +82,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         to: z.iso.date().optional(),
         type: z.string().optional(),
         theme: z.string().optional(),
-        sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),
+        sort: z
+          .enum(["date_desc", "date_asc", "relevance"])
+          .default("date_desc"),
         legislature: z.string().default("17"),
         ...CursorPaginationQuery.shape,
       }),
@@ -94,11 +99,12 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       },
     },
     handler: async (req, reply) => {
-      const { q, from, to, type, theme, sort, legislature, limit, cursor } = req.query;
+      const { q, from, to, type, theme, sort, legislature, limit, cursor } =
+        req.query;
       const result = await service.searchScrutins(
         legislature,
         { q, from, to, type, theme, sort },
-        { limit, cursor }
+        { limit, cursor },
       );
       return reply.send({
         data: result.data,
@@ -134,7 +140,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       params: z.object({ id: z.string() }),
       querystring: z.object({
         group: z.string().optional(),
-        position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
+        position: z
+          .enum(["pour", "contre", "abstention", "nonVotant"])
+          .optional(),
         ...OffsetPaginationQuery.shape,
       }),
       response: {
@@ -152,7 +160,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       const result = await service.getScrutinVotes(
         id,
         { group, position },
-        { limit, offset }
+        { limit, offset },
       );
       return reply.send({
         data: result.rows,

@@ -16,18 +16,19 @@ export function ConcordanceScore({
   const radius = (size - 12) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
-  const color =
-    score >= 70 ? "#15803d" : score >= 40 ? "#b45309" : "#b91c1c";
+  const color = score >= 70 ? "#15803d" : score >= 40 ? "#b45309" : "#b91c1c";
 
   return (
     <div
-      className={cn(
-        "flex flex-col items-center gap-2",
-        className
-      )}
+      className={cn("flex flex-col items-center gap-2", className)}
       aria-label={`Concordance ${score.toFixed(1)} % sur ${votesCommuns} votes communs`}
     >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+      >
         <circle
           cx={size / 2}
           cy={size / 2}

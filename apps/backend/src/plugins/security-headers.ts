@@ -3,7 +3,9 @@ import helmet from "@fastify/helmet";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-export async function registerSecurityHeaders(app: FastifyInstance): Promise<void> {
+export async function registerSecurityHeaders(
+  app: FastifyInstance,
+): Promise<void> {
   await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {

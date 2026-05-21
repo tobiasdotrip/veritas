@@ -9,12 +9,12 @@ Ce document décrit l’**implémentation réelle** du dépôt. Les specs de con
 
 ## Monorepo
 
-| Package | Rôle | Scripts principaux |
-|---------|------|-------------------|
-| `apps/frontend` | UI TanStack Start + Vite | `dev`, `build`, `start` |
-| `apps/backend` | API REST Fastify | `dev`, `build`, `db:migrate`, `db:seed` |
-| `packages/shared` | Schémas Drizzle, types, schémas Zod partagés | `build`, `typecheck` |
-| `packages/etl` | Pipeline Open Data AN | `start` (via `pnpm etl:run`) |
+| Package           | Rôle                                         | Scripts principaux                      |
+| ----------------- | -------------------------------------------- | --------------------------------------- |
+| `apps/frontend`   | UI TanStack Start + Vite                     | `dev`, `build`, `start`                 |
+| `apps/backend`    | API REST Fastify                             | `dev`, `build`, `db:migrate`, `db:seed` |
+| `packages/shared` | Schémas Drizzle, types, schémas Zod partagés | `build`, `typecheck`                    |
+| `packages/etl`    | Pipeline Open Data AN                        | `start` (via `pnpm etl:run`)            |
 
 **Outils** : Node ≥ 24, pnpm 10, Turbo pour `dev` / `build` / `test` à la racine.
 
@@ -24,16 +24,16 @@ Ce document décrit l’**implémentation réelle** du dépôt. Les specs de con
 
 ## Stack implémentée
 
-| Couche | Technologie | Version lockée (ordre de grandeur) |
-|--------|-------------|-----------------------------------|
-| Frontend | TanStack Start, TanStack Router, TanStack Query, Vite | Start 1.168, Router 1.170, Vite 7.x |
-| Styling | Tailwind CSS v4 (`@theme` dans `app.css`) | 4.3 |
-| Backend | Fastify 5 + `fastify-type-provider-zod` 6 | Zod **4.4.3** |
-| ORM | Drizzle 0.45 + `drizzle-zod` 0.8 | Schéma dans `@veritas/shared` |
-| BDD / cache | PostgreSQL 17, Redis 8 | `docker-compose.yml` |
+| Couche      | Technologie                                           | Version lockée (ordre de grandeur)  |
+| ----------- | ----------------------------------------------------- | ----------------------------------- |
+| Frontend    | TanStack Start, TanStack Router, TanStack Query, Vite | Start 1.168, Router 1.170, Vite 7.x |
+| Styling     | Tailwind CSS v4 (`@theme` dans `app.css`)             | 4.3                                 |
+| Backend     | Fastify 5 + `fastify-type-provider-zod` 6             | Zod **4.4.3**                       |
+| ORM         | Drizzle 0.45 + `drizzle-zod` 0.8                      | Schéma dans `@veritas/shared`       |
+| BDD / cache | PostgreSQL 17, Redis 8                                | `docker-compose.yml`                |
 
 > **Note** : Meilisearch et BullMQ ont été retirés de la stack après étude (`docs/research/meilisearch-bullmq-analysis.md`). La recherche repose sur PostgreSQL (`to_tsvector` + GIN + `pg_trgm`).
-| ETL | Node streams, `node-stream-zip`, `stream-json` | Pas de Zod runtime (validation URLs au boot) |
+> | ETL | Node streams, `node-stream-zip`, `stream-json` | Pas de Zod runtime (validation URLs au boot) |
 
 **Abandonné** : Vinxi (`app.config.ts` supprimé) — build frontend via **Vite** + plugin `@tanstack/react-start/plugin/vite`.
 
@@ -61,14 +61,14 @@ apps/frontend/
 
 ### Routes livrées
 
-| Route | Fichier | Données |
-|-------|---------|---------|
-| `/` | `routes/index.tsx` | Accueil, derniers scrutins |
-| `/recherche` | `routes/recherche.tsx` | Recherche députés / scrutins |
+| Route           | Fichier                   | Données                                    |
+| --------------- | ------------------------- | ------------------------------------------ |
+| `/`             | `routes/index.tsx`        | Accueil, derniers scrutins                 |
+| `/recherche`    | `routes/recherche.tsx`    | Recherche députés / scrutins               |
 | `/depute/$slug` | `routes/depute/$slug.tsx` | Fiche + votes paginés (`useInfiniteQuery`) |
-| `/scrutin/$id` | `routes/scrutin/$id.tsx` | Détail scrutin |
-| `/comparateur` | `routes/comparateur.tsx` | Comparateur (slugs → API `/compare`) |
-| `/methodologie` | `routes/methodologie.tsx` | Page statique |
+| `/scrutin/$id`  | `routes/scrutin/$id.tsx`  | Détail scrutin                             |
+| `/comparateur`  | `routes/comparateur.tsx`  | Comparateur (slugs → API `/compare`)       |
+| `/methodologie` | `routes/methodologie.tsx` | Page statique                              |
 
 ### API client
 
@@ -92,13 +92,13 @@ apps/frontend/
 
 ### Modules API
 
-| Préfixe | Module | Notes |
-|--------|--------|-------|
-| `/deputies` | `deputies` | Fiche, votes (cursor), stats |
-| `/scrutins` | `scrutins` | Liste, détail, votes individuels |
-| `/groups` | `groups` | Groupes politiques + stats |
-| `/compare` | `compare` | Concordance multi-députés |
-| `/search` | `search` | Suggestions + recherche full-text PostgreSQL (`to_tsvector` + GIN) |
+| Préfixe     | Module     | Notes                                                              |
+| ----------- | ---------- | ------------------------------------------------------------------ |
+| `/deputies` | `deputies` | Fiche, votes (cursor), stats                                       |
+| `/scrutins` | `scrutins` | Liste, détail, votes individuels                                   |
+| `/groups`   | `groups`   | Groupes politiques + stats                                         |
+| `/compare`  | `compare`  | Concordance multi-députés                                          |
+| `/search`   | `search`   | Suggestions + recherche full-text PostgreSQL (`to_tsvector` + GIN) |
 
 ### Validation
 
@@ -138,23 +138,23 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 ## Sécurité (mitigations en place)
 
-| Risque | Mitigation |
-|--------|------------|
-| CVE `h3` < 1.15.9 | Override pnpm racine `h3 ^1.15.9` |
+| Risque                                 | Mitigation                                                                                    |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| CVE `h3` < 1.15.9                      | Override pnpm racine `h3 ^1.15.9`                                                             |
 | CVE-2026-45321 (TanStack Router/Start) | Versions hors fenêtre malveillante ; `pnpm audit:tanstack` ; deps `>= 1.170.5` / `>= 1.168.7` |
-| SSRF ETL | `validateEtlUrl` (HTTPS + hôte AN) |
-| Zip slip | `resolveSafeZipEntryPath` avant extraction |
-| Dépendances | Voir `docs/STACK_VERSIONS.md` |
+| SSRF ETL                               | `validateEtlUrl` (HTTPS + hôte AN)                                                            |
+| Zip slip                               | `resolveSafeZipEntryPath` avant extraction                                                    |
+| Dépendances                            | Voir `docs/STACK_VERSIONS.md`                                                                 |
 
 ---
 
 ## Qualité & CI
 
-| Élément | État |
-|---------|------|
-| Tests automatisés | Vitest installé, 8 fichiers de test, ~67 tests, couverture 3,58 % |
-| GitHub Actions | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests |
-| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend |
+| Élément                    | État                                                              |
+| -------------------------- | ----------------------------------------------------------------- |
+| Tests automatisés          | Vitest installé, 8 fichiers de test, ~67 tests, couverture 3,58 % |
+| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests   |
+| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                             |
 
 ---
 
@@ -172,7 +172,7 @@ Corrigés récemment (voir historique PR / agents) :
 
 ---
 
-*Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits récents : rapports QA, Security et Tech Lead (voir historique agents).*
+_Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits récents : rapports QA, Security et Tech Lead (voir historique agents)._
 
 ---
 

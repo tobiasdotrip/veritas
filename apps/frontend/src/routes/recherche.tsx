@@ -1,5 +1,9 @@
 import * as React from "react";
-import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useSearch,
+  useNavigate,
+} from "@tanstack/react-router";
 import { Card } from "@/components/ui/Card";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -54,8 +58,12 @@ function SearchPage() {
   }, [input, search.q, navigate]);
 
   const query = search.q ?? "";
-  const { data: rawData, isLoading: isSearchLoading, error, refetch } =
-    useSearchData(query, 0, 20);
+  const {
+    data: rawData,
+    isLoading: isSearchLoading,
+    error,
+    refetch,
+  } = useSearchData(query, 0, 20);
   const {
     data: themeScrutins,
     isLoading: isThemeLoading,
@@ -87,14 +95,15 @@ function SearchPage() {
   }, [rawData, search.type, search.theme, themeScrutins, query]);
 
   const options = React.useMemo(() => {
-    const list: { id: string; label: string; group: string; meta: string }[] = [];
+    const list: { id: string; label: string; group: string; meta: string }[] =
+      [];
     data?.deputies.forEach((d) =>
       list.push({
         id: d.slug,
         label: `${d.firstName} ${d.lastName}`,
         group: "Députés",
         meta: d.circoLabel ?? d.departmentId ?? "",
-      })
+      }),
     );
     data?.scrutins.forEach((s) =>
       list.push({
@@ -102,7 +111,7 @@ function SearchPage() {
         label: s.titre,
         group: "Scrutins",
         meta: `Scrutin n°${s.numero}`,
-      })
+      }),
     );
     return list;
   }, [data]);
@@ -249,7 +258,10 @@ function SearchPage() {
                         className="flex flex-col gap-1 focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
                         onClick={(e) => {
                           e.preventDefault();
-                          navigate({ to: "/scrutin/$id", params: { id: s.id } });
+                          navigate({
+                            to: "/scrutin/$id",
+                            params: { id: s.id },
+                          });
                         }}
                       >
                         <div className="flex items-start justify-between gap-2">

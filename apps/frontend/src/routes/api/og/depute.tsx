@@ -38,7 +38,9 @@ export const APIRoute = createAPIFileRoute("/api/og/depute")({
             }}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div style={{ fontSize: "48px", fontWeight: 700, color: "#111827" }}>
+            <div
+              style={{ fontSize: "48px", fontWeight: 700, color: "#111827" }}
+            >
               {slug}
             </div>
             <div style={{ fontSize: "24px", color: "#4b5563" }}>
@@ -70,15 +72,19 @@ export const APIRoute = createAPIFileRoute("/api/og/depute")({
                 minWidth: "160px",
               }}
             >
-              <div style={{ fontSize: "16px", color: "#6b7280" }}>{k.label}</div>
-              <div style={{ fontSize: "32px", fontWeight: 700, color: "#111827" }}>
+              <div style={{ fontSize: "16px", color: "#6b7280" }}>
+                {k.label}
+              </div>
+              <div
+                style={{ fontSize: "32px", fontWeight: 700, color: "#111827" }}
+              >
                 {k.value}
               </div>
             </div>
           ))}
         </div>
       </div>,
-      { width: 1200, height: 630, fonts: [] }
+      { width: 1200, height: 630, fonts: [] },
     );
 
     return new Response(svg, {

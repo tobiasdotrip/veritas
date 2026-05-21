@@ -5,7 +5,10 @@ import { createDeputyService } from "./service.js";
 import { CacheService, getRedis } from "../common/cache.js";
 import { getDb } from "../../db/client.js";
 import { NotFoundError } from "../common/errors.js";
-import { OffsetPaginationQuery, CursorPaginationQuery } from "../common/pagination.js";
+import {
+  OffsetPaginationQuery,
+  CursorPaginationQuery,
+} from "../common/pagination.js";
 import { DateString, NullableDateString } from "../common/schemas.js";
 
 const DeputyStatsSchema = z.object({
@@ -40,19 +43,26 @@ const DeputyProfileResponseSchema = DeputyResponseSchema.extend({
   stats: DeputyStatsSchema.nullable(),
 });
 
-function toIsoDateString(value: Date | string | null | undefined): string | null {
+function toIsoDateString(
+  value: Date | string | null | undefined,
+): string | null {
   if (value == null) return null;
   if (value instanceof Date) return value.toISOString();
   return value;
 }
 
 function buildDeputyProfile(
-  deputy: NonNullable<Awaited<ReturnType<ReturnType<typeof createDeputyService>["getDeputyById"]>>>,
-  stats: Awaited<ReturnType<ReturnType<typeof createDeputyService>["getDeputyStats"]>>,
-  legislature: string
+  deputy: NonNullable<
+    Awaited<ReturnType<ReturnType<typeof createDeputyService>["getDeputyById"]>>
+  >,
+  stats: Awaited<
+    ReturnType<ReturnType<typeof createDeputyService>["getDeputyStats"]>
+  >,
+  legislature: string,
 ) {
   const mandate =
-    deputy.mandates.find((m) => m.legislature === legislature) ?? deputy.mandates[0];
+    deputy.mandates.find((m) => m.legislature === legislature) ??
+    deputy.mandates[0];
 
   return {
     id: deputy.id,
@@ -90,7 +100,10 @@ const DeputyVoteSchema = z.object({
   alignment: z.enum(["aligned", "opposed", "neutral"]),
 });
 
-async function resolveDeputyId(service: ReturnType<typeof createDeputyService>, idOrSlug: string) {
+async function resolveDeputyId(
+  service: ReturnType<typeof createDeputyService>,
+  idOrSlug: string,
+) {
   if (idOrSlug.startsWith("PA")) {
     const deputy = await service.getDeputyById(idOrSlug);
     if (deputy) return deputy.id;
@@ -128,11 +141,12 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       },
     },
     handler: async (req, reply) => {
-      const { q, department, circo, group, legislature, limit, offset } = req.query;
+      const { q, department, circo, group, legislature, limit, offset } =
+        req.query;
       const result = await service.searchDeputies(
         { q, department, circo, group, legislature },
         limit,
-        offset
+        offset,
       );
       return reply.send({
         data: result.items,
@@ -184,7 +198,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         to: z.iso.date().optional(),
         type: z.string().optional(),
         theme: z.string().optional(),
-        position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
+        position: z
+          .enum(["pour", "contre", "abstention", "nonVotant"])
+          .optional(),
         legislature: z.string().default("17"),
         ...CursorPaginationQuery.shape,
       }),
@@ -200,13 +216,14 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     },
     handler: async (req, reply) => {
       const { id } = req.params;
-      const { from, to, type, theme, position, legislature, limit, cursor } = req.query;
+      const { from, to, type, theme, position, legislature, limit, cursor } =
+        req.query;
       const deputyId = await resolveDeputyId(service, id);
       const result = await service.getDeputyVotes(
         deputyId,
         legislature,
         { from, to, type, theme, position },
-        { limit, cursor }
+        { limit, cursor },
       );
       return reply.send({
         data: result.data,

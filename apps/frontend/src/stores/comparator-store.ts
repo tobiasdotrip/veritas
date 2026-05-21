@@ -57,6 +57,6 @@ export const useComparatorStore = create<ComparatorState>()(
         period: state.period,
         view: state.view,
       }),
-    }
-  )
+    },
+  ),
 );

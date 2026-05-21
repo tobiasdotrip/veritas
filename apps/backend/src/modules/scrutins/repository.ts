@@ -10,7 +10,10 @@ import {
   scrutinGroupVotes,
 } from "../../db/schema.js";
 import { decodeCursor, buildCursorResponse } from "../common/pagination.js";
-import type { CursorPaginationInput, OffsetPaginationInput } from "../common/pagination.js";
+import type {
+  CursorPaginationInput,
+  OffsetPaginationInput,
+} from "../common/pagination.js";
 import { withTextSearchErrorHandling } from "../common/db-errors.js";
 
 export interface ScrutinSearchFilters {
@@ -32,7 +35,7 @@ export function createScrutinRepository(db: Database) {
     async search(
       legislature: string,
       filters: ScrutinSearchFilters,
-      pagination: CursorPaginationInput
+      pagination: CursorPaginationInput,
     ) {
       const { limit, cursor } = pagination;
       const conditions = [eq(scrutins.legislature, legislature)];
@@ -42,7 +45,7 @@ export function createScrutinRepository(db: Database) {
           sql`
             to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
             @@ plainto_tsquery('french', ${filters.q})
-          `
+          `,
         );
       }
       if (filters.from) {
@@ -62,19 +65,19 @@ export function createScrutinRepository(db: Database) {
               .select({ scrutinId: scrutinThemes.scrutinId })
               .from(scrutinThemes)
               .innerJoin(themes, eq(scrutinThemes.themeId, themes.id))
-              .where(eq(themes.slug, filters.theme))
-          )
+              .where(eq(themes.slug, filters.theme)),
+          ),
         );
       }
       if (cursor) {
         const decoded = decodeCursor(cursor);
         if (filters.sort === "date_asc") {
           conditions.push(
-            sql`(${scrutins.dateScrutin}, ${scrutins.id}) > (${new Date(decoded.date)}, ${decoded.id})`
+            sql`(${scrutins.dateScrutin}, ${scrutins.id}) > (${new Date(decoded.date)}, ${decoded.id})`,
           );
         } else {
           conditions.push(
-            sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`
+            sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`,
           );
         }
       }
@@ -83,10 +86,12 @@ export function createScrutinRepository(db: Database) {
         filters.sort === "date_asc"
           ? [asc(scrutins.dateScrutin), asc(scrutins.id)]
           : filters.sort === "relevance" && filters.q
-            ? [sql`ts_rank(
+            ? [
+                sql`ts_rank(
                 to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')),
                 plainto_tsquery('french', ${filters.q})
-              ) DESC`]
+              ) DESC`,
+              ]
             : [desc(scrutins.dateScrutin), desc(scrutins.id)];
 
       const runSearch = async () => {
@@ -164,7 +169,10 @@ export function createScrutinRepository(db: Database) {
           nombreNonVotants: scrutinGroupVotes.nombreNonVotants,
         })
         .from(scrutinGroupVotes)
-        .innerJoin(politicalGroups, eq(scrutinGroupVotes.politicalGroupId, politicalGroups.id))
+        .innerJoin(
+          politicalGroups,
+          eq(scrutinGroupVotes.politicalGroupId, politicalGroups.id),
+        )
         .where(eq(scrutinGroupVotes.scrutinId, id));
 
       return {
@@ -177,7 +185,7 @@ export function createScrutinRepository(db: Database) {
     async getVotes(
       scrutinId: string,
       filters: ScrutinVoteFilters,
-      pagination: OffsetPaginationInput
+      pagination: OffsetPaginationInput,
     ) {
       const { limit, offset } = pagination;
       const conditions = [eq(scrutinVotes.scrutinId, scrutinId)];
@@ -205,7 +213,10 @@ export function createScrutinRepository(db: Database) {
         })
         .from(scrutinVotes)
         .innerJoin(deputies, eq(scrutinVotes.deputyId, deputies.id))
-        .innerJoin(politicalGroups, eq(scrutinVotes.politicalGroupId, politicalGroups.id))
+        .innerJoin(
+          politicalGroups,
+          eq(scrutinVotes.politicalGroupId, politicalGroups.id),
+        )
         .where(and(...conditions))
         .orderBy(asc(deputies.lastName), asc(deputies.firstName))
         .limit(limit)

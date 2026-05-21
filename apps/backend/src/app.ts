@@ -1,7 +1,11 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
-import { createSerializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
+import {
+  createSerializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from "fastify-type-provider-zod";
 import { getRedis } from "./modules/common/cache.js";
 import { registerErrorHandler } from "./plugins/error-handler.js";
 import { registerJsonBodyParser } from "./plugins/json-body.js";
@@ -30,7 +34,9 @@ export async function buildApp() {
       level: process.env.LOG_LEVEL ?? "info",
     },
     trustProxy: process.env.TRUSTED_PROXIES
-      ? process.env.TRUSTED_PROXIES.split(",").map((s) => s.trim()).filter(Boolean)
+      ? process.env.TRUSTED_PROXIES.split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : false,
   }).withTypeProvider<ZodTypeProvider>();
 

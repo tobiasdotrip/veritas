@@ -24,7 +24,9 @@ describe("encodeCursor / decodeCursor", () => {
 
   it("throws ValidationError on invalid base64", () => {
     expect(() => decodeCursor("!!!not-valid!!!")).toThrow(ValidationError);
-    expect(() => decodeCursor("!!!not-valid!!!")).toThrow("Invalid cursor format");
+    expect(() => decodeCursor("!!!not-valid!!!")).toThrow(
+      "Invalid cursor format",
+    );
   });
 
   it("throws ValidationError on missing date field", () => {
@@ -39,7 +41,7 @@ describe("encodeCursor / decodeCursor", () => {
   });
 
   it("throws ValidationError on non-object payload", () => {
-    const encoded = Buffer.from("\"just-a-string\"").toString("base64url");
+    const encoded = Buffer.from('"just-a-string"').toString("base64url");
     expect(() => decodeCursor(encoded)).toThrow(ValidationError);
   });
 
@@ -55,7 +57,7 @@ describe("buildCursorResponse", () => {
     const result = buildCursorResponse(
       [] as Array<{ date: string; id: string }>,
       20,
-      (item) => ({ date: item.date, id: item.id })
+      (item) => ({ date: item.date, id: item.id }),
     );
     expect(result.data).toEqual([]);
     expect(result.nextCursor).toBeNull();

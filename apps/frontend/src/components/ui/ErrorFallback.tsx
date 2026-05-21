@@ -20,7 +20,7 @@ export function ErrorFallback({
       role="alert"
       className={cn(
         "flex flex-col items-center justify-center gap-3 rounded-lg border border-danger/20 bg-danger-bg px-6 py-10 text-center",
-        className
+        className,
       )}
     >
       <AlertTriangle className="h-10 w-10 text-danger" aria-hidden="true" />

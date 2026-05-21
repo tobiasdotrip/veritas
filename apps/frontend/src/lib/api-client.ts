@@ -5,7 +5,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public code: string,
-    message: string
+    message: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -23,7 +23,7 @@ interface ProblemDetails {
 
 function parseErrorBody(
   body: Record<string, unknown>,
-  statusText: string
+  statusText: string,
 ): { code: string; message: string } {
   if ("error" in body && body.error && typeof body.error === "object") {
     const err = body.error as { code?: string; message?: string };
@@ -51,7 +51,7 @@ const API_BASE_URL =
 
 export async function apiFetch<T>(
   path: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<ApiSuccess<T>> {
   const url = new URL(path, API_BASE_URL).toString();
   const res = await fetch(url, {
@@ -76,7 +76,7 @@ export async function apiFetch<T>(
     throw new ApiError(
       body.error.statusCode,
       body.error.code,
-      body.error.message
+      body.error.message,
     );
   }
   const success = body as ApiSuccess<T>;
@@ -93,7 +93,11 @@ export const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {
-        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        if (
+          error instanceof ApiError &&
+          error.status >= 400 &&
+          error.status < 500
+        ) {
           return false;
         }
         return failureCount < 3;

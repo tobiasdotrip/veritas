@@ -24,7 +24,10 @@ export function DeputeHeader({ depute, className }: DeputeHeaderProps) {
             loading="eager"
           />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-bg text-text-muted sm:h-24 sm:w-24" aria-hidden="true">
+          <div
+            className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-bg text-text-muted sm:h-24 sm:w-24"
+            aria-hidden="true"
+          >
             <span className="text-2xl font-bold">
               {depute.firstName.charAt(0)}
               {depute.lastName.charAt(0)}
@@ -40,8 +43,8 @@ export function DeputeHeader({ depute, className }: DeputeHeaderProps) {
           {depute.circoLabel
             ? `${depute.circoLabel}`
             : depute.departmentId
-            ? `Département ${depute.departmentId}`
-            : "Circonscription inconnue"}
+              ? `Département ${depute.departmentId}`
+              : "Circonscription inconnue"}
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {depute.groupAbbreviation && (
@@ -49,10 +52,7 @@ export function DeputeHeader({ depute, className }: DeputeHeaderProps) {
               {depute.groupAbbreviation}
             </span>
           )}
-          <BadgeResultat
-            resultat={isActive ? "adopté" : "rejeté"}
-            size="sm"
-          />
+          <BadgeResultat resultat={isActive ? "adopté" : "rejeté"} size="sm" />
           <span className="sr-only">
             {isActive ? "Mandat en cours" : "Mandat terminé"}
           </span>

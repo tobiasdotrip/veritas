@@ -17,7 +17,7 @@ const CompareResponseSchema = z.object({
       lastName: z.string(),
       slug: z.string(),
       photoUrl: z.string().nullable(),
-    })
+    }),
   ),
   totalCommonVotes: z.number(),
   identicalVotes: z.number(),
@@ -37,9 +37,9 @@ const CompareResponseSchema = z.object({
           slug: z.string(),
           groupAbbreviation: z.string().nullable(),
           position: z.enum(["pour", "contre", "abstention", "nonVotant"]),
-        })
+        }),
       ),
-    })
+    }),
   ),
   pairwise: z.array(
     z.object({
@@ -50,7 +50,7 @@ const CompareResponseSchema = z.object({
       concordanceRate: z.number(),
       identicalVotes: z.number(),
       totalCommon: z.number(),
-    })
+    }),
   ),
 });
 
@@ -62,11 +62,19 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
 
   async function resolveDeputyId(idOrSlug: string): Promise<string | null> {
     if (idOrSlug.startsWith("PA")) {
-      const result = await db.select({ id: deputies.id }).from(deputies).where(eq(deputies.id, idOrSlug)).limit(1);
+      const result = await db
+        .select({ id: deputies.id })
+        .from(deputies)
+        .where(eq(deputies.id, idOrSlug))
+        .limit(1);
       const row = result[0];
       if (row) return row.id;
     }
-    const result = await db.select({ id: deputies.id }).from(deputies).where(eq(deputies.slug, idOrSlug)).limit(1);
+    const result = await db
+      .select({ id: deputies.id })
+      .from(deputies)
+      .where(eq(deputies.slug, idOrSlug))
+      .limit(1);
     return result[0]?.id ?? null;
   }
 
@@ -79,9 +87,12 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         deputies: z
           .string()
           .min(3)
-          .refine((val) => val.split(",").length >= 2 && val.split(",").length <= 5, {
-            error: "2 à 5 députés requis (séparés par des virgules)",
-          }),
+          .refine(
+            (val) => val.split(",").length >= 2 && val.split(",").length <= 5,
+            {
+              error: "2 à 5 députés requis (séparés par des virgules)",
+            },
+          ),
         from: z.iso.date().optional(),
         to: z.iso.date().optional(),
         legislature: z.string().default("17"),
@@ -99,10 +110,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       const deputyIds = resolvedIds.filter((id): id is string => id !== null);
       if (deputyIds.length < 2) {
         throw new ValidationError(
-          "Could not resolve at least 2 valid deputy identifiers"
+          "Could not resolve at least 2 valid deputy identifiers",
         );
       }
-      const result = await service.compareDeputies(deputyIds, legislature, from, to);
+      const result = await service.compareDeputies(
+        deputyIds,
+        legislature,
+        from,
+        to,
+      );
       return reply.send({ data: result });
     },
   });

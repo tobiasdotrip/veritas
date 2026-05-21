@@ -20,15 +20,16 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
 
   const { data, isLoading } = useSearch(query, 0, 10);
 
-  const canAdd =
-    compared.length + (reference ? 1 : 0) < 5;
+  const canAdd = compared.length + (reference ? 1 : 0) < 5;
 
   return (
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-wrap items-center gap-2">
         {reference && (
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm text-primary">
-            <span className="font-medium">Réf. : {reference.firstName} {reference.lastName}</span>
+            <span className="font-medium">
+              Réf. : {reference.firstName} {reference.lastName}
+            </span>
             <button
               type="button"
               onClick={() => clearReference()}
@@ -72,11 +73,14 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
             <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-surface shadow-md">
               <ul role="listbox" className="max-h-64 overflow-auto py-1">
                 {data.deputies.length === 0 ? (
-                  <li className="px-3 py-2 text-sm text-text-muted">Aucun résultat</li>
+                  <li className="px-3 py-2 text-sm text-text-muted">
+                    Aucun résultat
+                  </li>
                 ) : (
                   data.deputies.map((d) => {
                     const already =
-                      reference?.slug === d.slug || compared.some((x) => x.slug === d.slug);
+                      reference?.slug === d.slug ||
+                      compared.some((x) => x.slug === d.slug);
                     return (
                       <li key={d.id}>
                         <button
@@ -102,7 +106,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
                             "flex w-full items-center gap-3 px-3 py-2 text-left text-sm",
                             already
                               ? "cursor-not-allowed opacity-50"
-                              : "hover:bg-surface-raised focus-visible:bg-surface-raised focus-visible:outline-none"
+                              : "hover:bg-surface-raised focus-visible:bg-surface-raised focus-visible:outline-none",
                           )}
                         >
                           {d.photoUrl ? (
@@ -127,7 +131,9 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
                               {d.circoLabel ? ` · ${d.circoLabel}` : ""}
                             </p>
                           </div>
-                          {!already && <UserPlus className="h-4 w-4 text-text-muted" />}
+                          {!already && (
+                            <UserPlus className="h-4 w-4 text-text-muted" />
+                          )}
                         </button>
                       </li>
                     );
@@ -145,9 +151,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
       )}
 
       {!canAdd && (
-        <p className="text-xs text-text-muted">
-          Limite de 5 députés atteinte.
-        </p>
+        <p className="text-xs text-text-muted">Limite de 5 députés atteinte.</p>
       )}
     </div>
   );

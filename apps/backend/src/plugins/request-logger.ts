@@ -12,24 +12,27 @@ export function registerRequestLogger(app: FastifyInstance): void {
           userAgent: req.headers["user-agent"],
         },
       },
-      "Incoming request"
+      "Incoming request",
     );
   });
 
-  app.addHook("onResponse", async (req: FastifyRequest, reply: FastifyReply) => {
-    req.log.info(
-      {
-        req: {
-          id: req.id,
-          method: req.method,
-          url: req.url,
+  app.addHook(
+    "onResponse",
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      req.log.info(
+        {
+          req: {
+            id: req.id,
+            method: req.method,
+            url: req.url,
+          },
+          res: {
+            statusCode: reply.statusCode,
+            responseTime: reply.elapsedTime,
+          },
         },
-        res: {
-          statusCode: reply.statusCode,
-          responseTime: reply.elapsedTime,
-        },
-      },
-      "Request completed"
-    );
-  });
+        "Request completed",
+      );
+    },
+  );
 }

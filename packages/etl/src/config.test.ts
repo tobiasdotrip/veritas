@@ -10,28 +10,28 @@ describe("validateEtlUrl", () => {
 
   it("throws on HTTP URL", () => {
     expect(() =>
-      validateEtlUrl("http://data.assemblee-nationale.fr/test.zip", "test")
+      validateEtlUrl("http://data.assemblee-nationale.fr/test.zip", "test"),
     ).toThrow("test URL must use HTTPS");
   });
 
   it("throws on invalid host", () => {
-    expect(() =>
-      validateEtlUrl("https://evil.com/test.zip", "test")
-    ).toThrow("test URL host must be data.assemblee-nationale.fr");
+    expect(() => validateEtlUrl("https://evil.com/test.zip", "test")).toThrow(
+      "test URL host must be data.assemblee-nationale.fr",
+    );
   });
 
   it("throws on URL with credentials", () => {
     expect(() =>
       validateEtlUrl(
         "https://user:pass@data.assemblee-nationale.fr/test.zip",
-        "test"
-      )
+        "test",
+      ),
     ).toThrow("test URL must not contain credentials");
   });
 
   it("throws on invalid URL format", () => {
     expect(() => validateEtlUrl("not-a-url", "test")).toThrow(
-      "Invalid test URL: not-a-url"
+      "Invalid test URL: not-a-url",
     );
   });
 
@@ -39,7 +39,7 @@ describe("validateEtlUrl", () => {
     // Cyrillic 'е' (U+0435) instead of Latin 'e' (U+0065)
     const homograph = "https://data.assеmblee-nationale.fr/test.zip";
     expect(() => validateEtlUrl(homograph, "test")).toThrow(
-      "test URL host must be data.assemblee-nationale.fr"
+      "test URL host must be data.assemblee-nationale.fr",
     );
   });
 
@@ -48,8 +48,8 @@ describe("validateEtlUrl", () => {
     expect(() =>
       validateEtlUrl(
         "https://evil.com@data.assemblee-nationale.fr/test.zip",
-        "test"
-      )
+        "test",
+      ),
     ).toThrow("test URL must not contain credentials");
   });
 
@@ -65,8 +65,8 @@ describe("validateEtlUrl", () => {
       expect(() =>
         validateEtlUrl(
           "https://data.assemblee-nationale.fr:8080/test.zip",
-          "test"
-        )
+          "test",
+        ),
       ).toThrow("test URL must use standard HTTPS port");
     } finally {
       process.env.NODE_ENV = originalNodeEnv;
@@ -121,7 +121,7 @@ describe("defaultConfig", () => {
     const { defaultConfig: dynamicConfig } = await import("./config.js");
 
     expect(dynamicConfig.urls.scrutins).toBe(
-      "https://data.assemblee-nationale.fr/custom.zip"
+      "https://data.assemblee-nationale.fr/custom.zip",
     );
     expect(dynamicConfig.tempDir).toBe("/custom/tmp");
     expect(dynamicConfig.downloadTimeoutMs).toBe(30_000);

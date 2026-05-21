@@ -28,7 +28,7 @@ export function createLoader(pool: Pool): LoaderDeps {
 export async function loadDeputies(
   deps: LoaderDeps,
   deputies: AsyncIterable<ParsedDeputy>,
-  _config: EtlConfig
+  _config: EtlConfig,
 ): Promise<{ inserted: number; updated: number }> {
   let inserted = 0;
   let updated = 0;
@@ -77,7 +77,7 @@ export async function loadDeputies(
 
 export async function loadMandates(
   deps: LoaderDeps,
-  mandates: AsyncIterable<ParsedMandate>
+  mandates: AsyncIterable<ParsedMandate>,
 ): Promise<{ inserted: number; updated: number }> {
   let inserted = 0;
   let updated = 0;
@@ -123,7 +123,7 @@ export async function loadMandates(
 
 export async function loadAffiliations(
   deps: LoaderDeps,
-  affiliations: AsyncIterable<ParsedAffiliation>
+  affiliations: AsyncIterable<ParsedAffiliation>,
 ): Promise<{ inserted: number }> {
   let inserted = 0;
 
@@ -162,7 +162,7 @@ export async function loadAffiliations(
 export async function loadPoliticalGroups(
   deps: LoaderDeps,
   groups: AsyncIterable<ParsedPoliticalGroup>,
-  _config: EtlConfig
+  _config: EtlConfig,
 ): Promise<{ inserted: number; updated: number }> {
   let inserted = 0;
   let updated = 0;
@@ -211,7 +211,7 @@ export async function loadScrutins(
   deps: LoaderDeps,
   scrutinsIter: AsyncIterable<ParsedScrutin>,
   config: EtlConfig,
-  onProgress?: (processed: number) => void
+  onProgress?: (processed: number) => void,
 ): Promise<{ inserted: number; updated: number; errors: number }> {
   let inserted = 0;
   const updated = 0;
@@ -280,7 +280,7 @@ export async function loadScrutins(
                   nombreNonVotantsVolontaires:
                     gv.nombreNonVotantsVolontaires ?? null,
                   createdAt: new Date(),
-                }))
+                })),
               )
               .onConflictDoUpdate({
                 target: [
@@ -294,8 +294,7 @@ export async function loadScrutins(
                   nombreContre: sql`excluded.nombre_contre`,
                   nombreAbstentions: sql`excluded.nombre_abstentions`,
                   nombreNonVotants: sql`excluded.nombre_non_votants`,
-                  nombreNonVotantsVolontaires:
-                    sql`excluded.nombre_non_votants_volontaires`,
+                  nombreNonVotantsVolontaires: sql`excluded.nombre_non_votants_volontaires`,
                 },
               });
           }
@@ -323,7 +322,7 @@ export async function loadScrutins(
                 parDelegation: v.parDelegation,
                 causePositionVote: v.causePositionVote ?? null,
                 createdAt: new Date(),
-              }))
+              })),
             )
             .onConflictDoUpdate({
               target: [
@@ -345,7 +344,7 @@ export async function loadScrutins(
     } catch (err) {
       errors += batch.length;
       console.error(
-        `[loader] Batch failed (${batch.length} scrutins): ${err instanceof Error ? err.message : String(err)}`
+        `[loader] Batch failed (${batch.length} scrutins): ${err instanceof Error ? err.message : String(err)}`,
       );
     } finally {
       batch = [];

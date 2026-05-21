@@ -12,10 +12,7 @@ export interface VoteCardProps {
 
 export function VoteCard({ vote, className }: VoteCardProps) {
   return (
-    <Card
-      variant="hoverable"
-      className={cn("flex flex-col gap-2", className)}
-    >
+    <Card variant="hoverable" className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <Link
@@ -39,7 +36,7 @@ export function VoteCard({ vote, className }: VoteCardProps) {
             "inline-block h-2 w-2 rounded-full",
             vote.alignment === "aligned" && "bg-success",
             vote.alignment === "opposed" && "bg-danger",
-            vote.alignment === "neutral" && "bg-neutral"
+            vote.alignment === "neutral" && "bg-neutral",
           )}
           aria-hidden="true"
         />
@@ -47,8 +44,8 @@ export function VoteCard({ vote, className }: VoteCardProps) {
           {vote.alignment === "aligned"
             ? "Aligné avec le groupe"
             : vote.alignment === "opposed"
-            ? "Opposé au groupe"
-            : "Neutre"}
+              ? "Opposé au groupe"
+              : "Neutre"}
         </span>
         {vote.parDelegation && (
           <span className="ml-auto text-text-muted">Par délégation</span>

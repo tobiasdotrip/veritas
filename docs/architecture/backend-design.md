@@ -4,7 +4,7 @@
 **Version** : 1.1  
 **Stack** : Fastify 5 + TypeScript + PostgreSQL 17 + Drizzle 0.45 + Zod 4 + Redis 8  
 **Scope** : MVP (Assemblée Nationale, législature courante)  
-**Implémentation** : [ETAT_PROJET.md](../ETAT_PROJET.md)  
+**Implémentation** : [ETAT_PROJET.md](../ETAT_PROJET.md)
 
 ---
 
@@ -20,6 +20,7 @@ Ce document définit l'architecture backend complète pour la plateforme de tran
 - **Structure de projet modulaire** séparant routes, services, repositories et cross-cutting concerns
 
 **Hypothèses de volume (17e législature)** :
+
 - ~580 scrutins/an → ~3 500 scrutins sur la législature
 - ~577 députés
 - ~3,3 M votes individuels
@@ -33,13 +34,14 @@ Ce document définit l'architecture backend complète pour la plateforme de tran
 
 L'AN ne fournit pas d'API REST paginée mais des **archives ZIP complètes** mises à jour quotidiennement.
 
-| Ressource | URL modèle | Format |
-|-----------|------------|--------|
-| Scrutins (votes) | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip` | ZIP + JSON |
-| Députés acteurs | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs/AMO10_deputes_actifs.json.zip` | ZIP + JSON |
-| Organes (groupes) | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/organe/AMO20_organe.json.zip` | ZIP + JSON |
+| Ressource         | URL modèle                                                                                                           | Format     |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Scrutins (votes)  | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip`                   | ZIP + JSON |
+| Députés acteurs   | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs/AMO10_deputes_actifs.json.zip` | ZIP + JSON |
+| Organes (groupes) | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/organe/AMO20_organe.json.zip`                 | ZIP + JSON |
 
 **Structure des votes (JSON)** :
+
 - Racine : `scrutins.scrutin[]`
 - Chaque scrutin contient `ventilationVotes.organe.groupes.groupe[]`
 - Votes nominatifs dans `vote.decompteNominatif` :
@@ -101,10 +103,7 @@ export const votePositionEnum = pgEnum("vote_position", [
   "nonVotant",
 ]);
 
-export const scrutinSortEnum = pgEnum("scrutin_sort", [
-  "adopté",
-  "rejeté",
-]);
+export const scrutinSortEnum = pgEnum("scrutin_sort", ["adopté", "rejeté"]);
 
 export const syncStatusEnum = pgEnum("sync_status", [
   "pending",
@@ -147,9 +146,9 @@ export const deputies = pgTable(
     index("idx_deputies_circo").on(table.departmentId, table.circoNumber),
     index("idx_deputies_search").using(
       "gin",
-      sql`to_tsvector('french', coalesce(${table.lastName}, '') || ' ' || coalesce(${table.firstName}, ''))`
+      sql`to_tsvector('french', coalesce(${table.lastName}, '') || ' ' || coalesce(${table.firstName}, ''))`,
     ),
-  ]
+  ],
 );
 
 export const deputiesRelations = relations(deputies, ({ many }) => ({
@@ -183,9 +182,9 @@ export const deputyMandates = pgTable(
     index("idx_mandates_deputy").on(table.deputyId),
     index("idx_mandates_legislature_date").on(
       table.legislature,
-      table.startDate
+      table.startDate,
     ),
-  ]
+  ],
 );
 
 export const deputyMandatesRelations = relations(
@@ -197,7 +196,7 @@ export const deputyMandatesRelations = relations(
     }),
     affiliations: many(deputyGroupAffiliations),
     votes: many(scrutinVotes),
-  })
+  }),
 );
 
 // ─── Groupes politiques (Organes) ────────────────────────────────
@@ -217,7 +216,7 @@ export const politicalGroups = pgTable(
   },
   (table) => [
     index("idx_groups_legislature").on(table.legislature, table.name),
-  ]
+  ],
 );
 
 export const politicalGroupsRelations = relations(
@@ -225,7 +224,7 @@ export const politicalGroupsRelations = relations(
   ({ many }) => ({
     affiliations: many(deputyGroupAffiliations),
     groupVotes: many(scrutinGroupVotes),
-  })
+  }),
 );
 
 // ─── Affiliations député ↔ groupe ───────────────────────────────
@@ -250,7 +249,7 @@ export const deputyGroupAffiliations = pgTable(
   (table) => [
     index("idx_affiliations_deputy_date").on(table.deputyId, table.startDate),
     index("idx_affiliations_group").on(table.politicalGroupId),
-  ]
+  ],
 );
 
 // ─── Scrutins ────────────────────────────────────────────────────
@@ -293,19 +292,19 @@ export const scrutins = pgTable(
   (table) => [
     index("idx_scrutins_legislature_date").on(
       table.legislature,
-      table.dateScrutin.desc()
+      table.dateScrutin.desc(),
     ),
     index("idx_scrutins_date_numero").on(
       table.dateScrutin.desc(),
-      table.numero.desc()
+      table.numero.desc(),
     ),
     index("idx_scrutins_type").on(table.codeTypeVote),
     index("idx_scrutins_sort").on(table.sortCode),
     index("idx_scrutins_search").using(
       "gin",
-      sql`to_tsvector('french', coalesce(${table.titre}, '') || ' ' || coalesce(${table.objet}, ''))`
+      sql`to_tsvector('french', coalesce(${table.titre}, '') || ' ' || coalesce(${table.objet}, ''))`,
     ),
-  ]
+  ],
 );
 
 export const scrutinsRelations = relations(scrutins, ({ many }) => ({
@@ -338,10 +337,13 @@ export const scrutinGroupVotes = pgTable(
   (table) => [
     uniqueIndex("idx_scrutin_group_unique").on(
       table.scrutinId,
-      table.politicalGroupId
+      table.politicalGroupId,
     ),
-    index("idx_scrutin_group_group").on(table.politicalGroupId, table.scrutinId),
-  ]
+    index("idx_scrutin_group_group").on(
+      table.politicalGroupId,
+      table.scrutinId,
+    ),
+  ],
 );
 
 // ─── Votes individuels ───────────────────────────────────────────
@@ -372,8 +374,11 @@ export const scrutinVotes = pgTable(
     index("idx_scrutin_votes_deputy").on(table.deputyId, table.scrutinId),
     index("idx_scrutin_votes_scrutin_pos").on(table.scrutinId, table.position),
     index("idx_scrutin_votes_deputy_pos").on(table.deputyId, table.position),
-    index("idx_scrutin_votes_group").on(table.politicalGroupId, table.scrutinId),
-  ]
+    index("idx_scrutin_votes_group").on(
+      table.politicalGroupId,
+      table.scrutinId,
+    ),
+  ],
 );
 
 export const scrutinVotesRelations = relations(scrutinVotes, ({ one }) => ({
@@ -421,7 +426,7 @@ export const scrutinThemes = pgTable(
   (table) => [
     uniqueIndex("idx_scrutin_theme_unique").on(table.scrutinId, table.themeId),
     index("idx_scrutin_theme_theme").on(table.themeId),
-  ]
+  ],
 );
 
 // ─── Logs de synchronisation ETL ─────────────────────────────────
@@ -457,23 +462,23 @@ export const communes = pgTable(
   (table) => [
     index("idx_communes_postal").on(table.postalCode),
     index("idx_communes_dept_circo").on(table.departmentId, table.circoNumber),
-  ]
+  ],
 );
 ```
 
 ### 3.3. Justification des index
 
-| Index | Tables | Justification |
-|-------|--------|---------------|
-| `idx_deputies_search` (GIN tsvector) | `deputies` | Recherche full-text rapide par nom/prénom |
-| `idx_deputies_circo` | `deputies` | Filtrage par département + numéro de circonscription |
-| `idx_mandates_legislature_date` | `deputy_mandates` | Sélection des mandats actifs à une date donnée |
-| `idx_scrutins_legislature_date` | `scrutins` | Liste des scrutins par législature, triés par date décroissante |
-| `idx_scrutins_search` (GIN tsvector) | `scrutins` | Recherche texte dans titre et objet du scrutin |
-| `idx_scrutin_votes_unique` | `scrutin_votes` | Contrainte d'unicité (1 vote par député et par scrutin) |
-| `idx_scrutin_votes_deputy` | `scrutin_votes` | Récupération de l'historique des votes d'un député |
-| `idx_scrutin_votes_scrutin_pos` | `scrutin_votes` | Filtrage des votes par position sur un scrutin donné |
-| `idx_communes_postal` | `communes` | Résolution code postal → circonscription |
+| Index                                | Tables            | Justification                                                   |
+| ------------------------------------ | ----------------- | --------------------------------------------------------------- |
+| `idx_deputies_search` (GIN tsvector) | `deputies`        | Recherche full-text rapide par nom/prénom                       |
+| `idx_deputies_circo`                 | `deputies`        | Filtrage par département + numéro de circonscription            |
+| `idx_mandates_legislature_date`      | `deputy_mandates` | Sélection des mandats actifs à une date donnée                  |
+| `idx_scrutins_legislature_date`      | `scrutins`        | Liste des scrutins par législature, triés par date décroissante |
+| `idx_scrutins_search` (GIN tsvector) | `scrutins`        | Recherche texte dans titre et objet du scrutin                  |
+| `idx_scrutin_votes_unique`           | `scrutin_votes`   | Contrainte d'unicité (1 vote par député et par scrutin)         |
+| `idx_scrutin_votes_deputy`           | `scrutin_votes`   | Récupération de l'historique des votes d'un député              |
+| `idx_scrutin_votes_scrutin_pos`      | `scrutin_votes`   | Filtrage des votes par position sur un scrutin donné            |
+| `idx_communes_postal`                | `communes`        | Résolution code postal → circonscription                        |
 
 ---
 
@@ -482,6 +487,7 @@ export const communes = pgTable(
 ### 4.1. Principes transversaux
 
 - **Enveloppe de réponse** uniforme :
+
   ```json
   // Succès
   {
@@ -542,9 +548,7 @@ export const DeputyVotesQuery = z.object({
     .enum(["solennel", "motion_censure", "amendement", "budget", "autre"])
     .optional(),
   theme: z.string().optional(),
-  position: z
-    .enum(["pour", "contre", "abstention", "nonVotant"])
-    .optional(),
+  position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
   ...CursorPaginationQuery.shape,
 });
 
@@ -561,9 +565,7 @@ export const SearchScrutinsQuery = z.object({
 
 export const ScrutinVotesQuery = z.object({
   group: z.string().optional(),
-  position: z
-    .enum(["pour", "contre", "abstention", "nonVotant"])
-    .optional(),
+  position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
   ...OffsetPaginationQuery.shape,
 });
 
@@ -571,7 +573,10 @@ export const ScrutinVotesQuery = z.object({
 export const CompareQuery = z.object({
   deputies: z
     .string()
-    .regex(/^PA\d+(,PA\d+){1,4}$/, "2 à 5 députés requis (séparés par des virgules)"),
+    .regex(
+      /^PA\d+(,PA\d+){1,4}$/,
+      "2 à 5 députés requis (séparés par des virgules)",
+    ),
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
 });
@@ -579,21 +584,21 @@ export const CompareQuery = z.object({
 
 ### 4.3. Définition des endpoints
 
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| `GET` | `/deputies` | Recherche de députés (nom, CP, circonscription, groupe) | — |
-| `GET` | `/deputies/:id` | Fiche député avec stats agrégées | — |
-| `GET` | `/deputies/:id/votes` | Historique des votes (cursor pagination) | — |
-| `GET` | `/deputies/:id/stats` | Indicateurs calculés (participation, loyauté) | — |
-| `GET` | `/deputies/:id/votes/export` | Export CSV/JSON des votes | — |
-| `GET` | `/scrutins` | Liste des scrutins avec filtres | — |
-| `GET` | `/scrutins/:id` | Détail d'un scrutin + résultats globaux | — |
-| `GET` | `/scrutins/:id/votes` | Votes individuels paginés | — |
-| `GET` | `/scrutins/:id/votes/export` | Export CSV/JSON des votes d'un scrutin | — |
-| `GET` | `/groups` | Liste des groupes politiques | — |
-| `GET` | `/groups/:id/stats` | Stats agrégées par groupe (cohésion, participation moyenne) | — |
-| `GET` | `/compare` | Comparaison de votes entre 2–5 députés | — |
-| `GET` | `/health` | Health check (DB + Redis) | — |
+| Méthode | Endpoint                     | Description                                                 | Auth |
+| ------- | ---------------------------- | ----------------------------------------------------------- | ---- |
+| `GET`   | `/deputies`                  | Recherche de députés (nom, CP, circonscription, groupe)     | —    |
+| `GET`   | `/deputies/:id`              | Fiche député avec stats agrégées                            | —    |
+| `GET`   | `/deputies/:id/votes`        | Historique des votes (cursor pagination)                    | —    |
+| `GET`   | `/deputies/:id/stats`        | Indicateurs calculés (participation, loyauté)               | —    |
+| `GET`   | `/deputies/:id/votes/export` | Export CSV/JSON des votes                                   | —    |
+| `GET`   | `/scrutins`                  | Liste des scrutins avec filtres                             | —    |
+| `GET`   | `/scrutins/:id`              | Détail d'un scrutin + résultats globaux                     | —    |
+| `GET`   | `/scrutins/:id/votes`        | Votes individuels paginés                                   | —    |
+| `GET`   | `/scrutins/:id/votes/export` | Export CSV/JSON des votes d'un scrutin                      | —    |
+| `GET`   | `/groups`                    | Liste des groupes politiques                                | —    |
+| `GET`   | `/groups/:id/stats`          | Stats agrégées par groupe (cohésion, participation moyenne) | —    |
+| `GET`   | `/compare`                   | Comparaison de votes entre 2–5 députés                      | —    |
+| `GET`   | `/health`                    | Health check (DB + Redis)                                   | —    |
 
 ### 4.4. Exemple de route Fastify
 
@@ -631,7 +636,11 @@ export async function deputyRoutes(app: FastifyInstance) {
       const result = await service.getProfile(req.params.id);
       if (!result) {
         return reply.status(404).send({
-          error: { code: "DEPUTY_NOT_FOUND", message: "Député non trouvé", statusCode: 404 },
+          error: {
+            code: "DEPUTY_NOT_FOUND",
+            message: "Député non trouvé",
+            statusCode: 404,
+          },
         });
       }
       return reply.send({ data: result });
@@ -691,16 +700,16 @@ export async function deputyRoutes(app: FastifyInstance) {
 
 Mapping AN → Modèle interne :
 
-| Champ AN | Champ interne | Transformation |
-|----------|---------------|----------------|
-| `uid` | `scrutins.id` | — |
-| `numero` | `scrutins.numero` | `parseInt` |
-| `dateScrutin` | `scrutins.dateScrutin` | `new Date()` |
-| `sort.code` | `scrutins.sortCode` | Enum mapping |
-| `titre` | `scrutins.titre` | Trim |
-| `acteurRef` | `scrutinVotes.deputyId` | — |
-| `mandatRef` | `scrutinVotes.mandateId` | — |
-| `parDelegation` | `scrutinVotes.parDelegation` | Boolean |
+| Champ AN              | Champ interne                           | Transformation          |
+| --------------------- | --------------------------------------- | ----------------------- |
+| `uid`                 | `scrutins.id`                           | —                       |
+| `numero`              | `scrutins.numero`                       | `parseInt`              |
+| `dateScrutin`         | `scrutins.dateScrutin`                  | `new Date()`            |
+| `sort.code`           | `scrutins.sortCode`                     | Enum mapping            |
+| `titre`               | `scrutins.titre`                        | Trim                    |
+| `acteurRef`           | `scrutinVotes.deputyId`                 | —                       |
+| `mandatRef`           | `scrutinVotes.mandateId`                | —                       |
+| `parDelegation`       | `scrutinVotes.parDelegation`            | Boolean                 |
 | `positionMajoritaire` | `scrutinGroupVotes.positionMajoritaire` | Normalisation minuscule |
 
 #### Étape 4 — Chargement transactionnel
@@ -710,11 +719,15 @@ Pour chaque scrutin modifié ou nouveau :
 ```typescript
 await db.transaction(async (trx) => {
   // 1. Upsert scrutin
-  await trx.insert(scrutins).values(scrutinRow)
+  await trx
+    .insert(scrutins)
+    .values(scrutinRow)
     .onConflictDoUpdate({ target: scrutins.id, set: scrutinRow });
 
   // 2. Supprimer les anciennes données liées
-  await trx.delete(scrutinGroupVotes).where(eq(scrutinGroupVotes.scrutinId, scrutinId));
+  await trx
+    .delete(scrutinGroupVotes)
+    .where(eq(scrutinGroupVotes.scrutinId, scrutinId));
   await trx.delete(scrutinVotes).where(eq(scrutinVotes.scrutinId, scrutinId));
   await trx.delete(scrutinThemes).where(eq(scrutinThemes.scrutinId, scrutinId));
 
@@ -739,6 +752,7 @@ await db.transaction(async (trx) => {
 #### Étape 5 — Synchronisation des députés et groupes
 
 Le pipeline ETL lance également (avant les scrutins) :
+
 1. Téléchargement des **députés actifs** (`AMO10_deputes_actifs.json.zip`)
 2. Téléchargement des **organes** (`AMO20_organe.json.zip`)
 3. Upsert des `deputies`, `deputyMandates`, `politicalGroups`, `deputyGroupAffiliations`
@@ -759,11 +773,11 @@ Le pipeline ETL lance également (avant les scrutins) :
 
 ### 5.4. Planification
 
-| Job | Fréquence | Heure | Source |
-|-----|-----------|-------|--------|
-| Sync scrutins | Quotidien | 03:00 CET | ZIP Scrutins.json |
-| Sync députés | Quotidien | 03:15 CET | ZIP AMO10 |
-| Sync organes | Quotidien | 03:30 CET | ZIP AMO20 |
+| Job             | Fréquence | Heure     | Source                         |
+| --------------- | --------- | --------- | ------------------------------ |
+| Sync scrutins   | Quotidien | 03:00 CET | ZIP Scrutins.json              |
+| Sync députés    | Quotidien | 03:15 CET | ZIP AMO10                      |
+| Sync organes    | Quotidien | 03:30 CET | ZIP AMO20                      |
 | Classify themes | Quotidien | 04:00 CET | Règles internes + review queue |
 
 ---
@@ -1113,6 +1127,7 @@ GET v1:deputies:profile:PA1234:gen:42
 ```
 
 Après chaque ETL réussi :
+
 ```
 INCR cache:gen:17  → 43
 ```
@@ -1121,17 +1136,17 @@ Les anciennes clés expirent naturellement via TTL. Aucun `SCAN` / `DEL` massif 
 
 ### 7.2. Matrice de cache
 
-| Ressource | Clé | TTL | Warming |
-|-----------|-----|-----|---------|
-| Recherche députés | `v1:deputies:search:{hash}:{gen}` | 30 min | Non |
-| Profil député + stats | `v1:deputies:profile:{id}:{gen}` | 15 min | Oui (top 50) |
-| Votes d'un député | `v1:deputies:votes:{id}:{cursor}:{filters}:{gen}` | 10 min | Non |
-| Détail scrutin | `v1:scrutins:{id}:{gen}` | 30 min | Oui (derniers 20) |
-| Votes par scrutin | `v1:scrutins:votes:{id}:{page}:{filters}:{gen}` | 10 min | Non |
-| Comparaison | `v1:compare:{hash}:{gen}` | 15 min | Non |
-| Groupes & stats | `v1:groups:{id}:{gen}` | 1 h | Oui |
-| Homepage (derniers scrutins) | `v1:home:scrutins:{gen}` | 5 min | Oui |
-| Indicateurs leaderboard | `v1:leaderboard:{type}:{gen}` | 1 h | Oui |
+| Ressource                    | Clé                                               | TTL    | Warming           |
+| ---------------------------- | ------------------------------------------------- | ------ | ----------------- |
+| Recherche députés            | `v1:deputies:search:{hash}:{gen}`                 | 30 min | Non               |
+| Profil député + stats        | `v1:deputies:profile:{id}:{gen}`                  | 15 min | Oui (top 50)      |
+| Votes d'un député            | `v1:deputies:votes:{id}:{cursor}:{filters}:{gen}` | 10 min | Non               |
+| Détail scrutin               | `v1:scrutins:{id}:{gen}`                          | 30 min | Oui (derniers 20) |
+| Votes par scrutin            | `v1:scrutins:votes:{id}:{page}:{filters}:{gen}`   | 10 min | Non               |
+| Comparaison                  | `v1:compare:{hash}:{gen}`                         | 15 min | Non               |
+| Groupes & stats              | `v1:groups:{id}:{gen}`                            | 1 h    | Oui               |
+| Homepage (derniers scrutins) | `v1:home:scrutins:{gen}`                          | 5 min  | Oui               |
+| Indicateurs leaderboard      | `v1:leaderboard:{type}:{gen}`                     | 1 h    | Oui               |
 
 ### 7.3. Implémentation TypeScript
 
@@ -1250,12 +1265,12 @@ backend/
 
 ### 8.1. Séparation des couches
 
-| Couche | Responsabilité | Exemple |
-|--------|----------------|---------|
-| **Routes** | Validation entrée, sérialisation sortie, HTTP status | `deputies/routes.ts` |
-| **Service** | Logique métier, orchestration, calcul d'indicateurs | `DeputyService.computeStats()` |
-| **Repository** | Requêtes SQL, transactions, abstraction Drizzle | `DeputyRepository.findById()` |
-| **ETL** | Ingestion, transformation, normalisation des sources | `etl/loader.ts` |
+| Couche         | Responsabilité                                       | Exemple                        |
+| -------------- | ---------------------------------------------------- | ------------------------------ |
+| **Routes**     | Validation entrée, sérialisation sortie, HTTP status | `deputies/routes.ts`           |
+| **Service**    | Logique métier, orchestration, calcul d'indicateurs  | `DeputyService.computeStats()` |
+| **Repository** | Requêtes SQL, transactions, abstraction Drizzle      | `DeputyRepository.findById()`  |
+| **ETL**        | Ingestion, transformation, normalisation des sources | `etl/loader.ts`                |
 
 ### 8.2. Variables d'environnement clés
 
@@ -1311,11 +1326,11 @@ CACHE_GEN_PREFIX=v1
 
 ### 10.1. Stratégie
 
-| Type | Portée | Outils |
-|------|--------|--------|
-| **Unitaires** | Calcul d'indicateurs (concordance, participation, loyauté) | Vitest |
-| **Intégration** | Routes API + requêtes SQL sur base de test | Vitest + `testcontainers` (PostgreSQL) |
-| **ETL** | Parsing d'un extrait JSON AN (fixture de 3 scrutins) | Vitest |
+| Type            | Portée                                                     | Outils                                 |
+| --------------- | ---------------------------------------------------------- | -------------------------------------- |
+| **Unitaires**   | Calcul d'indicateurs (concordance, participation, loyauté) | Vitest                                 |
+| **Intégration** | Routes API + requêtes SQL sur base de test                 | Vitest + `testcontainers` (PostgreSQL) |
+| **ETL**         | Parsing d'un extrait JSON AN (fixture de 3 scrutins)       | Vitest                                 |
 
 ### 10.2. Exemple de test unitaire (indicateur)
 
@@ -1347,30 +1362,30 @@ describe("calculateLoyalty", () => {
 
 ## 11. Roadmap technique
 
-| Jalon | Livrable | Semaine |
-|-------|----------|---------|
-| **J1** | Setup projet, schéma Drizzle, migrations, seeds | 1 |
-| **J2** | ETL complet (download → parse → load), tests fixtures | 2 |
-| **J3** | API députés (search, profile, votes) + cache Redis | 3 |
-| **J4** | API scrutins (list, detail, votes) + recherche texte | 4 |
-| **J5** | Comparateur + indicateurs (participation, loyauté) | 5 |
-| **J6** | Export CSV/JSON, rate limiting, documentation OpenAPI | 6 |
-| **J7** | Tests de charge (k6), optimisation requêtes lentes | 7 |
-| **J8** | Monitoring (health checks, alertes ETL), polissage | 8 |
+| Jalon  | Livrable                                              | Semaine |
+| ------ | ----------------------------------------------------- | ------- |
+| **J1** | Setup projet, schéma Drizzle, migrations, seeds       | 1       |
+| **J2** | ETL complet (download → parse → load), tests fixtures | 2       |
+| **J3** | API députés (search, profile, votes) + cache Redis    | 3       |
+| **J4** | API scrutins (list, detail, votes) + recherche texte  | 4       |
+| **J5** | Comparateur + indicateurs (participation, loyauté)    | 5       |
+| **J6** | Export CSV/JSON, rate limiting, documentation OpenAPI | 6       |
+| **J7** | Tests de charge (k6), optimisation requêtes lentes    | 7       |
+| **J8** | Monitoring (health checks, alertes ETL), polissage    | 8       |
 
 ---
 
 ## 12. Risques et mitigation
 
-| Risque | Probabilité | Impact | Mitigation |
-|--------|-------------|--------|------------|
-| Changement de format JSON AN | Moyenne | Élevé | Pipeline ETL versionné + hash de structure + alerting si parsing échoue |
-| Trafic viral soudain | Moyenne | Moyen | Cache agressif + CDN (Cloudflare) + rate limiting |
-| Données AN en retard / indisponibles | Faible | Moyen | Fallback sur page "Dernière synchro : XXX" + retry exponentiel |
-| Volume de données croissant (multi-législatures) | Moyenne | Moyen | Partitionnement future par législature + table `deputy_stats` précalculée |
-| Erreur de transcription (accusation de partialité) | Faible | Élevé | Tests automatisés sur fixtures AN officielles + page méthodologie |
+| Risque                                             | Probabilité | Impact | Mitigation                                                                |
+| -------------------------------------------------- | ----------- | ------ | ------------------------------------------------------------------------- |
+| Changement de format JSON AN                       | Moyenne     | Élevé  | Pipeline ETL versionné + hash de structure + alerting si parsing échoue   |
+| Trafic viral soudain                               | Moyenne     | Moyen  | Cache agressif + CDN (Cloudflare) + rate limiting                         |
+| Données AN en retard / indisponibles               | Faible      | Moyen  | Fallback sur page "Dernière synchro : XXX" + retry exponentiel            |
+| Volume de données croissant (multi-législatures)   | Moyenne     | Moyen  | Partitionnement future par législature + table `deputy_stats` précalculée |
+| Erreur de transcription (accusation de partialité) | Faible      | Élevé  | Tests automatisés sur fixtures AN officielles + page méthodologie         |
 
 ---
 
-*Document rédigé par le Backend Developer — 2026-05-19*  
-*Prochaine étape : Revue avec l'Architecte, puis mise en place du repo et génération des migrations Drizzle.*
+_Document rédigé par le Backend Developer — 2026-05-19_  
+_Prochaine étape : Revue avec l'Architecte, puis mise en place du repo et génération des migrations Drizzle._

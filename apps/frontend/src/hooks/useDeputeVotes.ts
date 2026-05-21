@@ -12,7 +12,7 @@ export interface DeputeVotesFilters {
 
 function buildVotesParams(
   filters: DeputeVotesFilters,
-  cursor?: string
+  cursor?: string,
 ): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.from) params.set("from", filters.from);
@@ -30,7 +30,7 @@ export function useDeputeVotes(slug: string, filters: DeputeVotesFilters) {
     queryKey: ["depute", slug, "votes", filters],
     queryFn: ({ pageParam }) =>
       apiFetch<DeputeVoteItem[]>(
-        `/deputies/${slug}/votes?${buildVotesParams(filters, pageParam).toString()}`
+        `/deputies/${slug}/votes?${buildVotesParams(filters, pageParam).toString()}`,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>

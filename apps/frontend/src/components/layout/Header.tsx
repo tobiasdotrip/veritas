@@ -11,7 +11,10 @@ export interface HeaderProps {
   searchValue?: string;
 }
 
-export function Header({ onSearch, searchValue: controlledValue }: HeaderProps) {
+export function Header({
+  onSearch,
+  searchValue: controlledValue,
+}: HeaderProps) {
   const navigate = useNavigate();
   const [internalQuery, setInternalQuery] = React.useState("");
   const searchValue = controlledValue ?? internalQuery;
@@ -41,7 +44,7 @@ export function Header({ onSearch, searchValue: controlledValue }: HeaderProps) 
     <header
       className={cn(
         "sticky top-0 z-40 border-b border-transparent bg-surface/90 backdrop-blur transition-all duration-base",
-        scrolled && "border-border shadow-sm"
+        scrolled && "border-border shadow-sm",
       )}
     >
       <Container>

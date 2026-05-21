@@ -1,4 +1,9 @@
-import { createFileRoute, useParams, useSearch, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useParams,
+  useSearch,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useDepute } from "@/hooks/useDepute";
 import { useDeputeVotes } from "@/hooks/useDeputeVotes";
 import { DeputeHeader } from "@/components/depute/DeputeHeader";
@@ -63,7 +68,10 @@ function DeputePage() {
         <SkeletonCard lines={2} />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-neutral-bg" />
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-lg bg-neutral-bg"
+            />
           ))}
         </div>
         <SkeletonCard lines={3} />
@@ -152,7 +160,10 @@ function DeputePage() {
         {!votesLoading && !votesError && votesPages && (
           <>
             {votes.length === 0 ? (
-              <EmptyState title="Aucun vote" description="Aucun vote ne correspond aux filtres sélectionnés." />
+              <EmptyState
+                title="Aucun vote"
+                description="Aucun vote ne correspond aux filtres sélectionnés."
+              />
             ) : (
               <div className="space-y-3">
                 {votes.map((vote) => (

@@ -28,7 +28,11 @@ export function validateEtlUrl(url: string, label: string): string {
   if (parsed.hostname !== ALLOWED_ETL_HOST) {
     throw new Error(`${label} URL host must be ${ALLOWED_ETL_HOST}`);
   }
-  if (process.env.NODE_ENV !== "development" && parsed.port && parsed.port !== "443") {
+  if (
+    process.env.NODE_ENV !== "development" &&
+    parsed.port &&
+    parsed.port !== "443"
+  ) {
     throw new Error(`${label} URL must use standard HTTPS port`);
   }
   return url;
@@ -53,21 +57,23 @@ export const defaultConfig: EtlConfig = {
   urls: {
     scrutins: validateEtlUrl(
       process.env.ETL_URL_SCRUTINS ?? DEFAULT_URLS.scrutins,
-      "scrutins"
+      "scrutins",
     ),
     deputies: validateEtlUrl(
       process.env.ETL_URL_DEPUTIES ?? DEFAULT_URLS.deputies,
-      "deputies"
+      "deputies",
     ),
     organes: validateEtlUrl(
       process.env.ETL_URL_ORGANES ?? DEFAULT_URLS.organes,
-      "organes"
+      "organes",
     ),
   },
   tempDir: resolve(process.env.TEMP_DIR ?? "./tmp/etl"),
   downloadTimeoutMs: Number(process.env.DOWNLOAD_TIMEOUT_MS ?? 120_000),
   downloadRetries: Number(process.env.DOWNLOAD_RETRIES ?? 3),
-  downloadMaxSizeBytes: Number(process.env.DOWNLOAD_MAX_SIZE_BYTES ?? 500 * 1024 * 1024),
+  downloadMaxSizeBytes: Number(
+    process.env.DOWNLOAD_MAX_SIZE_BYTES ?? 500 * 1024 * 1024,
+  ),
   batchSize: Number(process.env.BATCH_SIZE ?? 1_000),
   scrutinTransactionSize: Number(process.env.SCRUTIN_TX_SIZE ?? 100),
   legislature: process.env.LEGISLATURE ?? "17",

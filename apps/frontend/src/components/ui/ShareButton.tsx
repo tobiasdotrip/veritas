@@ -39,7 +39,7 @@ export function ShareButton({ title, text, url, className }: ShareButtonProps) {
       onClick={handleShare}
       className={cn(
         "inline-flex h-10 min-w-[44px] items-center justify-center gap-2 rounded-md border border-border bg-surface px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30",
-        className
+        className,
       )}
       aria-label={copied ? "Lien copié" : "Partager"}
       title={copied ? "Lien copié" : "Partager"}

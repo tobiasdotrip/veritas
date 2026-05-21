@@ -19,14 +19,14 @@ Les données des votes existent (Open Data de l'Assemblée Nationale), mais elle
 
 ## Stack (implémentée)
 
-| Couche | Technologie |
-|--------|-------------|
-| **Frontend** | TanStack Start 1.168, TanStack Router, TanStack Query, **Vite 7**, Tailwind 4, Radix UI, Zustand |
-| **Backend API** | Fastify 5.8, Zod **4.4**, Drizzle 0.45, `fastify-type-provider-zod` 6 |
-| **Base de données** | PostgreSQL 17 |
-| **Recherche** | PostgreSQL 17 (`to_tsvector` + GIN + `pg_trgm`) |
-| **Cache** | Redis 8 |
-| **ETL** | Node.js streams, ZIP Open Data AN |
+| Couche              | Technologie                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| **Frontend**        | TanStack Start 1.168, TanStack Router, TanStack Query, **Vite 7**, Tailwind 4, Radix UI, Zustand |
+| **Backend API**     | Fastify 5.8, Zod **4.4**, Drizzle 0.45, `fastify-type-provider-zod` 6                            |
+| **Base de données** | PostgreSQL 17                                                                                    |
+| **Recherche**       | PostgreSQL 17 (`to_tsvector` + GIN + `pg_trgm`)                                                  |
+| **Cache**           | Redis 8                                                                                          |
+| **ETL**             | Node.js streams, ZIP Open Data AN                                                                |
 
 Voir le détail des versions et de l'état du code : **[État du projet](docs/ETAT_PROJET.md)** · **[Stack versions](docs/STACK_VERSIONS.md)**
 
@@ -51,13 +51,12 @@ veritas/
 
 ## Documentation
 
-| Document | Contenu |
-|----------|---------|
-| [État du projet](docs/ETAT_PROJET.md) | Implémentation actuelle, écarts, structure des apps |
-| [Architecture globale](docs/architecture/architecture-technique.md) | Vue d'ensemble, flux, scaling |
-| [Design backend](docs/architecture/backend-design.md) | API, Drizzle, ETL |
-| [Design frontend](docs/architecture/frontend-design.md) | Routes, composants, comparateur (cible produit) |
-
+| Document                                                            | Contenu                                             |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| [État du projet](docs/ETAT_PROJET.md)                               | Implémentation actuelle, écarts, structure des apps |
+| [Architecture globale](docs/architecture/architecture-technique.md) | Vue d'ensemble, flux, scaling                       |
+| [Design backend](docs/architecture/backend-design.md)               | API, Drizzle, ETL                                   |
+| [Design frontend](docs/architecture/frontend-design.md)             | Routes, composants, comparateur (cible produit)     |
 
 ## Démarrage rapide
 
@@ -98,14 +97,14 @@ pnpm --filter @veritas/frontend start   # node dist/server/server.js
 
 ## Scripts racine
 
-| Commande | Action |
-|----------|--------|
-| `pnpm dev` | Dev parallèle (Turbo) |
-| `pnpm build` | Build tous les packages |
-| `pnpm typecheck` | Vérification TypeScript |
-| `pnpm docker:up` | Postgres + Redis |
-| `pnpm db:migrate` | Migrations Drizzle |
-| `pnpm etl:run` | Pipeline ETL |
+| Commande          | Action                  |
+| ----------------- | ----------------------- |
+| `pnpm dev`        | Dev parallèle (Turbo)   |
+| `pnpm build`      | Build tous les packages |
+| `pnpm typecheck`  | Vérification TypeScript |
+| `pnpm docker:up`  | Postgres + Redis        |
+| `pnpm db:migrate` | Migrations Drizzle      |
+| `pnpm etl:run`    | Pipeline ETL            |
 
 ## Sécurité
 
@@ -119,4 +118,4 @@ Le code source sera publié sous licence AGPL-3.0.
 
 ---
 
-*Projet citoyen — France, 2026*
+_Projet citoyen — France, 2026_

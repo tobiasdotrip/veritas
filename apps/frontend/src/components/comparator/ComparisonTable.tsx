@@ -46,7 +46,7 @@ export function ComparisonTable({ result, className }: ComparisonTableProps) {
         <tbody>
           {result.divergences.map((row) => {
             const positionsBySlug = Object.fromEntries(
-              row.positions.map((p) => [p.slug, p.position])
+              row.positions.map((p) => [p.slug, p.position]),
             );
             return (
               <tr
@@ -78,7 +78,7 @@ export function ComparisonTable({ result, className }: ComparisonTableProps) {
                         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                         row.sortCode === "adopté"
                           ? "bg-success-bg text-success"
-                          : "bg-danger-bg text-danger"
+                          : "bg-danger-bg text-danger",
                       )}
                     >
                       {row.sortCode === "adopté" ? "Adopté" : "Rejeté"}

@@ -36,7 +36,7 @@ export interface PipelineResult {
 }
 
 export async function runEtlPipeline(
-  config: EtlConfig = defaultConfig
+  config: EtlConfig = defaultConfig,
 ): Promise<PipelineResult> {
   await ensureTempDir(config);
 
@@ -63,20 +63,20 @@ export async function runEtlPipeline(
     const deputiesResult = await downloadZip(
       config.urls.deputies,
       resolve(config.tempDir, "deputies.zip"),
-      config
+      config,
     );
     console.log(
-      `[etl] Deputies zip: ${deputiesResult.skipped ? "skipped" : "downloaded"} (${deputiesResult.hash})`
+      `[etl] Deputies zip: ${deputiesResult.skipped ? "skipped" : "downloaded"} (${deputiesResult.hash})`,
     );
 
     const deputiesIter = parseDeputiesFromZip(
       deputiesResult.filePath,
       config.tempDir,
-      config.legislature
+      config.legislature,
     );
     result.deputies = await loadDeputies(deps, deputiesIter, config);
     console.log(
-      `[etl] Deputies loaded: ${result.deputies.inserted} inserted, ${result.deputies.updated} updated`
+      `[etl] Deputies loaded: ${result.deputies.inserted} inserted, ${result.deputies.updated} updated`,
     );
 
     // Mandates & affiliations sont émis en même temps que les députés ;
@@ -85,7 +85,7 @@ export async function runEtlPipeline(
     const deputiesIter2 = parseDeputiesFromZip(
       deputiesResult.filePath,
       config.tempDir,
-      config.legislature
+      config.legislature,
     );
     const mandates: import("./parser/deputies.js").ParsedMandate[] = [];
     const affiliations: import("./parser/deputies.js").ParsedAffiliation[] = [];
@@ -97,19 +97,19 @@ export async function runEtlPipeline(
       deps,
       (async function* () {
         for (const m of mandates) yield m;
-      })()
+      })(),
     );
     result.affiliations = await loadAffiliations(
       deps,
       (async function* () {
         for (const a of affiliations) yield a;
-      })()
+      })(),
     );
     console.log(
-      `[etl] Mandates loaded: ${result.mandates.inserted} inserted, ${result.mandates.updated} updated`
+      `[etl] Mandates loaded: ${result.mandates.inserted} inserted, ${result.mandates.updated} updated`,
     );
     console.log(
-      `[etl] Affiliations loaded: ${result.affiliations.inserted} inserted`
+      `[etl] Affiliations loaded: ${result.affiliations.inserted} inserted`,
     );
 
     // ─── 2. Organes ──────────────────────────────────────────────
@@ -117,20 +117,20 @@ export async function runEtlPipeline(
     const organesResult = await downloadZip(
       config.urls.organes,
       resolve(config.tempDir, "organes.zip"),
-      config
+      config,
     );
     console.log(
-      `[etl] Organes zip: ${organesResult.skipped ? "skipped" : "downloaded"} (${organesResult.hash})`
+      `[etl] Organes zip: ${organesResult.skipped ? "skipped" : "downloaded"} (${organesResult.hash})`,
     );
 
     const organesIter = parseOrganesFromZip(
       organesResult.filePath,
       config.tempDir,
-      config.legislature
+      config.legislature,
     );
     result.organes = await loadPoliticalGroups(deps, organesIter, config);
     console.log(
-      `[etl] Organes loaded: ${result.organes.inserted} inserted, ${result.organes.updated} updated`
+      `[etl] Organes loaded: ${result.organes.inserted} inserted, ${result.organes.updated} updated`,
     );
 
     // ─── 3. Scrutins ─────────────────────────────────────────────
@@ -138,35 +138,35 @@ export async function runEtlPipeline(
     const scrutinsResult = await downloadZip(
       config.urls.scrutins,
       resolve(config.tempDir, "scrutins.zip"),
-      config
+      config,
     );
     console.log(
-      `[etl] Scrutins zip: ${scrutinsResult.skipped ? "skipped" : "downloaded"} (${scrutinsResult.hash})`
+      `[etl] Scrutins zip: ${scrutinsResult.skipped ? "skipped" : "downloaded"} (${scrutinsResult.hash})`,
     );
 
     const scrutinsIter = parseScrutinsFromZip(
       scrutinsResult.filePath,
-      config.tempDir
+      config.tempDir,
     );
     result.scrutins = await loadScrutins(deps, scrutinsIter, config, (p) => {
       if (p % 500 === 0) console.log(`[etl] Scrutins processed: ${p}`);
     });
     console.log(
-      `[etl] Scrutins loaded: ${result.scrutins.inserted} inserted, ${result.scrutins.updated} updated, ${result.scrutins.errors} errors`
+      `[etl] Scrutins loaded: ${result.scrutins.inserted} inserted, ${result.scrutins.updated} updated, ${result.scrutins.errors} errors`,
     );
 
     // ─── 4. Classification ───────────────────────────────────────
     console.log("[etl] Step 4/4: Classification");
     result.classification = await runClassification(deps.db);
     console.log(
-      `[etl] Classification: ${result.classification.processed} processed, ${result.classification.classified} classified`
+      `[etl] Classification: ${result.classification.processed} processed, ${result.classification.classified} classified`,
     );
 
     console.log("[etl] Pipeline completed successfully");
   } catch (err) {
     console.error(
       "[etl] Pipeline failed:",
-      err instanceof Error ? err.message : String(err)
+      err instanceof Error ? err.message : String(err),
     );
     throw err;
   } finally {

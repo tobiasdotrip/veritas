@@ -22,20 +22,22 @@ function isZipEntrySymlink(entry: ZipEntry): boolean {
  */
 export async function extractJsonEntryFromZip(
   zipPath: string,
-  tempDir: string
+  tempDir: string,
 ): Promise<string> {
-  const zip = new (StreamZip as unknown as {
-    async: new (opts: { file: string }) => {
-      entries: () => Promise<Record<string, ZipEntry>>;
-      extract: (name: string, path: string) => Promise<void>;
-      close: () => Promise<void>;
-    };
-  }).async({ file: zipPath });
+  const zip = new (
+    StreamZip as unknown as {
+      async: new (opts: { file: string }) => {
+        entries: () => Promise<Record<string, ZipEntry>>;
+        extract: (name: string, path: string) => Promise<void>;
+        close: () => Promise<void>;
+      };
+    }
+  ).async({ file: zipPath });
 
   try {
     const entries = await zip.entries();
     const jsonEntry = Object.values(entries).find((e) =>
-      e.name.endsWith(".json")
+      e.name.endsWith(".json"),
     );
     if (!jsonEntry) {
       throw new Error(`No JSON entry found in ${zipPath}`);
@@ -44,7 +46,7 @@ export async function extractJsonEntryFromZip(
     const extractedPath = resolveSafeZipEntryPath(
       tempDir,
       jsonEntry.name,
-      isZipEntrySymlink(jsonEntry)
+      isZipEntrySymlink(jsonEntry),
     );
     await zip.extract(jsonEntry.name, extractedPath);
     return extractedPath;

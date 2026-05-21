@@ -6,7 +6,6 @@ import {
   integer,
   pgEnum,
   pgTable,
-
   serial,
   text,
   timestamp,
@@ -23,10 +22,7 @@ export const votePositionEnum = pgEnum("vote_position", [
   "nonVotant",
 ]);
 
-export const scrutinSortEnum = pgEnum("scrutin_sort", [
-  "adopté",
-  "rejeté",
-]);
+export const scrutinSortEnum = pgEnum("scrutin_sort", ["adopté", "rejeté"]);
 
 export const syncStatusEnum = pgEnum("sync_status", [
   "pending",
@@ -77,9 +73,9 @@ export const deputies = pgTable(
     index("idx_deputies_circo").on(table.departmentId, table.circoNumber),
     index("idx_deputies_search").using(
       "gin",
-      sql`to_tsvector('french', coalesce(${table.lastName}, '') || ' ' || coalesce(${table.firstName}, ''))`
+      sql`to_tsvector('french', coalesce(${table.lastName}, '') || ' ' || coalesce(${table.firstName}, ''))`,
     ),
-  ]
+  ],
 );
 
 export const deputiesRelations = relations(deputies, ({ many }) => ({
@@ -113,9 +109,9 @@ export const deputyMandates = pgTable(
     index("idx_mandates_deputy").on(table.deputyId),
     index("idx_mandates_legislature_date").on(
       table.legislature,
-      table.startDate
+      table.startDate,
     ),
-  ]
+  ],
 );
 
 export const deputyMandatesRelations = relations(
@@ -127,7 +123,7 @@ export const deputyMandatesRelations = relations(
     }),
     affiliations: many(deputyGroupAffiliations),
     votes: many(scrutinVotes),
-  })
+  }),
 );
 
 // ─── Groupes politiques (Organes) ────────────────────────────────
@@ -147,7 +143,7 @@ export const politicalGroups = pgTable(
   },
   (table) => [
     index("idx_groups_legislature").on(table.legislature, table.name),
-  ]
+  ],
 );
 
 export const politicalGroupsRelations = relations(
@@ -156,7 +152,7 @@ export const politicalGroupsRelations = relations(
     affiliations: many(deputyGroupAffiliations),
     groupVotes: many(scrutinGroupVotes),
     votes: many(scrutinVotes),
-  })
+  }),
 );
 
 // ─── Affiliations député ↔ groupe ───────────────────────────────
@@ -183,10 +179,10 @@ export const deputyGroupAffiliations = pgTable(
       table.deputyId,
       table.politicalGroupId,
       table.mandateId,
-      table.startDate
+      table.startDate,
     ),
     index("idx_affiliations_group").on(table.politicalGroupId),
-  ]
+  ],
 );
 
 export const deputyGroupAffiliationsRelations = relations(
@@ -204,7 +200,7 @@ export const deputyGroupAffiliationsRelations = relations(
       fields: [deputyGroupAffiliations.mandateId],
       references: [deputyMandates.id],
     }),
-  })
+  }),
 );
 
 // ─── Scrutins ────────────────────────────────────────────────────
@@ -247,19 +243,19 @@ export const scrutins = pgTable(
   (table) => [
     index("idx_scrutins_legislature_date").on(
       table.legislature,
-      table.dateScrutin.desc()
+      table.dateScrutin.desc(),
     ),
     index("idx_scrutins_date_numero").on(
       table.dateScrutin.desc(),
-      table.numero.desc()
+      table.numero.desc(),
     ),
     index("idx_scrutins_type").on(table.codeTypeVote),
     index("idx_scrutins_sort").on(table.sortCode),
     index("idx_scrutins_search").using(
       "gin",
-      sql`to_tsvector('french', coalesce(${table.titre}, '') || ' ' || coalesce(${table.objet}, ''))`
+      sql`to_tsvector('french', coalesce(${table.titre}, '') || ' ' || coalesce(${table.objet}, ''))`,
     ),
-  ]
+  ],
 );
 
 export const scrutinsRelations = relations(scrutins, ({ many }) => ({
@@ -292,10 +288,13 @@ export const scrutinGroupVotes = pgTable(
   (table) => [
     uniqueIndex("idx_scrutin_group_unique").on(
       table.scrutinId,
-      table.politicalGroupId
+      table.politicalGroupId,
     ),
-    index("idx_scrutin_group_group").on(table.politicalGroupId, table.scrutinId),
-  ]
+    index("idx_scrutin_group_group").on(
+      table.politicalGroupId,
+      table.scrutinId,
+    ),
+  ],
 );
 
 export const scrutinGroupVotesRelations = relations(
@@ -309,7 +308,7 @@ export const scrutinGroupVotesRelations = relations(
       fields: [scrutinGroupVotes.politicalGroupId],
       references: [politicalGroups.id],
     }),
-  })
+  }),
 );
 
 // ─── Votes individuels ───────────────────────────────────────────
@@ -340,8 +339,11 @@ export const scrutinVotes = pgTable(
     index("idx_scrutin_votes_deputy").on(table.deputyId, table.scrutinId),
     index("idx_scrutin_votes_scrutin_pos").on(table.scrutinId, table.position),
     index("idx_scrutin_votes_deputy_pos").on(table.deputyId, table.position),
-    index("idx_scrutin_votes_group").on(table.politicalGroupId, table.scrutinId),
-  ]
+    index("idx_scrutin_votes_group").on(
+      table.politicalGroupId,
+      table.scrutinId,
+    ),
+  ],
 );
 
 export const scrutinVotesRelations = relations(scrutinVotes, ({ one }) => ({
@@ -395,7 +397,7 @@ export const scrutinThemes = pgTable(
   (table) => [
     uniqueIndex("idx_scrutin_theme_unique").on(table.scrutinId, table.themeId),
     index("idx_scrutin_theme_theme").on(table.themeId),
-  ]
+  ],
 );
 
 export const scrutinThemesRelations = relations(scrutinThemes, ({ one }) => ({
@@ -431,7 +433,7 @@ export const syncLogs = pgTable(
   (table) => [
     index("idx_sync_logs_source_started").on(table.source, table.startedAt),
     index("idx_sync_logs_status").on(table.status),
-  ]
+  ],
 );
 
 // ─── Communes ↔ Circonscriptions (pour recherche par CP) ─────────
@@ -449,5 +451,5 @@ export const communes = pgTable(
   (table) => [
     index("idx_communes_postal").on(table.postalCode),
     index("idx_communes_dept_circo").on(table.departmentId, table.circoNumber),
-  ]
+  ],
 );

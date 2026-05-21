@@ -23,7 +23,7 @@ function periodToFrom(period: Period): string | undefined {
 export function useComparison(
   refSlug: string,
   compareSlugs: string[],
-  period?: Period
+  period?: Period,
 ) {
   const params = new URLSearchParams();
   params.set("deputies", [refSlug, ...compareSlugs].join(","));

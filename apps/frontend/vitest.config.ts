@@ -11,5 +11,5 @@ export default mergeConfig(
       globals: true,
       css: false,
     },
-  })
+  }),
 );

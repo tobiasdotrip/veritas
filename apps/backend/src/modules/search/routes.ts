@@ -79,46 +79,46 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       let scrutinRows;
       try {
         deputyRows = await db
-        .select({
-          id: deputies.id,
-          firstName: deputies.firstName,
-          lastName: deputies.lastName,
-          slug: deputies.slug,
-          rank: sql<number>`ts_rank(
+          .select({
+            id: deputies.id,
+            firstName: deputies.firstName,
+            lastName: deputies.lastName,
+            slug: deputies.slug,
+            rank: sql<number>`ts_rank(
             to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')),
             to_tsquery('french', ${tsQuery})
           )`,
-        })
-        .from(deputies)
-        .where(
-          sql`
+          })
+          .from(deputies)
+          .where(
+            sql`
             to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
             @@ to_tsquery('french', ${tsQuery})
-          `
-        )
-        .orderBy(desc(sql`ts_rank`))
-        .limit(maxResults);
+          `,
+          )
+          .orderBy(desc(sql`ts_rank`))
+          .limit(maxResults);
 
         scrutinRows = await db
-        .select({
-          id: scrutins.id,
-          numero: scrutins.numero,
-          titre: scrutins.titre,
-          slug: scrutins.id,
-          rank: sql<number>`ts_rank(
+          .select({
+            id: scrutins.id,
+            numero: scrutins.numero,
+            titre: scrutins.titre,
+            slug: scrutins.id,
+            rank: sql<number>`ts_rank(
             to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')),
             to_tsquery('french', ${tsQuery})
           )`,
-        })
-        .from(scrutins)
-        .where(
-          sql`
+          })
+          .from(scrutins)
+          .where(
+            sql`
             to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
             @@ to_tsquery('french', ${tsQuery})
-          `
-        )
-        .orderBy(desc(sql`ts_rank`))
-        .limit(maxResults);
+          `,
+          )
+          .orderBy(desc(sql`ts_rank`))
+          .limit(maxResults);
       } catch (err) {
         rethrowTextSearchValidationError(err);
         throw err;
@@ -174,71 +174,71 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       let scrutinRows;
       try {
         deputyRows = await db
-        .select({
-          id: deputies.id,
-          firstName: deputies.firstName,
-          lastName: deputies.lastName,
-          slug: deputies.slug,
-          photoUrl: deputies.photoUrl,
-          circoLabel: deputies.circoLabel,
-          departmentId: deputies.departmentId,
-          groupAbbreviation: politicalGroups.abbreviation,
-        })
-        .from(deputies)
-        .leftJoin(
-          deputyGroupAffiliations,
-          and(
-            eq(deputyGroupAffiliations.deputyId, deputies.id),
-            sql`${deputyGroupAffiliations.endDate} IS NULL`
+          .select({
+            id: deputies.id,
+            firstName: deputies.firstName,
+            lastName: deputies.lastName,
+            slug: deputies.slug,
+            photoUrl: deputies.photoUrl,
+            circoLabel: deputies.circoLabel,
+            departmentId: deputies.departmentId,
+            groupAbbreviation: politicalGroups.abbreviation,
+          })
+          .from(deputies)
+          .leftJoin(
+            deputyGroupAffiliations,
+            and(
+              eq(deputyGroupAffiliations.deputyId, deputies.id),
+              sql`${deputyGroupAffiliations.endDate} IS NULL`,
+            ),
           )
-        )
-        .leftJoin(
-          politicalGroups,
-          eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id)
-        )
-        .where(
-          sql`
+          .leftJoin(
+            politicalGroups,
+            eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
+          )
+          .where(
+            sql`
             to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
             @@ plainto_tsquery('french', ${q})
-          `
-        )
-        .orderBy(
-          desc(
-            sql`ts_rank(
+          `,
+          )
+          .orderBy(
+            desc(
+              sql`ts_rank(
               to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')),
               plainto_tsquery('french', ${q})
-            )`
+            )`,
+            ),
           )
-        )
-        .limit(maxResults);
+          .limit(maxResults);
 
         scrutinRows = await db
-        .select({
-          id: scrutins.id,
-          numero: scrutins.numero,
-          dateScrutin: scrutins.dateScrutin,
-          titre: scrutins.titre,
-          sortCode: scrutins.sortCode,
-          nombrePour: scrutins.nombrePour,
-          nombreContre: scrutins.nombreContre,
-          nombreAbstentions: scrutins.nombreAbstentions,
-        })
-        .from(scrutins)
-        .where(
-          sql`
+          .select({
+            id: scrutins.id,
+            numero: scrutins.numero,
+            dateScrutin: scrutins.dateScrutin,
+            titre: scrutins.titre,
+            sortCode: scrutins.sortCode,
+            nombrePour: scrutins.nombrePour,
+            nombreContre: scrutins.nombreContre,
+            nombreAbstentions: scrutins.nombreAbstentions,
+          })
+          .from(scrutins)
+          .where(
+            sql`
             to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
             @@ plainto_tsquery('french', ${q})
-          `
-        )
-        .orderBy(
-          desc(
-            sql`ts_rank(
+          `,
+          )
+          .orderBy(
+            desc(
+              sql`ts_rank(
               to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')),
               plainto_tsquery('french', ${q})
-            )`
+            )`,
+            ),
           )
-        )
-        .limit(maxResults);
+          .limit(maxResults);
       } catch (err) {
         rethrowTextSearchValidationError(err);
         throw err;

@@ -60,7 +60,9 @@ export const APIRoute = createAPIFileRoute("/api/og/scrutin")({
                 minWidth: "160px",
               }}
             >
-              <div style={{ fontSize: "16px", color: "#6b7280" }}>{k.label}</div>
+              <div style={{ fontSize: "16px", color: "#6b7280" }}>
+                {k.label}
+              </div>
               <div
                 style={{ fontSize: "32px", fontWeight: 700, color: k.color }}
               >
@@ -70,7 +72,7 @@ export const APIRoute = createAPIFileRoute("/api/og/scrutin")({
           ))}
         </div>
       </div>,
-      { width: 1200, height: 630, fonts: [] }
+      { width: 1200, height: 630, fonts: [] },
     );
 
     return new Response(svg, {

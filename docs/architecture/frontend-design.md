@@ -4,7 +4,7 @@
 > **Date** : 2026-05-20  
 > **Framework** : TanStack Start (React, Vite 7)  
 > **Cible** : Mobile-first, WCAG 2.1 AA, FCP < 1.5s  
-> **Implémentation** : [ETAT_PROJET.md](../ETAT_PROJET.md) — ce document reste la spec produit cible.  
+> **Implémentation** : [ETAT_PROJET.md](../ETAT_PROJET.md) — ce document reste la spec produit cible.
 
 ---
 
@@ -13,6 +13,7 @@
 Ce document définit l'architecture frontend complète pour la plateforme de transparence parlementaire. Il s'appuie sur le cahier des charges produit, les spécifications UX, et les contraintes des API officielles et tierces.
 
 **Choix technologiques clés (cible) :**
+
 - **Framework** : TanStack Start (file-system routing, build **Vite**, plugin `tanstackStart()`)
 - **Styling** : Tailwind CSS **v4** (`@theme` dans `src/app.css`, PostCSS `@tailwindcss/postcss`)
 - **Composants** : Radix UI primitives (headless, accessible) + composants métier maison
@@ -26,33 +27,34 @@ Ce document définit l'architecture frontend complète pour la plateforme de tra
 
 ### 2.1. Stack technique
 
-| Couche | Technologie | Justification |
-|--------|-------------|---------------|
-| Framework | **TanStack Start** | SSR/SSG natif, Server Functions (pas de API routes manuelles pour le CRUD standard), file-system routing type-safe avec TanStack Router |
-| Langage | **TypeScript** (strict) | Typage des routes, des API, des composants. `strict: true` obligatoire |
-| Styling | **Tailwind CSS** + **CSS Variables** | Utility-first rapide, design tokens en variables CSS pour le theming et les transitions sans JS |
-| Composants base | **Radix UI** | Primitives accessibles (focus trap, roving focus, WAI-ARIA) sans style imposé |
-| Data serveur | **TanStack Query v5** | Cache normalisé, stale-while-revalidate, prefetching SSR, déduplication des requêtes |
-| State client | **Zustand** | Léger, pas de boilerplate, pour le comparateur et les préférences utilisateur |
-| Graphiques | **SVG vanilla** + **recharts** (lazy) | Graphiques simples en SVG pour LCP ; recharts lazy-loadé uniquement pour les graphiques complexes (desktop) |
-| OG Images | **Satori** + **@resvg/resvg-js** | Génération d'images Open Graph côté serveur, 0 dépendance runtime lourde |
-| Analytics | **Matomo** (self-hosté) | Souveraineté des données, pas de cookies tiers, bandeau information simple |
+| Couche          | Technologie                           | Justification                                                                                                                           |
+| --------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework       | **TanStack Start**                    | SSR/SSG natif, Server Functions (pas de API routes manuelles pour le CRUD standard), file-system routing type-safe avec TanStack Router |
+| Langage         | **TypeScript** (strict)               | Typage des routes, des API, des composants. `strict: true` obligatoire                                                                  |
+| Styling         | **Tailwind CSS** + **CSS Variables**  | Utility-first rapide, design tokens en variables CSS pour le theming et les transitions sans JS                                         |
+| Composants base | **Radix UI**                          | Primitives accessibles (focus trap, roving focus, WAI-ARIA) sans style imposé                                                           |
+| Data serveur    | **TanStack Query v5**                 | Cache normalisé, stale-while-revalidate, prefetching SSR, déduplication des requêtes                                                    |
+| State client    | **Zustand**                           | Léger, pas de boilerplate, pour le comparateur et les préférences utilisateur                                                           |
+| Graphiques      | **SVG vanilla** + **recharts** (lazy) | Graphiques simples en SVG pour LCP ; recharts lazy-loadé uniquement pour les graphiques complexes (desktop)                             |
+| OG Images       | **Satori** + **@resvg/resvg-js**      | Génération d'images Open Graph côté serveur, 0 dépendance runtime lourde                                                                |
+| Analytics       | **Matomo** (self-hosté)               | Souveraineté des données, pas de cookies tiers, bandeau information simple                                                              |
 
 ### 2.2. Stratégie de rendu (SSR vs SSG)
 
 TanStack Start permet trois modes par route : `ssr`, `static`, ou `api`.
 
-| Route | Mode | Justification |
-|-------|------|---------------|
-| `/` (Accueil) | `static` avec revalidation | Contenu quasi-statique (derniers scrutins, thématiques). Rebuild toutes les 4h via CI/CD ou webhook |
-| `/recherche` | `ssr` | Résultats dépendants des paramètres de recherche. Pas de prérendu statique pertinent |
-| `/depute/$slug` | `static` (SSG) | ~577 députées. Générées au build + revalidation incrémentale (ISR-like) quotidienne. Chaque fiche est indépendante |
-| `/scrutin/$id` | `static` (SSG) | ~5800+ scrutins par législature. Génération au build pour les scrutins récents (N derniers). Les anciens sont générés à la volée (on-demand) |
-| `/comparateur` | `ssr` | État utilisateur (sélection de députés) déterminé à l'exécution |
-| `/api/og/*` | `api` | Endpoint serveur pour la génération dynamique d'images de partage |
-| `/api/sitemap.xml` | `api` | Génération dynamique du sitemap à partir de la base de données |
+| Route              | Mode                       | Justification                                                                                                                                |
+| ------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/` (Accueil)      | `static` avec revalidation | Contenu quasi-statique (derniers scrutins, thématiques). Rebuild toutes les 4h via CI/CD ou webhook                                          |
+| `/recherche`       | `ssr`                      | Résultats dépendants des paramètres de recherche. Pas de prérendu statique pertinent                                                         |
+| `/depute/$slug`    | `static` (SSG)             | ~577 députées. Générées au build + revalidation incrémentale (ISR-like) quotidienne. Chaque fiche est indépendante                           |
+| `/scrutin/$id`     | `static` (SSG)             | ~5800+ scrutins par législature. Génération au build pour les scrutins récents (N derniers). Les anciens sont générés à la volée (on-demand) |
+| `/comparateur`     | `ssr`                      | État utilisateur (sélection de députés) déterminé à l'exécution                                                                              |
+| `/api/og/*`        | `api`                      | Endpoint serveur pour la génération dynamique d'images de partage                                                                            |
+| `/api/sitemap.xml` | `api`                      | Génération dynamique du sitemap à partir de la base de données                                                                               |
 
 **Mécanisme de revalidation :**
+
 - TanStack Start ne dispose pas nativement d'ISR comme Next.js. La revalidation est implémentée via :
   1. **Build quotidien** (CI/CD cron) qui regénère les pages statiques critiques.
   2. **Server Functions avec cache** : pour les pages SSG, un Server Function expose la donnée avec un header `Cache-Control: s-maxage=3600, stale-while-revalidate=86400`. Le CDN (Cloudflare / Vercel Edge) sert la page en cache et la revalide en arrière-plan.
@@ -63,47 +65,55 @@ TanStack Start permet trois modes par route : `ssr`, `static`, ou `api`.
 Le frontend consomme une **API REST interne** (backend à construire par l'équipe backend) qui normalise les données de l'Assemblée nationale (ZIP bulk → ETL → API REST). Les sources tierces (CIVIX, Poligraph) peuvent servir de fallback ou de sources de bootstrap, mais l'API interne est la source de vérité pour le frontend.
 
 **Couche 1 : Server Functions (SSR)**
+
 ```ts
 // app/routes/depute/$slug.tsx
-import { createServerFn } from '@tanstack/react-start';
+import { createServerFn } from "@tanstack/react-start";
 
-export const getDeputeBySlug = createServerFn({ method: 'GET' })
+export const getDeputeBySlug = createServerFn({ method: "GET" })
   .validator((slug: string) => slug)
   .handler(async ({ data: slug }) => {
     const depute = await apiClient.get(`/deputes/${slug}`);
     return depute;
   });
 ```
+
 - Exécutées uniquement sur le serveur (Node.js / Edge).
 - Pas de fuite de clés API côté client.
 - Le résultat est sérialisé et hydraté dans le HTML initial.
 
 **Couche 2 : TanStack Query (Client)**
+
 - Chaque Server Function est wrappée dans une query pour le cache client :
+
 ```ts
 export const deputeQueryOptions = (slug: string) =>
   queryOptions({
-    queryKey: ['depute', slug],
+    queryKey: ["depute", slug],
     queryFn: () => getDeputeBySlug({ data: slug }),
     staleTime: 1000 * 60 * 60, // 1h
   });
 ```
+
 - Sur la route `/depute/$slug`, le loader SSR précharge la query. Le client réutilise cette donnée hydratée.
 - Les interactions (filtres de votes, pagination) utilisent des queries client séparées pour éviter de re-render le shell.
 
 **Couche 3 : URL State (Partageable)**
+
 - Tous les filtres (période, thématique, type, résultat) sont stockés dans l'URL via `useSearch` de TanStack Router.
 - Avantages : partage direct, historique navigateur, pas de state manager complexe.
 
 ```ts
 // Exemple de search schema pour la fiche député
-export const Route = createFileRoute('/depute/$slug')({
+export const Route = createFileRoute("/depute/$slug")({
   component: DeputePage,
   validateSearch: z.object({
-    periode: z.enum(['7j', '30j', '6mois', 'legislature']).default('legislature'),
+    periode: z
+      .enum(["7j", "30j", "6mois", "legislature"])
+      .default("legislature"),
     themes: z.array(z.string()).default([]),
     type: z.array(z.string()).default([]),
-    resultat: z.enum(['pour', 'contre', 'abstention', 'absent']).optional(),
+    resultat: z.enum(["pour", "contre", "abstention", "absent"]).optional(),
     page: z.number().default(1),
   }),
 });
@@ -111,15 +121,16 @@ export const Route = createFileRoute('/depute/$slug')({
 
 ### 2.4. State Management — Décision arbre
 
-| Type de state | Solution | Justification |
-|---------------|----------|---------------|
-| Serveur (listes, détails) | TanStack Query | Cache normalisé, gestion des états réseau |
-| Filtres / Pagination | URL Search Params | Partageable, SEO-friendly, pas de librairie |
-| Comparateur (sélection) | Zustand | Éphémère, max 5 députés, interactions complexes entre écrans |
-| Préférences (theme, consentement) | localStorage + Zustand | Persistance légère, pas besoin de backend |
-| UI transitoire (drawer, modale) | React state local | Pas besoin de globaliser |
+| Type de state                     | Solution               | Justification                                                |
+| --------------------------------- | ---------------------- | ------------------------------------------------------------ |
+| Serveur (listes, détails)         | TanStack Query         | Cache normalisé, gestion des états réseau                    |
+| Filtres / Pagination              | URL Search Params      | Partageable, SEO-friendly, pas de librairie                  |
+| Comparateur (sélection)           | Zustand                | Éphémère, max 5 députés, interactions complexes entre écrans |
+| Préférences (theme, consentement) | localStorage + Zustand | Persistance légère, pas besoin de backend                    |
+| UI transitoire (drawer, modale)   | React state local      | Pas besoin de globaliser                                     |
 
 **Store Zustand — Comparateur :**
+
 ```ts
 interface ComparatorStore {
   reference: Depute | null;
@@ -130,6 +141,7 @@ interface ComparatorStore {
   setReference: (d: Depute) => void;
 }
 ```
+
 - Persisté en `localStorage` pour permettre le retour sur la page comparateur sans perdre la sélection.
 - Limité à 5 députés (contrainte UX).
 
@@ -144,22 +156,22 @@ Tailwind est configuré pour lire les variables CSS. Cela permet le theming (mod
 ```css
 /* app/styles/tokens.css */
 :root {
-  --color-primary: #1D4ED8;
-  --color-primary-hover: #1E40AF;
-  --color-success: #15803D;
-  --color-success-bg: #DCFCE7;
-  --color-danger: #B91C1C;
-  --color-danger-bg: #FEE2E2;
-  --color-neutral: #6B7280;
-  --color-neutral-bg: #F3F4F6;
-  --color-warning: #B45309;
-  --color-warning-bg: #FEF3C7;
-  --color-surface: #FFFFFF;
-  --color-surface-raised: #F9FAFB;
-  --color-border: #E5E7EB;
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-success: #15803d;
+  --color-success-bg: #dcfce7;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fee2e2;
+  --color-neutral: #6b7280;
+  --color-neutral-bg: #f3f4f6;
+  --color-warning: #b45309;
+  --color-warning-bg: #fef3c7;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f9fafb;
+  --color-border: #e5e7eb;
   --color-text-primary: #111827;
-  --color-text-secondary: #4B5563;
-  --color-text-muted: #9CA3AF;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
 
   --space-xs: 4px;
   --space-sm: 8px;
@@ -172,9 +184,9 @@ Tailwind est configuré pour lire les variables CSS. Cela permet le theming (mod
   --radius-md: 8px;
   --radius-lg: 12px;
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-  --shadow-focus: 0 0 0 3px rgba(29,78,216,0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-focus: 0 0 0 3px rgba(29, 78, 216, 0.3);
 
   --duration-fast: 150ms;
   --duration-base: 200ms;
@@ -198,40 +210,40 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: 'var(--color-primary)',
-        'primary-hover': 'var(--color-primary-hover)',
-        success: 'var(--color-success)',
-        'success-bg': 'var(--color-success-bg)',
-        danger: 'var(--color-danger)',
-        'danger-bg': 'var(--color-danger-bg)',
-        neutral: 'var(--color-neutral)',
-        'neutral-bg': 'var(--color-neutral-bg)',
-        warning: 'var(--color-warning)',
-        'warning-bg': 'var(--color-warning-bg)',
-        surface: 'var(--color-surface)',
-        'surface-raised': 'var(--color-surface-raised)',
-        border: 'var(--color-border)',
-        'text-primary': 'var(--color-text-primary)',
-        'text-secondary': 'var(--color-text-secondary)',
-        'text-muted': 'var(--color-text-muted)',
+        primary: "var(--color-primary)",
+        "primary-hover": "var(--color-primary-hover)",
+        success: "var(--color-success)",
+        "success-bg": "var(--color-success-bg)",
+        danger: "var(--color-danger)",
+        "danger-bg": "var(--color-danger-bg)",
+        neutral: "var(--color-neutral)",
+        "neutral-bg": "var(--color-neutral-bg)",
+        warning: "var(--color-warning)",
+        "warning-bg": "var(--color-warning-bg)",
+        surface: "var(--color-surface)",
+        "surface-raised": "var(--color-surface-raised)",
+        border: "var(--color-border)",
+        "text-primary": "var(--color-text-primary)",
+        "text-secondary": "var(--color-text-secondary)",
+        "text-muted": "var(--color-text-muted)",
       },
       spacing: {
-        xs: 'var(--space-xs)',
-        sm: 'var(--space-sm)',
-        md: 'var(--space-md)',
-        lg: 'var(--space-lg)',
-        xl: 'var(--space-xl)',
-        '2xl': 'var(--space-2xl)',
+        xs: "var(--space-xs)",
+        sm: "var(--space-sm)",
+        md: "var(--space-md)",
+        lg: "var(--space-lg)",
+        xl: "var(--space-xl)",
+        "2xl": "var(--space-2xl)",
       },
       boxShadow: {
-        sm: 'var(--shadow-sm)',
-        md: 'var(--shadow-md)',
-        focus: 'var(--shadow-focus)',
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        focus: "var(--shadow-focus)",
       },
       transitionDuration: {
-        fast: 'var(--duration-fast)',
-        base: 'var(--duration-base)',
-        slow: 'var(--duration-slow)',
+        fast: "var(--duration-fast)",
+        base: "var(--duration-base)",
+        slow: "var(--duration-slow)",
       },
     },
   },
@@ -242,28 +254,32 @@ module.exports = {
 
 Tous les composants sont construits sur Radix UI + Tailwind. Ils respectent les critères d'accessibilité (focus visible, touch target 44×44, aria-labels).
 
-| Composant | Source / Base | Props clés | Accessibilité |
-|-----------|---------------|------------|---------------|
-| `Button` | Radix primitive | `variant`, `size`, `isLoading` | `focus-visible:ring`, touch target min 44px |
-| `Input` | Radix primitive | `iconLeft`, `clearable` | Label associé, `aria-describedby` |
-| `SearchCombobox` | Radix Popover + Command | `options`, `onSelect`, `groupBy` | `role="combobox"`, `aria-expanded`, navigation clavier |
-| `Card` | HTML div | `variant` (default / hoverable) | `aria-label` sur le lien interne |
-| `BadgeVote` | Custom | `position: 'pour' \| 'contre' \| 'abstention' \| 'absent'` | `aria-label` explicite, pas seulement couleur |
-| `BadgeResultat` | Custom | `resultat: 'adopté' \| 'rejeté' \| 'en-cours'` | Rôle `status` |
-| `Skeleton` | Custom CSS | `lines`, `className` | `aria-busy="true"`, `aria-live="polite"` |
-| `Drawer` | Radix Dialog | `direction: bottom \| left` | Focus trap, retour au trigger |
-| `Tabs` | Radix Tabs | `value`, `onValueChange` | `tablist` / `tab` / `tabpanel` |
-| `Accordion` | Radix Accordion | `type: single \| multiple` | `aria-expanded` |
-| `ComparateurScore` | Custom SVG | `score`, `votesCount` | `aria-label` avec valeur et contexte |
-| `VoteChart` | Custom SVG | `data: {pour,contre,abstention}` | `role="img"`, `aria-label` textuel |
-| `ShareButton` | Web Share API + fallback | `title`, `text`, `url`, `ogImage` | Label explicite par réseau |
+| Composant          | Source / Base            | Props clés                                                 | Accessibilité                                          |
+| ------------------ | ------------------------ | ---------------------------------------------------------- | ------------------------------------------------------ |
+| `Button`           | Radix primitive          | `variant`, `size`, `isLoading`                             | `focus-visible:ring`, touch target min 44px            |
+| `Input`            | Radix primitive          | `iconLeft`, `clearable`                                    | Label associé, `aria-describedby`                      |
+| `SearchCombobox`   | Radix Popover + Command  | `options`, `onSelect`, `groupBy`                           | `role="combobox"`, `aria-expanded`, navigation clavier |
+| `Card`             | HTML div                 | `variant` (default / hoverable)                            | `aria-label` sur le lien interne                       |
+| `BadgeVote`        | Custom                   | `position: 'pour' \| 'contre' \| 'abstention' \| 'absent'` | `aria-label` explicite, pas seulement couleur          |
+| `BadgeResultat`    | Custom                   | `resultat: 'adopté' \| 'rejeté' \| 'en-cours'`             | Rôle `status`                                          |
+| `Skeleton`         | Custom CSS               | `lines`, `className`                                       | `aria-busy="true"`, `aria-live="polite"`               |
+| `Drawer`           | Radix Dialog             | `direction: bottom \| left`                                | Focus trap, retour au trigger                          |
+| `Tabs`             | Radix Tabs               | `value`, `onValueChange`                                   | `tablist` / `tab` / `tabpanel`                         |
+| `Accordion`        | Radix Accordion          | `type: single \| multiple`                                 | `aria-expanded`                                        |
+| `ComparateurScore` | Custom SVG               | `score`, `votesCount`                                      | `aria-label` avec valeur et contexte                   |
+| `VoteChart`        | Custom SVG               | `data: {pour,contre,abstention}`                           | `role="img"`, `aria-label` textuel                     |
+| `ShareButton`      | Web Share API + fallback | `title`, `text`, `url`, `ogImage`                          | Label explicite par réseau                             |
 
 ### 3.4. Typographie
 
 Police système uniquement (pas de chargement de fonte externe) :
+
 ```css
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+font-family:
+  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+  Arial, sans-serif;
 ```
+
 - Échelle typographique définie dans Tailwind (`text-h1`, `text-h2`, etc. via plugin).
 - Pas de flash de texte invisible (FOUT/FOIT).
 
@@ -274,6 +290,7 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica N
 ### 4.1. Route racine (`__root.tsx`)
 
 **Responsabilités :**
+
 - Layout commun (Header, Footer, Skip Link)
 - Providers (TanStack Query, Zustand, Router)
 - `html` lang="fr", meta viewport, favicon
@@ -284,17 +301,20 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica N
 **Mode** : `static` (SSG) + revalidation 4h
 
 **Données chargées (Server Function) :**
+
 - `getLatestScrutins(limit: 10)` : derniers scrutins publics
 - `getTopThemes()` : thématiques du moment
 - `getMostViewedDeputes(limit: 6)` : députés les plus consultés (si analytics disponible)
 
 **Composants :**
+
 - `HeroSearch` : barre de recherche principale (48px mobile, 56px desktop)
 - `ScrutinCard` : carte scrutin avec badge résultat
 - `ThemeChips` : chips horizontalement scrollables
 - `DeputeCarousel` : députés mis en avant (grid 2 cols mobile, 3 cols desktop)
 
 **SEO :**
+
 - Title : `Transparence des votes — Découvrez comment votent vos députés`
 - Meta description générique
 - JSON-LD `WebSite` avec `SearchAction` (barre de recherche dans les résultats Google)
@@ -304,15 +324,18 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica N
 **Mode** : `ssr`
 
 **Search params :**
+
 - `q`: chaîne de recherche
 - `type`: `depute` | `scrutin` | `all`
 - `page`, `limit`
 
 **Données chargées :**
+
 - `searchDeputes(query, page, limit)`
 - `searchScrutins(query, page, limit)`
 
 **Composants :**
+
 - `SearchInput` (sticky header réduit au scroll)
 - `SearchResultsTabs` : onglets Députés / Textes
 - `DeputeResultCard` : photo 48×48, nom, circonscription, groupe
@@ -320,6 +343,7 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica N
 - `EmptyState` : message + suggestions géographiques
 
 **SEO :**
+
 - Title dynamique : `"Durand" — Résultats de recherche`
 - `noindex` si `q` vide (éviter le duplicate content)
 - Canonical avec paramètre `q`
@@ -329,15 +353,18 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica N
 **Mode** : `static` (SSG) pour tous les slugs actifs + revalidation quotidienne
 
 **Données chargées (SSR) :**
+
 - `getDeputeBySlug(slug)` : identité, contact, groupe, mandats, stats clés
 - `getDeputeVotes(slug, periode, themes, type, resultat, page)` : liste paginée des votes (lazy, charge côté client après hydratation du shell)
 
 **Architecture de la page :**
 La page est découpée en deux zones de données pour optimiser le LCP :
+
 1. **Shell (SSR)** : photo, nom, groupe, KPI (présence, votes) → affiché immédiatement
 2. **Contenu interactif (Client)** : onglet "Votes" avec filtres et pagination
 
 **Composants :**
+
 - `DeputeHeader` : photo, nom, circonscription, groupe, badge mandat en cours/terminé
 - `KPIGrid` : taux de présence, nombre de votes, taux de cohésion (2 colonnes mobile, 4 desktop)
 - `InfoTooltip` : explication des termes (infobulle accessible, `aria-describedby`)
@@ -349,9 +376,11 @@ La page est découpée en deux zones de données pour optimiser le LCP :
 - `ShareSection` : boutons de partage + téléchargement image synthétique
 
 **SEO :**
+
 - Title : `Marie Durand — Députée Paris (75) — Groupe A`
 - Meta description avec stats clés
 - JSON-LD `Person` :
+
 ```json
 {
   "@context": "https://schema.org",
@@ -362,6 +391,7 @@ La page est découpée en deux zones de données pour optimiser le LCP :
   "image": "https://.../photos/marie-durand.jpg"
 }
 ```
+
 - OG Image : `/api/og/depute?slug=marie-durand`
 
 ### 4.5. Page Scrutin (`/scrutin/$id.tsx`)
@@ -369,10 +399,12 @@ La page est découpée en deux zones de données pour optimiser le LCP :
 **Mode** : `static` (SSG) pour les scrutins récents (N=500) + on-demand pour les anciens
 
 **Données chargées (SSR) :**
+
 - `getScrutinById(id)` : titre, date, thématique, type, résultat global, synthèse
 - `getScrutinVotesByGroup(id)` : ventilation par groupe politique
 
 **Composants :**
+
 - `ScrutinHeader` : titre, date, badges thématique et type
 - `ResultatBadge` : Adopté/Rejeté en grand
 - `VoteChart` : graphique répartition (barres horizontales mobile, donut desktop)
@@ -381,6 +413,7 @@ La page est découpée en deux zones de données pour optimiser le LCP :
 - `TextLink` : lien vers le texte officiel (Assemblée nationale)
 
 **SEO :**
+
 - Title : `Projet de loi sur... — Scrutin n°1234`
 - JSON-LD `Legislation` + `VoteAction`
 - OG Image : `/api/og/scrutin?id=1234`
@@ -390,10 +423,12 @@ La page est découpée en deux zones de données pour optimiser le LCP :
 **Mode** : `ssr` (état dépendant de la sélection utilisateur)
 
 **Données :**
+
 - La sélection est stockée dans Zustand + URL sync (`?ref=slug1&compare=slug2,slug3`)
 - `getComparisonResult(refSlug, compareSlugs[], period)` : Server Function ou appel API pour récupérer les votes communs et le score
 
 **Composants :**
+
 - `ComparatorSelector` : sélection député de référence + ajout députés (max 5)
 - `ComparatorSuggestions` : députés de même circonscription/groupe
 - `PeriodFilter` : période prédéfinie
@@ -404,11 +439,13 @@ La page est découpée en deux zones de données pour optimiser le LCP :
 - `ShareComparator` : partage de l'URL avec la sélection encodée
 
 **Calcul du score :**
+
 - **Stratégie hybride** : le calcul est effectué côté serveur par l'API interne (`/api/comparateur/concordance`) pour gérer la volumétrie (jusqu'à 5 députés × milliers de votes).
 - Le frontend envoie les slugs + filtres, le backend retourne : `{ score, votesCommuns, votesIdentiques, details: [...] }`.
 - Alternative client-side : uniquement si les données sont déjà en cache (ex: comparaison rapide depuis la fiche député avec un seul autre député et peu de votes).
 
 **SEO :**
+
 - Title dynamique : `Marie Durand vs Jean Martin — Concordance 78%`
 - OG Image : `/api/og/comparateur?ref=durand&compare=martin&score=78`
 
@@ -422,13 +459,16 @@ Un client HTTP unique, typé, configuré pour TanStack Query.
 
 ```ts
 // app/lib/api-client.ts
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from "@tanstack/react-query";
 
 const API_BASE_URL = process.env.VITE_API_BASE_URL; // ou import.meta.env
 
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
     ...options,
   });
   if (!res.ok) throw new ApiError(res.status, await res.text());
@@ -439,10 +479,15 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 min
-      gcTime: 1000 * 60 * 30,   // 30 min
+      gcTime: 1000 * 60 * 30, // 30 min
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {
-        if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false;
+        if (
+          error instanceof ApiError &&
+          error.status >= 400 &&
+          error.status < 500
+        )
+          return false;
         return failureCount < 3;
       },
     },
@@ -459,10 +504,17 @@ export function useDepute(slug: string) {
 }
 
 // app/hooks/use-depute-votes.ts
-export function useDeputeVotes(slug: string, filters: VoteFilters, page: number) {
+export function useDeputeVotes(
+  slug: string,
+  filters: VoteFilters,
+  page: number,
+) {
   return useQuery({
-    queryKey: ['depute', slug, 'votes', filters, page],
-    queryFn: () => apiFetch(`/deputes/${slug}/votes?${stringifyFilters(filters)}&page=${page}`),
+    queryKey: ["depute", slug, "votes", filters, page],
+    queryFn: () =>
+      apiFetch(
+        `/deputes/${slug}/votes?${stringifyFilters(filters)}&page=${page}`,
+      ),
     placeholderData: keepPreviousData,
   });
 }
@@ -470,17 +522,27 @@ export function useDeputeVotes(slug: string, filters: VoteFilters, page: number)
 // app/hooks/use-search.ts
 export function useSearch(query: string, type: SearchType, page: number) {
   return useQuery({
-    queryKey: ['search', query, type, page],
-    queryFn: () => apiFetch(`/search?q=${encodeURIComponent(query)}&type=${type}&page=${page}`),
+    queryKey: ["search", query, type, page],
+    queryFn: () =>
+      apiFetch(
+        `/search?q=${encodeURIComponent(query)}&type=${type}&page=${page}`,
+      ),
     enabled: query.length >= 2,
   });
 }
 
 // app/hooks/use-comparator.ts
-export function useComparison(refSlug: string, compareSlugs: string[], period: Period) {
+export function useComparison(
+  refSlug: string,
+  compareSlugs: string[],
+  period: Period,
+) {
   return useQuery({
-    queryKey: ['compare', refSlug, compareSlugs, period],
-    queryFn: () => apiFetch(`/compare?ref=${refSlug}&compare=${compareSlugs.join(',')}&period=${period}`),
+    queryKey: ["compare", refSlug, compareSlugs, period],
+    queryFn: () =>
+      apiFetch(
+        `/compare?ref=${refSlug}&compare=${compareSlugs.join(",")}&period=${period}`,
+      ),
     enabled: compareSlugs.length > 0,
   });
 }
@@ -496,15 +558,16 @@ export function useComparison(refSlug: string, compareSlugs: string[], period: P
 
 Chaque écran doit gérer explicitement :
 
-| État | UI | Composant |
-|------|-----|-----------|
-| **Loading initial** | Skeleton pulsés (3 cartes) | `SkeletonCard` avec `aria-busy="true"` |
-| **Loading pagination** | Spinner inline + contenu précédent conservé | `LoadingSpinner` |
-| **Success vide** | Illustration + message + CTA | `EmptyState` |
-| **Error** | Message + bouton retry + log monitoring | `ErrorBoundary` + `QueryErrorResetBoundary` |
-| **Offline** | Bannière "Mode hors-ligne, données en cache" | `NetworkStatusBanner` |
+| État                   | UI                                           | Composant                                   |
+| ---------------------- | -------------------------------------------- | ------------------------------------------- |
+| **Loading initial**    | Skeleton pulsés (3 cartes)                   | `SkeletonCard` avec `aria-busy="true"`      |
+| **Loading pagination** | Spinner inline + contenu précédent conservé  | `LoadingSpinner`                            |
+| **Success vide**       | Illustration + message + CTA                 | `EmptyState`                                |
+| **Error**              | Message + bouton retry + log monitoring      | `ErrorBoundary` + `QueryErrorResetBoundary` |
+| **Offline**            | Bannière "Mode hors-ligne, données en cache" | `NetworkStatusBanner`                       |
 
 **Error Boundary :**
+
 - Route-level Error Boundary avec TanStack Router (`errorComponent`).
 - Fallback UI : message user-friendly + bouton "Réessayer" qui invalide la query.
 
@@ -518,7 +581,12 @@ TanStack Start expose `Head` et `Meta` via `@tanstack/react-start`.
 
 ```tsx
 // Composant réutilisable par page
-export function PageSEO({ title, description, image, type = 'website' }: SEOProps) {
+export function PageSEO({
+  title,
+  description,
+  image,
+  type = "website",
+}: SEOProps) {
   return (
     <>
       <title>{title}</title>
@@ -543,9 +611,9 @@ Généré dynamiquement via une API route (`/api/sitemap.xml`).
 
 ```ts
 // app/routes/api/sitemap.xml.ts
-import { createAPIFileRoute } from '@tanstack/react-start';
+import { createAPIFileRoute } from "@tanstack/react-start";
 
-export const APIRoute = createAPIFileRoute('/api/sitemap.xml')({
+export const APIRoute = createAPIFileRoute("/api/sitemap.xml")({
   GET: async () => {
     const [deputes, scrutins] = await Promise.all([
       getAllDeputeSlugs(),
@@ -553,15 +621,27 @@ export const APIRoute = createAPIFileRoute('/api/sitemap.xml')({
     ]);
 
     const urls = [
-      { loc: '/', priority: 1.0 },
-      { loc: '/recherche', priority: 0.8 },
-      { loc: '/comparateur', priority: 0.7 },
-      ...deputes.map((d) => ({ loc: `/depute/${d.slug}`, priority: 0.9, lastmod: d.updatedAt })),
-      ...scrutins.slice(0, 1000).map((s) => ({ loc: `/scrutin/${s.id}`, priority: 0.8, lastmod: s.dateScrutin })),
+      { loc: "/", priority: 1.0 },
+      { loc: "/recherche", priority: 0.8 },
+      { loc: "/comparateur", priority: 0.7 },
+      ...deputes.map((d) => ({
+        loc: `/depute/${d.slug}`,
+        priority: 0.9,
+        lastmod: d.updatedAt,
+      })),
+      ...scrutins
+        .slice(0, 1000)
+        .map((s) => ({
+          loc: `/scrutin/${s.id}`,
+          priority: 0.8,
+          lastmod: s.dateScrutin,
+        })),
     ];
 
     const xml = generateSitemapXml(urls);
-    return new Response(xml, { headers: { 'Content-Type': 'application/xml' } });
+    return new Response(xml, {
+      headers: { "Content-Type": "application/xml" },
+    });
   },
 });
 ```
@@ -598,17 +678,20 @@ export const APIRoute = createAPIFileRoute('/api/og/depute')({
 ```
 
 **Templates :**
+
 - `/api/og/depute?slug=...` : photo, nom, circonscription, 3 chiffres clés
 - `/api/og/scrutin?id=...` : titre, badge résultat, mini barres de répartition
 - `/api/og/comparateur?ref=...&compare=...&score=...` : visuels des 2 députés, score en grand
 
 **Performance :**
+
 - Cache CDN long (24h) car les données changent lentement.
 - Polices embarquées en base64 ou chargées depuis le filesystem (pas de fetch réseau).
 
 ### 6.4. JSON-LD structuré
 
 Injection de Schema.org dans chaque page critique :
+
 - **Accueil** : `WebSite` + `SearchAction`
 - **Fiche député** : `Person` + `MemberOf` (groupe politique)
 - **Page scrutin** : `Legislation` + `VoteAction`
@@ -616,13 +699,13 @@ Injection de Schema.org dans chaque page critique :
 
 ### 6.5. URLs et Canonicalisation
 
-| Page | URL pattern | Canonical |
-|------|-------------|-----------|
-| Accueil | `/` | Self |
-| Recherche | `/recherche?q=durand` | `/recherche?q=durand` (pas de paramètre page=1) |
-| Député | `/depute/marie-durand` | Self |
-| Scrutin | `/scrutin/VTANR5L17V1` | Self |
-| Comparateur | `/comparateur?ref=durand&compare=martin` | Self |
+| Page        | URL pattern                              | Canonical                                       |
+| ----------- | ---------------------------------------- | ----------------------------------------------- |
+| Accueil     | `/`                                      | Self                                            |
+| Recherche   | `/recherche?q=durand`                    | `/recherche?q=durand` (pas de paramètre page=1) |
+| Député      | `/depute/marie-durand`                   | Self                                            |
+| Scrutin     | `/scrutin/VTANR5L17V1`                   | Self                                            |
+| Comparateur | `/comparateur?ref=durand&compare=martin` | Self                                            |
 
 - Pas de trailing slash (redirection 301 si présent).
 - Paramètres de tracking (`utm_*`) autorisés mais canonical sans.
@@ -725,12 +808,14 @@ Injection de Schema.org dans chaque page critique :
 Le comparateur est le feature le plus complexe côté client. Son state est géré en trois couches :
 
 **Couche 1 : URL Search Params**
+
 - `ref` : slug du député de référence
 - `compare` : slugs séparés par des virgules (max 4 comparés + 1 ref = 5)
 - `period` : période de filtrage
 - `view` : `synthese` | `detail` | `thematique`
 
 **Couche 2 : Zustand Store (éphémère + persistant)**
+
 - Maintient la liste des députés sélectionnés pendant la navigation.
 - Persisté dans `localStorage` sous la clé `comparator-state`.
 - Synchronisé bidirectionnellement avec l'URL (URL source de vérité au load, Zustand source de vérité pendant l'interaction).
@@ -751,6 +836,7 @@ interface ComparatorState {
 ```
 
 **Couche 3 : TanStack Query (données serveur)**
+
 - La query `useComparison` récupère le résultat calculé.
 - `staleTime: Infinity` pour cette query (les votes passés ne changent pas) ; invalidation uniquement si la sélection ou la période change.
 
@@ -759,16 +845,24 @@ interface ComparatorState {
 **Règle d'or** : le calcul est fait côté serveur pour garantir la performance et la cohérence sur des volumes importants.
 
 **Endpoint API requis :**
+
 ```
 GET /api/v1/compare?ref={slug}&compare={slug1,slug2,slug3}&period={period}&themes={themes}
 ```
 
 **Réponse attendue :**
+
 ```json
 {
   "reference": { "slug": "marie-durand", "nom": "Marie Durand" },
   "compared": [
-    { "slug": "jean-martin", "nom": "Jean Martin", "score": 78.5, "votesCommuns": 67, "votesIdentiques": 53 }
+    {
+      "slug": "jean-martin",
+      "nom": "Jean Martin",
+      "score": 78.5,
+      "votesCommuns": 67,
+      "votesIdentiques": 53
+    }
   ],
   "details": [
     {
@@ -787,6 +881,7 @@ GET /api/v1/compare?ref={slug}&compare={slug1,slug2,slug3}&period={period}&theme
 ```
 
 **Calcul côté serveur (logique métier) :**
+
 ```
 concordance(ref, target, period, themes) =
   let votes = intersection(scrutins où ref a voté, scrutins où target a voté, dans period et themes)
@@ -798,6 +893,7 @@ concordance(ref, target, period, themes) =
     details: [...]
   }
 ```
+
 - Les absences (`nonVotants`) sont exclues du dénominateur.
 - Si `votesCommuns < 10`, `warning = true`.
 
@@ -823,13 +919,13 @@ Si l'utilisateur compare 2 députés et que leurs votes sont déjà en cache (na
 
 ### 9.1. Budget de performance
 
-| Métrique | Cible | Technique |
-|----------|-------|-----------|
-| FCP | < 1.5s | SSG, polices système, pas de JS blocking, prefetch DNS |
-| LCP | < 2.0s | Images optimisées (WebP/AVIF), `fetchpriority="high"` sur photo député, SSR |
-| INP | < 200ms | Pas de gros calculs sur le main thread, Workers pour le comparateur si besoin |
-| CLS | < 0.1 | Dimensions explicites sur images, pas de layout shift au chargement des skeletons |
-| TTFB | < 600ms | Edge deployment, cache CDN, Server Functions rapides |
+| Métrique | Cible   | Technique                                                                         |
+| -------- | ------- | --------------------------------------------------------------------------------- |
+| FCP      | < 1.5s  | SSG, polices système, pas de JS blocking, prefetch DNS                            |
+| LCP      | < 2.0s  | Images optimisées (WebP/AVIF), `fetchpriority="high"` sur photo député, SSR       |
+| INP      | < 200ms | Pas de gros calculs sur le main thread, Workers pour le comparateur si besoin     |
+| CLS      | < 0.1   | Dimensions explicites sur images, pas de layout shift au chargement des skeletons |
+| TTFB     | < 600ms | Edge deployment, cache CDN, Server Functions rapides                              |
 
 ### 9.2. Optimisations techniques
 
@@ -862,14 +958,14 @@ Si l'utilisateur compare 2 députés et que leurs votes sont déjà en cache (na
 
 ### 10.1. Implémentation systématique
 
-| Critère | Implémentation |
-|---------|----------------|
-| **1.4.3 Contraste** | Tous les tokens de couleur sont vérifiés à ≥ 4.5:1 (texte normal) et ≥ 3:1 (UI). Les badges utilisent du texte sombre sur fond pastel |
-| **1.4.1 Couleur** | Les votes utilisent couleur + texte + icône. Jamais de couleur seule |
-| **2.1.1 Clavier** | Tous les éléments interactifs sont atteignables par Tab. Skip link en haut de page |
-| **2.4.3 Focus Order** | Ordre de tabulation logique. Retour au trigger après fermeture drawer/modale |
-| **2.4.7 Focus Visible** | Anneau `shadow-focus` (#1D4ED8, 3px) sur tous les éléments interactifs |
-| **4.1.2 Name, Role, Value** | Radix UI fournit les rôles ARIA. Vérification manuelle pour les graphiques (`aria-label` descriptif) |
+| Critère                     | Implémentation                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **1.4.3 Contraste**         | Tous les tokens de couleur sont vérifiés à ≥ 4.5:1 (texte normal) et ≥ 3:1 (UI). Les badges utilisent du texte sombre sur fond pastel |
+| **1.4.1 Couleur**           | Les votes utilisent couleur + texte + icône. Jamais de couleur seule                                                                  |
+| **2.1.1 Clavier**           | Tous les éléments interactifs sont atteignables par Tab. Skip link en haut de page                                                    |
+| **2.4.3 Focus Order**       | Ordre de tabulation logique. Retour au trigger après fermeture drawer/modale                                                          |
+| **2.4.7 Focus Visible**     | Anneau `shadow-focus` (#1D4ED8, 3px) sur tous les éléments interactifs                                                                |
+| **4.1.2 Name, Role, Value** | Radix UI fournit les rôles ARIA. Vérification manuelle pour les graphiques (`aria-label` descriptif)                                  |
 
 ### 10.2. Patterns ARIA par écran
 
@@ -915,13 +1011,13 @@ Si l'utilisateur compare 2 députés et que leurs votes sont déjà en cache (na
 
 ### 12.1. Ambiguïtés nécessitant une décision
 
-| Sujet | Question | Impact | Statut |
-|-------|----------|--------|--------|
-| **API Backend** | Le frontend suppose l'existence d'une API REST interne qui agrège les données de l'AN (ZIP bulk). Qui construit cette API ? Quelle techno ? Quel SLA ? | Blocage total si l'API n'est pas prête | ⚠️ **À valider avec Backend** |
-| **Photos députés** | Quelle source pour les photos normalisées ? L'AN fournit des URLs stables ? Fallback si photo manquante ? | UX des fiches députés | ⚠️ **À valider avec Backend** |
-| **Thématiques** | Qui définit la classification thématique des scrutins ? NLP, manuel, ou source tierce (Datan) ? | Fonctionnalité filtres et comparateur par thème | ⚠️ **À valider avec Produit** |
-| **OG Image generation** | Satori + resvg-js fonctionne bien en Node.js. Si déploiement Edge (Cloudflare Workers), resvg-js nécessite une WASM spécifique. Où déploie-t-on ? | Choix infrastructure | ⚠️ **À valider avec Tech Lead** |
-| **Comparateur : limite de députés** | UX limite à 5 députés. L'API doit supporter jusqu'à 5 slugs en paramètre. | Contrat API | ✅ Spécifié ici |
+| Sujet                               | Question                                                                                                                                               | Impact                                          | Statut                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------- |
+| **API Backend**                     | Le frontend suppose l'existence d'une API REST interne qui agrège les données de l'AN (ZIP bulk). Qui construit cette API ? Quelle techno ? Quel SLA ? | Blocage total si l'API n'est pas prête          | ⚠️ **À valider avec Backend**   |
+| **Photos députés**                  | Quelle source pour les photos normalisées ? L'AN fournit des URLs stables ? Fallback si photo manquante ?                                              | UX des fiches députés                           | ⚠️ **À valider avec Backend**   |
+| **Thématiques**                     | Qui définit la classification thématique des scrutins ? NLP, manuel, ou source tierce (Datan) ?                                                        | Fonctionnalité filtres et comparateur par thème | ⚠️ **À valider avec Produit**   |
+| **OG Image generation**             | Satori + resvg-js fonctionne bien en Node.js. Si déploiement Edge (Cloudflare Workers), resvg-js nécessite une WASM spécifique. Où déploie-t-on ?      | Choix infrastructure                            | ⚠️ **À valider avec Tech Lead** |
+| **Comparateur : limite de députés** | UX limite à 5 députés. L'API doit supporter jusqu'à 5 slugs en paramètre.                                                                              | Contrat API                                     | ✅ Spécifié ici                 |
 
 ### 12.2. Hypothèses posées
 
@@ -956,6 +1052,7 @@ Si l'utilisateur compare 2 députés et que leurs votes sont déjà en cache (na
 ### 13.2. Dépendances à valider (Security Engineer)
 
 Avant installation, les packages suivants doivent être audités :
+
 - `satori` + `@resvg/resvg-js` (génération OG images)
 - `recharts` (si graphiques complexes requis)
 - `zustand` (state management)
@@ -964,5 +1061,5 @@ Avant installation, les packages suivants doivent être audités :
 
 ---
 
-*Document rédigé par le Frontend Developer — 2026-05-19*  
-*Prochaine étape : Revue avec l'Architecte (validation des Server Functions et du contrat API) et le Tech Lead (décision hébergement / OG image runtime).*
+_Document rédigé par le Frontend Developer — 2026-05-19_  
+_Prochaine étape : Revue avec l'Architecte (validation des Server Functions et du contrat API) et le Tech Lead (décision hébergement / OG image runtime)._

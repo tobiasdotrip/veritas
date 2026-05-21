@@ -277,9 +277,7 @@
         "deputies_slug_unique": {
           "name": "deputies_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -389,12 +387,8 @@
           "name": "deputy_group_affiliations_deputy_id_deputies_id_fk",
           "tableFrom": "deputy_group_affiliations",
           "tableTo": "deputies",
-          "columnsFrom": [
-            "deputy_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deputy_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -402,12 +396,8 @@
           "name": "deputy_group_affiliations_political_group_id_political_groups_id_fk",
           "tableFrom": "deputy_group_affiliations",
           "tableTo": "political_groups",
-          "columnsFrom": [
-            "political_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["political_group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -415,12 +405,8 @@
           "name": "deputy_group_affiliations_mandate_id_deputy_mandates_id_fk",
           "tableFrom": "deputy_group_affiliations",
           "tableTo": "deputy_mandates",
-          "columnsFrom": [
-            "mandate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mandate_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -546,12 +532,8 @@
           "name": "deputy_mandates_deputy_id_deputies_id_fk",
           "tableFrom": "deputy_mandates",
           "tableTo": "deputies",
-          "columnsFrom": [
-            "deputy_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deputy_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -559,12 +541,8 @@
           "name": "deputy_mandates_legislature_legislatures_id_fk",
           "tableFrom": "deputy_mandates",
           "tableTo": "legislatures",
-          "columnsFrom": [
-            "legislature"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["legislature"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -696,12 +674,8 @@
           "name": "political_groups_legislature_legislatures_id_fk",
           "tableFrom": "political_groups",
           "tableTo": "legislatures",
-          "columnsFrom": [
-            "legislature"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["legislature"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -833,12 +807,8 @@
           "name": "scrutin_group_votes_scrutin_id_scrutins_id_fk",
           "tableFrom": "scrutin_group_votes",
           "tableTo": "scrutins",
-          "columnsFrom": [
-            "scrutin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scrutin_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -846,12 +816,8 @@
           "name": "scrutin_group_votes_political_group_id_political_groups_id_fk",
           "tableFrom": "scrutin_group_votes",
           "tableTo": "political_groups",
-          "columnsFrom": [
-            "political_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["political_group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -941,12 +907,8 @@
           "name": "scrutin_themes_scrutin_id_scrutins_id_fk",
           "tableFrom": "scrutin_themes",
           "tableTo": "scrutins",
-          "columnsFrom": [
-            "scrutin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scrutin_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -954,12 +916,8 @@
           "name": "scrutin_themes_theme_id_themes_id_fk",
           "tableFrom": "scrutin_themes",
           "tableTo": "themes",
-          "columnsFrom": [
-            "theme_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["theme_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1144,12 +1102,8 @@
           "name": "scrutin_votes_scrutin_id_scrutins_id_fk",
           "tableFrom": "scrutin_votes",
           "tableTo": "scrutins",
-          "columnsFrom": [
-            "scrutin_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scrutin_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1157,12 +1111,8 @@
           "name": "scrutin_votes_deputy_id_deputies_id_fk",
           "tableFrom": "scrutin_votes",
           "tableTo": "deputies",
-          "columnsFrom": [
-            "deputy_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deputy_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1170,12 +1120,8 @@
           "name": "scrutin_votes_mandate_id_deputy_mandates_id_fk",
           "tableFrom": "scrutin_votes",
           "tableTo": "deputy_mandates",
-          "columnsFrom": [
-            "mandate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mandate_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1183,12 +1129,8 @@
           "name": "scrutin_votes_political_group_id_political_groups_id_fk",
           "tableFrom": "scrutin_votes",
           "tableTo": "political_groups",
-          "columnsFrom": [
-            "political_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["political_group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1478,12 +1420,8 @@
           "name": "scrutins_legislature_legislatures_id_fk",
           "tableFrom": "scrutins",
           "tableTo": "legislatures",
-          "columnsFrom": [
-            "legislature"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["legislature"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1630,9 +1568,7 @@
         "themes_slug_unique": {
           "name": "themes_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1644,30 +1580,17 @@
     "public.scrutin_sort": {
       "name": "scrutin_sort",
       "schema": "public",
-      "values": [
-        "adopté",
-        "rejeté"
-      ]
+      "values": ["adopté", "rejeté"]
     },
     "public.sync_status": {
       "name": "sync_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "running",
-        "success",
-        "failed"
-      ]
+      "values": ["pending", "running", "success", "failed"]
     },
     "public.vote_position": {
       "name": "vote_position",
       "schema": "public",
-      "values": [
-        "pour",
-        "contre",
-        "abstention",
-        "nonVotant"
-      ]
+      "values": ["pour", "contre", "abstention", "nonVotant"]
     }
   },
   "schemas": {},

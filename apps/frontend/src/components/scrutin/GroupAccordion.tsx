@@ -29,16 +29,32 @@ function GroupBar({
   return (
     <div className="flex h-3 w-full overflow-hidden rounded-full">
       {wp > 0 && (
-        <div style={{ width: `${wp}%` }} className="bg-success" aria-hidden="true" />
+        <div
+          style={{ width: `${wp}%` }}
+          className="bg-success"
+          aria-hidden="true"
+        />
       )}
       {wc > 0 && (
-        <div style={{ width: `${wc}%` }} className="bg-danger" aria-hidden="true" />
+        <div
+          style={{ width: `${wc}%` }}
+          className="bg-danger"
+          aria-hidden="true"
+        />
       )}
       {wa > 0 && (
-        <div style={{ width: `${wa}%` }} className="bg-warning" aria-hidden="true" />
+        <div
+          style={{ width: `${wa}%` }}
+          className="bg-warning"
+          aria-hidden="true"
+        />
       )}
       {wn > 0 && (
-        <div style={{ width: `${wn}%` }} className="bg-neutral" aria-hidden="true" />
+        <div
+          style={{ width: `${wn}%` }}
+          className="bg-neutral"
+          aria-hidden="true"
+        />
       )}
     </div>
   );
@@ -46,7 +62,10 @@ function GroupBar({
 
 export function GroupAccordion({ groups, className }: GroupAccordionProps) {
   return (
-    <AccordionPrimitive.Root type="multiple" className={cn("space-y-2", className)}>
+    <AccordionPrimitive.Root
+      type="multiple"
+      className={cn("space-y-2", className)}
+    >
       {groups.map((g) => {
         const total =
           (g.nombrePour ?? 0) +

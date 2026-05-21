@@ -20,14 +20,18 @@ export interface BadgeResultatProps {
   className?: string;
 }
 
-export function BadgeResultat({ resultat, size = "sm", className }: BadgeResultatProps) {
+export function BadgeResultat({
+  resultat,
+  size = "sm",
+  className,
+}: BadgeResultatProps) {
   if (!resultat || !(resultat in config)) {
     return (
       <span
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full bg-neutral-bg px-2.5 py-1 text-xs font-medium text-neutral",
           size === "md" && "px-3 py-1.5 text-sm",
-          className
+          className,
         )}
         aria-label="Résultat inconnu"
       >
@@ -42,7 +46,7 @@ export function BadgeResultat({ resultat, size = "sm", className }: BadgeResulta
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
         c.classes,
         size === "md" && "px-3 py-1.5 text-sm",
-        className
+        className,
       )}
       role="status"
       aria-label={`Résultat : ${c.label}`}

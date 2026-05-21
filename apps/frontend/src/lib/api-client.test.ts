@@ -20,11 +20,11 @@ describe("apiFetch error parsing", () => {
           detail: "Deputy 'PA123' not found",
           code: "NOT_FOUND",
         }),
-      })
+      }),
     );
 
     await expect(apiFetch("/deputies/PA123")).rejects.toEqual(
-      new ApiError(404, "NOT_FOUND", "Deputy 'PA123' not found")
+      new ApiError(404, "NOT_FOUND", "Deputy 'PA123' not found"),
     );
   });
 
@@ -38,11 +38,11 @@ describe("apiFetch error parsing", () => {
         json: async () => ({
           error: { code: "VALIDATION_ERROR", message: "Invalid input" },
         }),
-      })
+      }),
     );
 
     await expect(apiFetch("/search?q=x")).rejects.toEqual(
-      new ApiError(400, "VALIDATION_ERROR", "Invalid input")
+      new ApiError(400, "VALIDATION_ERROR", "Invalid input"),
     );
   });
 });

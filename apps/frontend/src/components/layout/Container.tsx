@@ -20,14 +20,14 @@ const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
         className={cn(
           "mx-auto w-full px-4 sm:px-6 lg:px-8",
           sizes[size],
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 Container.displayName = "Container";
 
