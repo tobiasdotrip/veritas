@@ -134,7 +134,9 @@ describeIntegration("GET /api/v1/scrutins", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.total).toBe(1);
-    expect(response.body.data[0]!.deputySlug).toBe(FIXTURE.deputies.martin.slug);
+    expect(response.body.data[0]!.deputySlug).toBe(
+      FIXTURE.deputies.martin.slug,
+    );
     expect(response.body.data[0]!.position).toBe("contre");
   });
 });

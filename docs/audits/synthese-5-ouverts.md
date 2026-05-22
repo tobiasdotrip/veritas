@@ -321,12 +321,12 @@ Le security-engineer voit un **risque latent** (bombe à retardement) là où le
 
 ### Semaine 3 — Couverture backend ✅ (2026-05-22)
 
-| #   | Action                                                                               | Statut |
-| --- | ------------------------------------------------------------------------------------ | ------ |
-| 15  | Tests `scrutins/repository.ts` → `repository.integration.test.ts` (9 scénarios)    | ✅     |
-| 16  | Tests `deputies/routes.ts` → `deputies.integration.test.ts` (8 scénarios)           | ✅     |
-| 17  | Tests `scrutins/routes.ts` → `scrutins.integration.test.ts` (9 scénarios)           | ✅     |
-| 18  | Tests `compare/routes.ts` + `compare/repository.ts` (9 + 4 scénarios)               | ✅     |
+| #   | Action                                                                          | Statut |
+| --- | ------------------------------------------------------------------------------- | ------ |
+| 15  | Tests `scrutins/repository.ts` → `repository.integration.test.ts` (9 scénarios) | ✅     |
+| 16  | Tests `deputies/routes.ts` → `deputies.integration.test.ts` (8 scénarios)       | ✅     |
+| 17  | Tests `scrutins/routes.ts` → `scrutins.integration.test.ts` (9 scénarios)       | ✅     |
+| 18  | Tests `compare/routes.ts` + `compare/repository.ts` (9 + 4 scénarios)           | ✅     |
 
 **Total** : 125 unitaires + 50 intégration = **175 tests**
 
