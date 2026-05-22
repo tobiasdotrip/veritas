@@ -99,4 +99,41 @@ describeIntegration("GET /api/v1/compare", () => {
 
     expect(response.status).toBe(400);
   });
+
+  it("rejects a single deputy", async () => {
+    const response = await ctx.injectJson(ctx.app, {
+      method: "GET",
+      url: `/api/v1/compare?deputies=${FIXTURE.deputies.dupont.id}`,
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects more than five deputies", async () => {
+    const response = await ctx.injectJson(ctx.app, {
+      method: "GET",
+      url: "/api/v1/compare?deputies=PA1,PA2,PA3,PA4,PA5,PA6",
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("returns pairwise concordance for two deputies", async () => {
+    const response = await ctx.injectJson<{
+      data: {
+        pairwise: {
+          deputyAId: string;
+          deputyBId: string;
+          concordanceRate: number;
+        }[];
+      };
+    }>(ctx.app, {
+      method: "GET",
+      url: `/api/v1/compare?deputies=${FIXTURE.deputies.dupont.id},${FIXTURE.deputies.martin.id}`,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.pairwise).toHaveLength(1);
+    expect(response.body.data.pairwise[0]!.concordanceRate).toBe(50);
+  });
 });

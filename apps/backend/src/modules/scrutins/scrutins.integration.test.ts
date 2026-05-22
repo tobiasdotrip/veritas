@@ -74,4 +74,67 @@ describeIntegration("GET /api/v1/scrutins", () => {
 
     expect(response.status).toBe(400);
   });
+
+  it("searches scrutins by text query", async () => {
+    const response = await ctx.injectJson<{
+      data: { id: string }[];
+    }>(ctx.app, {
+      method: "GET",
+      url: "/api/v1/scrutins?q=finances&limit=20",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]!.id).toBe(FIXTURE.scrutins.budget.id);
+  });
+
+  it("filters scrutins by date range", async () => {
+    const response = await ctx.injectJson<{
+      data: { id: string }[];
+    }>(ctx.app, {
+      method: "GET",
+      url: "/api/v1/scrutins?from=2024-09-01&to=2024-10-31&limit=20",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+  });
+
+  it("returns 404 for unknown scrutin", async () => {
+    const response = await ctx.injectJson(ctx.app, {
+      method: "GET",
+      url: "/api/v1/scrutins/VT_UNKNOWN",
+    });
+
+    expect(response.status).toBe(404);
+  });
+
+  it("lists individual votes for a scrutin", async () => {
+    const response = await ctx.injectJson<{
+      data: { deputySlug: string; position: string }[];
+      total: number;
+    }>(ctx.app, {
+      method: "GET",
+      url: `/api/v1/scrutins/${FIXTURE.scrutins.budget.id}/votes?limit=10&offset=0`,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.total).toBe(2);
+    expect(response.body.data).toHaveLength(2);
+  });
+
+  it("filters scrutin votes by position", async () => {
+    const response = await ctx.injectJson<{
+      data: { deputySlug: string; position: string }[];
+      total: number;
+    }>(ctx.app, {
+      method: "GET",
+      url: `/api/v1/scrutins/${FIXTURE.scrutins.budget.id}/votes?position=contre&limit=10&offset=0`,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.total).toBe(1);
+    expect(response.body.data[0]!.deputySlug).toBe(FIXTURE.deputies.martin.slug);
+    expect(response.body.data[0]!.position).toBe("contre");
+  });
 });
