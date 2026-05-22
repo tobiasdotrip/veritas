@@ -2,19 +2,19 @@
 
 **Date** : 2026-05-22  
 **Périmètre** : `docs/ETAT_PROJET.md` § « Toujours ouverts »  
-**Méthodologie** : analyse statique + exécution des tests existants + inspection du code  
+**Méthodologie** : analyse statique + exécution des tests existants + inspection du code
 
 ---
 
 ## Résumé exécutif
 
-| # | Élément | Effort estimé | Priorité | Risque si non traité |
-|---|---------|--------------|----------|---------------------|
-| 1 | Couverture tests | 4–6 j | 🔴 Élevée | Bugs non détectés en prod, régressions silencieuses |
-| 2 | Intégration/E2E | 3–5 j | 🟠 Moyenne | Flux cross-stack non vérifiés, UI cassée non détectée |
-| 3 | Biais suggestions | 2–3 j | 🔴 Élevée | Suggestions non pertinentes, frustration utilisateur |
-| 4 | Filtre thématique croisé | 2–3 j | 🟠 Moyenne | Résultats incohérents, combinatoire de filtres non validée |
-| 5 | Route OG non branchée | 1–2 j | 🟢 Basse | Fonctionnalité inexistante (pas de régression), previews sociales cassées |
+| #   | Élément                  | Effort estimé | Priorité   | Risque si non traité                                                      |
+| --- | ------------------------ | ------------- | ---------- | ------------------------------------------------------------------------- |
+| 1   | Couverture tests         | 4–6 j         | 🔴 Élevée  | Bugs non détectés en prod, régressions silencieuses                       |
+| 2   | Intégration/E2E          | 3–5 j         | 🟠 Moyenne | Flux cross-stack non vérifiés, UI cassée non détectée                     |
+| 3   | Biais suggestions        | 2–3 j         | 🔴 Élevée  | Suggestions non pertinentes, frustration utilisateur                      |
+| 4   | Filtre thématique croisé | 2–3 j         | 🟠 Moyenne | Résultats incohérents, combinatoire de filtres non validée                |
+| 5   | Route OG non branchée    | 1–2 j         | 🟢 Basse   | Fonctionnalité inexistante (pas de régression), previews sociales cassées |
 
 ---
 
@@ -24,59 +24,64 @@
 
 **Décompte réel** (exécution du 2026-05-22) :
 
-| Workspace | Fichiers | Tests passés | Tests sautés |
-|-----------|----------|-------------|-------------|
-| `@veritas/shared` | 1 | 4 | 0 |
-| `@veritas/etl` | 5 | 36 | 0 |
-| `@veritas/backend` | 5 (4 passent) | 42 | 2 |
-| `@veritas/frontend` | 1 | 2 | 0 |
-| **Total** | **12** | **84** | **2** |
+| Workspace           | Fichiers      | Tests passés | Tests sautés |
+| ------------------- | ------------- | ------------ | ------------ |
+| `@veritas/shared`   | 1             | 4            | 0            |
+| `@veritas/etl`      | 5             | 36           | 0            |
+| `@veritas/backend`  | 5 (4 passent) | 42           | 2            |
+| `@veritas/frontend` | 1             | 2            | 0            |
+| **Total**           | **12**        | **84**       | **2**        |
 
 Le chiffre ~3.58% correspond probablement à la couverture sur l'intégralité des 4 workspaces. Le coverage provider `v8` est configuré dans `vitest.config.ts` mais aucun rapport récent n'a été trouvé dans `coverage/`.
 
 ### Surfaces critiques non couvertes
 
 #### Backend (risque 🔴)
-| Module | Routes | Tests | Risque |
-|--------|--------|-------|--------|
-| `search` | 2 (suggestions + full search) | 1 smoke E2E | Requêtes PostgreSQL `to_tsvector`/`to_tsquery` non testées unitairement |
-| `scrutins` | 3 (liste/détail/votes) | 0 | Pagination cursor, filtres combinés, tri par pertinence non testés |
-| `deputies` | 4 (liste/profil/votes/stats) | 0 | Résolution slug/ID, stats agrégées, pagination votes non testées |
-| `compare` | 1 (compare) | **8 tests unitaires** (service) | ✅ Seul module backend bien couvert |
-| `groups` | routes présentes | 0 | Endpoints non testés du tout |
+
+| Module     | Routes                        | Tests                           | Risque                                                                  |
+| ---------- | ----------------------------- | ------------------------------- | ----------------------------------------------------------------------- |
+| `search`   | 2 (suggestions + full search) | 1 smoke E2E                     | Requêtes PostgreSQL `to_tsvector`/`to_tsquery` non testées unitairement |
+| `scrutins` | 3 (liste/détail/votes)        | 0                               | Pagination cursor, filtres combinés, tri par pertinence non testés      |
+| `deputies` | 4 (liste/profil/votes/stats)  | 0                               | Résolution slug/ID, stats agrégées, pagination votes non testées        |
+| `compare`  | 1 (compare)                   | **8 tests unitaires** (service) | ✅ Seul module backend bien couvert                                     |
+| `groups`   | routes présentes              | 0                               | Endpoints non testés du tout                                            |
 
 **Constats** :
+
 - Le module `search` a une logique de sanitization `toPrefixTsQuery()` pour suggestions et validation `rethrowTextSearchValidationError` — aucun test unitaire pour ces fonctions critiques.
 - L'intégration test (backend) ne teste que `/health` et `/api/v1/search/suggestions?q=martin&limit=5`. Aucune assertion sur le contenu des résultats.
 - Les services `scrutins` et `deputies` sont enrobés de cache Redis : le comportement de cache hit/miss/stale n'est jamais testé.
 
 #### Frontend (risque 🟠)
-| Composant/Hook | Tests | Risque |
-|---------------|-------|--------|
-| `useSearch` | 0 | Requêtes déclenchées, clés TanStack Query, `enabled` condition |
-| `useThemeScrutins` | 0 | Appel API `/scrutins?theme=X`, fusion résultats côté client |
-| `useComparison` | 0 | Calcul `periodToFrom`, composition URL params |
-| `useDeputeVotes` | 0 | Pagination infinite query |
-| `ComparatorStore` (Zustand) | 0 | Logique persist, max 4 comparés, retrait référence |
-| `SearchCombobox` | 0 | Comportement input debounce, sélection, accessibilité |
-| `routes/recherche.tsx` | 0 | Fusion recherche + thématique, filtres type, état loading/empty/error |
-| `routes/comparateur.tsx` | 0 | Tous les états (pas de référence, loading, error, pas de votes communs, concordance totale) |
+
+| Composant/Hook              | Tests | Risque                                                                                      |
+| --------------------------- | ----- | ------------------------------------------------------------------------------------------- |
+| `useSearch`                 | 0     | Requêtes déclenchées, clés TanStack Query, `enabled` condition                              |
+| `useThemeScrutins`          | 0     | Appel API `/scrutins?theme=X`, fusion résultats côté client                                 |
+| `useComparison`             | 0     | Calcul `periodToFrom`, composition URL params                                               |
+| `useDeputeVotes`            | 0     | Pagination infinite query                                                                   |
+| `ComparatorStore` (Zustand) | 0     | Logique persist, max 4 comparés, retrait référence                                          |
+| `SearchCombobox`            | 0     | Comportement input debounce, sélection, accessibilité                                       |
+| `routes/recherche.tsx`      | 0     | Fusion recherche + thématique, filtres type, état loading/empty/error                       |
+| `routes/comparateur.tsx`    | 0     | Tous les états (pas de référence, loading, error, pas de votes communs, concordance totale) |
 
 #### ETL (risque 🟢)
+
 Bonne couverture : config URLs (11 tests), zip slip (12 tests), zip entry types (6 tests), parseurs (4 tests).  
 **Manque** : tests d'intégration ETL complet (download → parse → load PostgreSQL), mais ceux-ci sont lourds et moins prioritaires.
 
 #### Shared (risque 🟢)
+
 4 tests sur les schémas Zod. Acceptable pour l'instant.
 
 ### Plan d'augmentation
 
-| Phase | Contenu | Effort | Priorité |
-|-------|---------|--------|----------|
-| **Phase 1** (immédiat) | Tests unitaires `toPrefixTsQuery()` + `withTextSearchErrorHandling()` + `ScrutinService` + `DeputyService` | 2 j | 🔴 |
-| **Phase 2** (court terme) | Tests hooks React (`useSearch`, `useComparison`, `useThemeScrutins`) + Zustand store | 1.5 j | 🟠 |
-| **Phase 3** (court terme) | Tests composants frontend (états loading/empty/error sur les pages critiques) | 1 j | 🟠 |
-| **Phase 4** (moyen terme) | Tests intégration backend sur jeux de données seed (scrutins, deputies, votes) | 1.5 j | 🟡 |
+| Phase                     | Contenu                                                                                                    | Effort | Priorité |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- | ------ | -------- |
+| **Phase 1** (immédiat)    | Tests unitaires `toPrefixTsQuery()` + `withTextSearchErrorHandling()` + `ScrutinService` + `DeputyService` | 2 j    | 🔴       |
+| **Phase 2** (court terme) | Tests hooks React (`useSearch`, `useComparison`, `useThemeScrutins`) + Zustand store                       | 1.5 j  | 🟠       |
+| **Phase 3** (court terme) | Tests composants frontend (états loading/empty/error sur les pages critiques)                              | 1 j    | 🟠       |
+| **Phase 4** (moyen terme) | Tests intégration backend sur jeux de données seed (scrutins, deputies, votes)                             | 1.5 j  | 🟡       |
 
 **Cible de couverture recommandée** : 60-65% global, avec ≥80% sur `search`, `scrutins`, `compare`, `deputies` (modules métier).
 
@@ -98,21 +103,23 @@ e2e/
 
 ### Plan d'extension E2E
 
-| Test E2E | Flux couvert | Effort | Priorité |
-|----------|-------------|--------|----------|
-| **Recherche complète** | Saisir "macron" → suggestions → sélection → fiche député | 0.5 j | 🔴 |
-| **Recherche scrutin** | Saisir "réforme" → résultats mixtes → navigation scrutin | 0.5 j | 🔴 |
-| **Comparateur complet** | Ajouter 2 députés → sélectionner période → vérifier score → divergences | 0.5 j | 🟠 |
-| **Filtre thématique** | Page recherche → sélectionner thème → vérifier scrutins filtrés | 0.5 j | 🟠 |
-| **Pagination votes député** | Fiche député → scroll → « Charger plus » → nouvelles données | 0.5 j | 🟠 |
-| **Navigation mobile** | Viewport 375px → navigation hamburger → toutes les pages | 0.5 j | 🟡 |
-| **Erreurs réseau** | Simuler backend down → vérifier états d'erreur frontend | 0.5 j | 🟡 |
+| Test E2E                    | Flux couvert                                                            | Effort | Priorité |
+| --------------------------- | ----------------------------------------------------------------------- | ------ | -------- |
+| **Recherche complète**      | Saisir "macron" → suggestions → sélection → fiche député                | 0.5 j  | 🔴       |
+| **Recherche scrutin**       | Saisir "réforme" → résultats mixtes → navigation scrutin                | 0.5 j  | 🔴       |
+| **Comparateur complet**     | Ajouter 2 députés → sélectionner période → vérifier score → divergences | 0.5 j  | 🟠       |
+| **Filtre thématique**       | Page recherche → sélectionner thème → vérifier scrutins filtrés         | 0.5 j  | 🟠       |
+| **Pagination votes député** | Fiche député → scroll → « Charger plus » → nouvelles données            | 0.5 j  | 🟠       |
+| **Navigation mobile**       | Viewport 375px → navigation hamburger → toutes les pages                | 0.5 j  | 🟡       |
+| **Erreurs réseau**          | Simuler backend down → vérifier états d'erreur frontend                 | 0.5 j  | 🟡       |
 
 **Prérequis bloquants** :
+
 - Base de données seed cohérente en CI (les données E2E doivent être déterministes).
 - `E2E_FRONTEND_BASE_URL` doit pointer vers le frontend buildé (pas `vite dev`).
 
 **Recommandation** : Ajouter un script `pnpm e2e:ci` qui :
+
 1. Lance PostgreSQL + Redis (docker-compose)
 2. Migre + seed la BDD
 3. Build le frontend
@@ -134,14 +141,14 @@ Le module `apps/backend/src/modules/search/routes.ts` contient deux endpoints :
 
 **Problèmes identifiés** :
 
-| # | Problème | Impact | Sévérité |
-|---|---------|--------|----------|
-| B1 | `toPrefixTsQuery()` strip tous les caractères non alphanumériques → "Jean-Michel" devient "JeanMichel:*" → pas de match sur "jean-michel" dans le ts_vector | Faux négatifs pour noms composés | 🔴 |
-| B2 | Les suggestions mélangent députés et scrutins, triés par `ts_rank` global → un scrutin avec un titre long contenant le terme peut dominer un député dont c'est le nom exact | Pertinence dégradée | 🟠 |
-| B3 | `ts_rank` ne tient pas compte de la position du terme → "Martin" en milieu de titre scrutin ranké comme en début | Scrutins parasites en tête | 🟡 |
-| B4 | Pas de normalisation Unicode (accents, ligatures) en entrée → "François" ne matche pas "francois" tapé sans cédille | UX dégradée | 🟠 |
-| B5 | `limit` appliqué par type PUIS fusionné → si un type a plus de résultats pertinents, il écrase l'autre | Déséquilibre députés/scrutins | 🟡 |
-| B6 | Pas de préférence pour les correspondances exactes → "Macron" devrait ranker Emmanuel Macron avant un scrutin qui mentionne le nom | Mauvaise première suggestion | 🔴 |
+| #   | Problème                                                                                                                                                                    | Impact                           | Sévérité |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------- |
+| B1  | `toPrefixTsQuery()` strip tous les caractères non alphanumériques → "Jean-Michel" devient "JeanMichel:\*" → pas de match sur "jean-michel" dans le ts_vector                | Faux négatifs pour noms composés | 🔴       |
+| B2  | Les suggestions mélangent députés et scrutins, triés par `ts_rank` global → un scrutin avec un titre long contenant le terme peut dominer un député dont c'est le nom exact | Pertinence dégradée              | 🟠       |
+| B3  | `ts_rank` ne tient pas compte de la position du terme → "Martin" en milieu de titre scrutin ranké comme en début                                                            | Scrutins parasites en tête       | 🟡       |
+| B4  | Pas de normalisation Unicode (accents, ligatures) en entrée → "François" ne matche pas "francois" tapé sans cédille                                                         | UX dégradée                      | 🟠       |
+| B5  | `limit` appliqué par type PUIS fusionné → si un type a plus de résultats pertinents, il écrase l'autre                                                                      | Déséquilibre députés/scrutins    | 🟡       |
+| B6  | Pas de préférence pour les correspondances exactes → "Macron" devrait ranker Emmanuel Macron avant un scrutin qui mentionne le nom                                          | Mauvaise première suggestion     | 🔴       |
 
 ### Scénarios de test recommandés
 
@@ -166,13 +173,13 @@ Suite: Suggestions search bias
 
 ### Jeux de données nécessaires
 
-| Donnée | Pourquoi |
-|--------|---------|
+| Donnée                                                                          | Pourquoi                              |
+| ------------------------------------------------------------------------------- | ------------------------------------- |
 | Député "Emmanuel Macron" (ou nom très similaire) + scrutin mentionnant "Macron" | Tester priorité nom propre vs mention |
-| Député "Jean-Michel Dupont" + scrutin "Jean-Michel" | Tester tirets |
-| Député "François Martin" | Tester accents/Unicode |
-| 10+ scrutins avec le mot "réforme" | Tester ranking pertinence |
-| Scrutins avec titres très longs (>500 car.) | Tester edge cases PostgreSQL |
+| Député "Jean-Michel Dupont" + scrutin "Jean-Michel"                             | Tester tirets                         |
+| Député "François Martin"                                                        | Tester accents/Unicode                |
+| 10+ scrutins avec le mot "réforme"                                              | Tester ranking pertinence             |
+| Scrutins avec titres très longs (>500 car.)                                     | Tester edge cases PostgreSQL          |
 
 **Estimation** : 2–3 jours (1 j données de test + 1 j scénarios + 0.5 j analyse biais)
 
@@ -191,14 +198,14 @@ Côté frontend, les résultats sont fusionnés : `searchScrutins + themedScruti
 
 **Problèmes identifiés** :
 
-| # | Problème | Impact | Sévérité |
-|---|---------|--------|----------|
-| T1 | Fusion déséquilibrée : si `type=depute`, `themedScrutins` est ignoré (`type !== 'depute'` dans la condition) | Filtre thématique silencieusement ignoré | 🟠 |
-| T2 | Le filtre thématique utilise `/scrutins` (pas `/search`) → pas de ranking texte, juste `date_desc`/`date_asc` | Résultats thématiques non ordonnés par pertinence | 🟡 |
-| T3 | Pas de limite côté backend pour le filtre thématique → si 500 scrutins tagués "écologie", tous sont chargés | Performances dégradées | 🟡 |
-| T4 | Les scrutins thématiques n'ont pas les mêmes champs que les scrutins de recherche (`SearchResultScrutin` utilisé pour les deux) | Cohérence OK actuellement, mais fragile | 🟡 |
-| T5 | Pas de combinaison `theme` + `q` sur le même endpoint backend → deux appels API séparés | Latence doublée, ordre incohérent | 🟠 |
-| T6 | Aucune indication visuelle que les résultats sont filtrés par thème (juste un `<p>` discret) | UX confuse | 🟡 |
+| #   | Problème                                                                                                                        | Impact                                            | Sévérité |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | -------- |
+| T1  | Fusion déséquilibrée : si `type=depute`, `themedScrutins` est ignoré (`type !== 'depute'` dans la condition)                    | Filtre thématique silencieusement ignoré          | 🟠       |
+| T2  | Le filtre thématique utilise `/scrutins` (pas `/search`) → pas de ranking texte, juste `date_desc`/`date_asc`                   | Résultats thématiques non ordonnés par pertinence | 🟡       |
+| T3  | Pas de limite côté backend pour le filtre thématique → si 500 scrutins tagués "écologie", tous sont chargés                     | Performances dégradées                            | 🟡       |
+| T4  | Les scrutins thématiques n'ont pas les mêmes champs que les scrutins de recherche (`SearchResultScrutin` utilisé pour les deux) | Cohérence OK actuellement, mais fragile           | 🟡       |
+| T5  | Pas de combinaison `theme` + `q` sur le même endpoint backend → deux appels API séparés                                         | Latence doublée, ordre incohérent                 | 🟠       |
+| T6  | Aucune indication visuelle que les résultats sont filtrés par thème (juste un `<p>` discret)                                    | UX confuse                                        | 🟡       |
 
 ### Cas de test
 
@@ -217,14 +224,14 @@ Suite: Filtre thématique croisé
 
 ### Edge cases
 
-| Edge case | Comportement attendu | Risque |
-|-----------|---------------------|--------|
-| Thème avec apostrophe dans le slug (`l-etat-d-urgence`) | Encodage URL correct, pas de double-encoding | 🟡 |
-| Thème avec 0 scrutins associés | Empty state, pas d'erreur | 🟢 |
-| 2 thèmes simultanés ? | Non supporté actuellement (un seul `theme` dans l'URL) | 🟢 |
-| Thème + recherche vide (`q=""`) | Les scrutins thématiques doivent s'afficher | 🟠 |
-| Changement rapide de thème → race condition | Dernière requête gagne (TanStack Query gère) | 🟢 |
-| Thème avec encoding spécial (`%20`, `+`) | Décodage correct côté backend | 🟡 |
+| Edge case                                               | Comportement attendu                                   | Risque |
+| ------------------------------------------------------- | ------------------------------------------------------ | ------ |
+| Thème avec apostrophe dans le slug (`l-etat-d-urgence`) | Encodage URL correct, pas de double-encoding           | 🟡     |
+| Thème avec 0 scrutins associés                          | Empty state, pas d'erreur                              | 🟢     |
+| 2 thèmes simultanés ?                                   | Non supporté actuellement (un seul `theme` dans l'URL) | 🟢     |
+| Thème + recherche vide (`q=""`)                         | Les scrutins thématiques doivent s'afficher            | 🟠     |
+| Changement rapide de thème → race condition             | Dernière requête gagne (TanStack Query gère)           | 🟢     |
+| Thème avec encoding spécial (`%20`, `+`)                | Décodage correct côté backend                          | 🟡     |
 
 **Estimation** : 2–3 jours (1 j cas de test + 1 j edge cases + 0.5 j validation cross-browser)
 
@@ -236,11 +243,11 @@ Suite: Filtre thématique croisé
 
 Trois fichiers stubs dans `apps/frontend/src/routes/api/og/` :
 
-| Fichier | Contenu | Statut |
-|---------|---------|--------|
-| `depute.tsx` | Satori 1200×630, affiche `slug` + stats vides | Stub — `// @ts-nocheck` |
-| `scrutin.tsx` | Satori 1200×630, affiche `id` + compteurs vides | Stub — `// @ts-nocheck` |
-| `comparateur.tsx` | Satori 1200×630, affiche score de concordance | Stub — `// @ts-nocheck` |
+| Fichier           | Contenu                                         | Statut                  |
+| ----------------- | ----------------------------------------------- | ----------------------- |
+| `depute.tsx`      | Satori 1200×630, affiche `slug` + stats vides   | Stub — `// @ts-nocheck` |
+| `scrutin.tsx`     | Satori 1200×630, affiche `id` + compteurs vides | Stub — `// @ts-nocheck` |
+| `comparateur.tsx` | Satori 1200×630, affiche score de concordance   | Stub — `// @ts-nocheck` |
 
 **Problèmes** :
 
@@ -251,22 +258,22 @@ Trois fichiers stubs dans `apps/frontend/src/routes/api/og/` :
 
 ### Stratégie de test
 
-| Niveau | Approche | Effort |
-|--------|----------|--------|
-| **Unitaire** | Tester le rendu Satori avec des props mockées → vérifier que le SVG contient les bons éléments (headless, pas besoin de navigateur) | 0.5 j |
-| **Snapshot** | Générer SVG → sauvegarder snapshot → comparer en CI. Satori est déterministe pour des inputs identiques. | 0.5 j |
-| **E2E** | GET `/api/og/depute?slug=X` → vérifier Content-Type `image/svg+xml` → vérifier dimensions → vérifier headers Cache-Control | 0.5 j |
-| **Visuel** | Playwright screenshot comparison sur le SVG rendu dans un `<img>` tag | 0.5 j |
+| Niveau       | Approche                                                                                                                            | Effort |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **Unitaire** | Tester le rendu Satori avec des props mockées → vérifier que le SVG contient les bons éléments (headless, pas besoin de navigateur) | 0.5 j  |
+| **Snapshot** | Générer SVG → sauvegarder snapshot → comparer en CI. Satori est déterministe pour des inputs identiques.                            | 0.5 j  |
+| **E2E**      | GET `/api/og/depute?slug=X` → vérifier Content-Type `image/svg+xml` → vérifier dimensions → vérifier headers Cache-Control          | 0.5 j  |
+| **Visuel**   | Playwright screenshot comparison sur le SVG rendu dans un `<img>` tag                                                               | 0.5 j  |
 
 ### Points d'attention techniques
 
-| Risque | Détail |
-|--------|--------|
+| Risque           | Détail                                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **Satori + SSR** | Satori utilise `yoga-layout` (WASM). En SSR TanStack Start, le chargement WASM peut être problématique. À tester avec le build Vite. |
-| **Fonts** | Il faudra embarquer une police (ex: Inter 400/700) en base64 dans le bundle. Taille ~100 Ko compressée. |
-| **Cache** | Les headers `Cache-Control` sont déjà configurés (24h + stale-while-revalidate 7j) — à valider. |
-| **Dimensions** | 1200×630 est l'Open Graph standard — vérifier que le ratio est exact. |
-| **Performance** | Le rendu Satori prend ~50-100ms. Pour des OG images servies à la volée, c'est acceptable. |
+| **Fonts**        | Il faudra embarquer une police (ex: Inter 400/700) en base64 dans le bundle. Taille ~100 Ko compressée.                              |
+| **Cache**        | Les headers `Cache-Control` sont déjà configurés (24h + stale-while-revalidate 7j) — à valider.                                      |
+| **Dimensions**   | 1200×630 est l'Open Graph standard — vérifier que le ratio est exact.                                                                |
+| **Performance**  | Le rendu Satori prend ~50-100ms. Pour des OG images servies à la volée, c'est acceptable.                                            |
 
 ### Scénarios de test
 
@@ -298,14 +305,14 @@ Suite: Route OG
 
 ## Synthèse des risques
 
-| Risque | Élément(s) concerné(s) | Impact | Probabilité |
-|--------|----------------------|--------|-------------|
-| Régression sur la recherche (cœur produit) | 1, 3, 4 | Fort — fonctionnalité phare | Moyenne (changements fréquents) |
-| UI cassée non détectée avant déploiement | 2 | Fort — perte de confiance utilisateur | Élevée (pas de tests E2E cross-stack) |
-| Previews sociales inexistantes | 5 | Faible — feature non livrée | Certaine (non branché) |
-| Dette technique test qui s'accumule | 1 | Moyen — ralentissement des futurs développements | Certaine |
-| Faux positifs/négatifs recherche | 3 | Fort — frustration utilisateur | Élevée (biais documentés) |
-| Combinatoire filtres non maîtrisée | 4 | Moyen — bugs subtils en production | Moyenne |
+| Risque                                     | Élément(s) concerné(s) | Impact                                           | Probabilité                           |
+| ------------------------------------------ | ---------------------- | ------------------------------------------------ | ------------------------------------- |
+| Régression sur la recherche (cœur produit) | 1, 3, 4                | Fort — fonctionnalité phare                      | Moyenne (changements fréquents)       |
+| UI cassée non détectée avant déploiement   | 2                      | Fort — perte de confiance utilisateur            | Élevée (pas de tests E2E cross-stack) |
+| Previews sociales inexistantes             | 5                      | Faible — feature non livrée                      | Certaine (non branché)                |
+| Dette technique test qui s'accumule        | 1                      | Moyen — ralentissement des futurs développements | Certaine                              |
+| Faux positifs/négatifs recherche           | 3                      | Fort — frustration utilisateur                   | Élevée (biais documentés)             |
+| Combinatoire filtres non maîtrisée         | 4                      | Moyen — bugs subtils en production               | Moyenne                               |
 
 ---
 
@@ -327,10 +334,10 @@ Suite: Route OG
 
 ### Outils complémentaires
 
-| Outil | Usage | Priorité |
-|-------|-------|----------|
-| `@vitest/coverage-v8` | Déjà configuré, activer le rapport CI | 🔴 |
-| `@faker-js/faker` | Données de test réalistes pour les seeds | 🟠 |
-| Playwright `toHaveScreenshot()` | Snapshots visuels OG + comparateur | 🟠 |
-| `msw` | Mock API pour les tests hooks React | 🟠 |
-| `testcontainers` (PostgreSQL) | Tests intégration backend isolés | 🟡 |
+| Outil                           | Usage                                    | Priorité |
+| ------------------------------- | ---------------------------------------- | -------- |
+| `@vitest/coverage-v8`           | Déjà configuré, activer le rapport CI    | 🔴       |
+| `@faker-js/faker`               | Données de test réalistes pour les seeds | 🟠       |
+| Playwright `toHaveScreenshot()` | Snapshots visuels OG + comparateur       | 🟠       |
+| `msw`                           | Mock API pour les tests hooks React      | 🟠       |
+| `testcontainers` (PostgreSQL)   | Tests intégration backend isolés         | 🟡       |

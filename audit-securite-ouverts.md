@@ -15,25 +15,25 @@
 
 ## Item 1 — Couverture de tests insuffisante
 
-| Attribut | Valeur |
-|----------|--------|
-| **Sévérité** | 🔴 **HIGH** |
-| **Catégorie** | OWASP A06:2021 — Composants vulnérables et obsolètes / CWE-1070: Test Coverage |
-| **Vecteur** | Régression non détectée dans les surfaces critiques (recherche, filtres, comparaison) |
+| Attribut      | Valeur                                                                                |
+| ------------- | ------------------------------------------------------------------------------------- |
+| **Sévérité**  | 🔴 **HIGH**                                                                           |
+| **Catégorie** | OWASP A06:2021 — Composants vulnérables et obsolètes / CWE-1070: Test Coverage        |
+| **Vecteur**   | Régression non détectée dans les surfaces critiques (recherche, filtres, comparaison) |
 
 ### État des lieux
 
-| Module | Fichiers testés | Lignes clés non couvertes |
-|--------|----------------|--------------------------|
-| `search/routes.ts` | ❌ Aucun | `toPrefixTsQuery`, `rethrowTextSearchValidationError`, fusion députés/scrutins |
-| `scrutins/routes.ts` | ❌ Aucun | Validation `theme`, `type`, combinaisons de filtres |
-| `scrutins/repository.ts` | ❌ Aucun | Filtre thématique par `inArray` + subquery, `withTextSearchErrorHandling` |
-| `deputies/routes.ts` | ❌ Aucun | Résolution slug/ID, pagination cursor |
-| `deputies/repository.ts` | ❌ Aucun | `plainto_tsquery` sur noms, jointures affiliations |
-| `compare/routes.ts` | ❌ Aucun | `resolveDeputyId` (logique PA-prefix vs slug) |
-| `compare/repository.ts` | ❌ Aucun | CTE `common_scrutins`, jointures `scrutinVotes` × 4 tables |
-| `groups/routes.ts` | ❌ Aucun | Intégralité |
-| Frontend global | 1 fichier (2 tests) | `useSearch`, `useThemeScrutins`, `recherche.tsx`, composants |
+| Module                   | Fichiers testés     | Lignes clés non couvertes                                                      |
+| ------------------------ | ------------------- | ------------------------------------------------------------------------------ |
+| `search/routes.ts`       | ❌ Aucun            | `toPrefixTsQuery`, `rethrowTextSearchValidationError`, fusion députés/scrutins |
+| `scrutins/routes.ts`     | ❌ Aucun            | Validation `theme`, `type`, combinaisons de filtres                            |
+| `scrutins/repository.ts` | ❌ Aucun            | Filtre thématique par `inArray` + subquery, `withTextSearchErrorHandling`      |
+| `deputies/routes.ts`     | ❌ Aucun            | Résolution slug/ID, pagination cursor                                          |
+| `deputies/repository.ts` | ❌ Aucun            | `plainto_tsquery` sur noms, jointures affiliations                             |
+| `compare/routes.ts`      | ❌ Aucun            | `resolveDeputyId` (logique PA-prefix vs slug)                                  |
+| `compare/repository.ts`  | ❌ Aucun            | CTE `common_scrutins`, jointures `scrutinVotes` × 4 tables                     |
+| `groups/routes.ts`       | ❌ Aucun            | Intégralité                                                                    |
+| Frontend global          | 1 fichier (2 tests) | `useSearch`, `useThemeScrutins`, `recherche.tsx`, composants                   |
 
 **Modules avec tests** : `common/cache.test.ts` (13 tests ✅), `compare/service.test.ts` (8 tests ✅), `common/errors.test.ts`, `common/pagination.test.ts`.  
 **Total backend** : 42 tests sur ~6 fichiers testés sur 21 fichiers de code.
@@ -48,23 +48,23 @@
 
 ### Recommandation
 
-| Priorité | Action | Effort |
-|----------|--------|--------|
-| **P0** | Ajouter des tests unitaires sur `toPrefixTsQuery` couvrant : chaîne vide, Unicode mixte, injection tentée (`' OR 1=1 --`, `!|&()`), très longue chaîne, uniquement ponctuation | 1h |
-| **P0** | Ajouter des tests sur `resolveDeputyId` : slug valide, ID `PA...` valide, `PA`-prefix sans être un vrai ID, slug inexistant | 30min |
-| **P1** | Tests d'intégration `search/routes.ts` : requêtes valides/invalides, limite, cas sans résultats, injection tsquery via caractères Unicode exotiques | 2h |
-| **P1** | Tests `scrutins/repository.ts` : filtre `theme` avec slug valide, slug inexistant, slug très long, slug avec caractères spéciaux | 1h |
-| **P2** | Tests frontend `recherche.tsx` : validation des search params, changement de type, changement de thème | 2h |
+| Priorité | Action                                                                                                                                              | Effort                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --- |
+| **P0**   | Ajouter des tests unitaires sur `toPrefixTsQuery` couvrant : chaîne vide, Unicode mixte, injection tentée (`' OR 1=1 --`, `!                        | &()`), très longue chaîne, uniquement ponctuation | 1h  |
+| **P0**   | Ajouter des tests sur `resolveDeputyId` : slug valide, ID `PA...` valide, `PA`-prefix sans être un vrai ID, slug inexistant                         | 30min                                             |
+| **P1**   | Tests d'intégration `search/routes.ts` : requêtes valides/invalides, limite, cas sans résultats, injection tsquery via caractères Unicode exotiques | 2h                                                |
+| **P1**   | Tests `scrutins/repository.ts` : filtre `theme` avec slug valide, slug inexistant, slug très long, slug avec caractères spéciaux                    | 1h                                                |
+| **P2**   | Tests frontend `recherche.tsx` : validation des search params, changement de type, changement de thème                                              | 2h                                                |
 
 ---
 
 ## Item 2 — Absence de tests d'intégration / E2E
 
-| Attribut | Valeur |
-|----------|--------|
-| **Sévérité** | 🟠 **MEDIUM** |
-| **Catégorie** | CWE-1119: Inadequate Testing / OWASP A05:2021 — Security Misconfiguration |
-| **Vecteur** | Désynchronisation API client/serveur, CORS/rate-limit non vérifiés en conditions réelles |
+| Attribut      | Valeur                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| **Sévérité**  | 🟠 **MEDIUM**                                                                            |
+| **Catégorie** | CWE-1119: Inadequate Testing / OWASP A05:2021 — Security Misconfiguration                |
+| **Vecteur**   | Désynchronisation API client/serveur, CORS/rate-limit non vérifiés en conditions réelles |
 
 ### État des lieux
 
@@ -84,22 +84,22 @@
 
 ### Recommandation
 
-| Priorité | Action | Effort |
-|----------|--------|--------|
-| **P1** | Ajouter un test d'intégration `search` via `app.inject()` Fastify : POST/GET complet → vérifier code 200, structure Zod conforme | 2h |
-| **P1** | Ajouter un test d'intégration `compare` : 2 députés valides → vérifier structure de réponse complète, taux de concordance cohérent | 1h30 |
-| **P2** | Smoke test E2E Playwright : page `/recherche` → taper "macron" → vérifier au moins 1 résultat député | 2h |
-| **P3** | Test de contrat API : extraire les schémas Zod de réponse et les comparer avec les types `api-types.ts` via un script CI | 3h |
+| Priorité | Action                                                                                                                             | Effort |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **P1**   | Ajouter un test d'intégration `search` via `app.inject()` Fastify : POST/GET complet → vérifier code 200, structure Zod conforme   | 2h     |
+| **P1**   | Ajouter un test d'intégration `compare` : 2 députés valides → vérifier structure de réponse complète, taux de concordance cohérent | 1h30   |
+| **P2**   | Smoke test E2E Playwright : page `/recherche` → taper "macron" → vérifier au moins 1 résultat député                               | 2h     |
+| **P3**   | Test de contrat API : extraire les schémas Zod de réponse et les comparer avec les types `api-types.ts` via un script CI           | 3h     |
 
 ---
 
 ## Item 3 — Biais et risques d'injection dans les suggestions de recherche
 
-| Attribut | Valeur |
-|----------|--------|
-| **Sévérité** | 🔴 **HIGH** |
+| Attribut      | Valeur                                                                            |
+| ------------- | --------------------------------------------------------------------------------- |
+| **Sévérité**  | 🔴 **HIGH**                                                                       |
 | **Catégorie** | CWE-89: SQL Injection (indirect via tsquery) / CWE-694: Use of Incorrect Operator |
-| **Vecteur** | Injection via `to_tsquery` avec input partiellement nettoyé |
+| **Vecteur**   | Injection via `to_tsquery` avec input partiellement nettoyé                       |
 
 ### Analyse du code
 
@@ -130,12 +130,12 @@ Pour `q = "jean dupont"`, le résultat est `"jean dupont:*"` → `to_tsquery('je
 
 #### 3.2 — Double chemin `to_tsquery` vs `plainto_tsquery` (MEDIUM)
 
-| Route | Fonction PG | Nettoyage |
-|-------|------------|-----------|
-| `/search/suggestions` | `to_tsquery` | Regex `toPrefixTsQuery` |
-| `/search` | `plainto_tsquery` | Aucun (PostgreSQL nettoie) |
-| `/scrutins?q=` | `plainto_tsquery` | Aucun (PostgreSQL nettoie) |
-| `/deputies?q=` | `plainto_tsquery` | Aucun (PostgreSQL nettoie) |
+| Route                 | Fonction PG       | Nettoyage                  |
+| --------------------- | ----------------- | -------------------------- |
+| `/search/suggestions` | `to_tsquery`      | Regex `toPrefixTsQuery`    |
+| `/search`             | `plainto_tsquery` | Aucun (PostgreSQL nettoie) |
+| `/scrutins?q=`        | `plainto_tsquery` | Aucun (PostgreSQL nettoie) |
+| `/deputies?q=`        | `plainto_tsquery` | Aucun (PostgreSQL nettoie) |
 
 Le chemin `/search/suggestions` est le **seul** à utiliser `to_tsquery` avec nettoyage manuel. Cette divergence est un risque : si la regex est modifiée sans comprendre l'impact, ou si PostgreSQL évolue dans son parsing des opérateurs tsquery, une injection devient possible.
 
@@ -149,46 +149,50 @@ Les députés et scrutins sont fusionnés via `ts_rank` puis `slice(0, maxResult
 
 ### Recommandation
 
-| Priorité | Action | Effort |
-|----------|--------|--------|
-| **P0** | **Corriger `toPrefixTsQuery`** pour préfixer chaque mot : `safeQ.split(/\s+/).map(w => w + ':*').join(' & ')` — ou mieux, **remplacer `to_tsquery` par `plainto_tsquery`** + `to_tsquery('french', replace(plainto_tsquery_output, ')', ':*'))` via SQL | 1h |
-| **P0** | Ajouter un test unitaire : `toPrefixTsQuery("jean dup")` → doit matcher « Jean Dupont » | 30min |
-| **P1** | Uniformiser : utiliser `plainto_tsquery` systématiquement, supprimer `toPrefixTsQuery` et le remplacer par une construction SQL `plainto_tsquery` + `ts_rewrite` ou utiliser `phraseto_tsquery` + stemming | 2h |
-| **P2** | Normaliser `ts_rank` par longueur de document (`ts_rank(...) / (1 + length(...))`) pour réduire le biais documents courts | 30min |
+| Priorité | Action                                                                                                                                                                                                                                                  | Effort |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **P0**   | **Corriger `toPrefixTsQuery`** pour préfixer chaque mot : `safeQ.split(/\s+/).map(w => w + ':*').join(' & ')` — ou mieux, **remplacer `to_tsquery` par `plainto_tsquery`** + `to_tsquery('french', replace(plainto_tsquery_output, ')', ':*'))` via SQL | 1h     |
+| **P0**   | Ajouter un test unitaire : `toPrefixTsQuery("jean dup")` → doit matcher « Jean Dupont »                                                                                                                                                                 | 30min  |
+| **P1**   | Uniformiser : utiliser `plainto_tsquery` systématiquement, supprimer `toPrefixTsQuery` et le remplacer par une construction SQL `plainto_tsquery` + `ts_rewrite` ou utiliser `phraseto_tsquery` + stemming                                              | 2h     |
+| **P2**   | Normaliser `ts_rank` par longueur de document (`ts_rank(...) / (1 + length(...))`) pour réduire le biais documents courts                                                                                                                               | 30min  |
 
 ---
 
 ## Item 4 — Filtre thématique croisé (risque injection SQL)
 
-| Attribut | Valeur |
-|----------|--------|
-| **Sévérité** | 🟡 **LOW** |
-| **Catégorie** | CWE-20: Improper Input Validation |
-| **Vecteur** | Paramètre `theme` non validé au-delà de `z.string()` |
+| Attribut      | Valeur                                               |
+| ------------- | ---------------------------------------------------- |
+| **Sévérité**  | 🟡 **LOW**                                           |
+| **Catégorie** | CWE-20: Improper Input Validation                    |
+| **Vecteur**   | Paramètre `theme` non validé au-delà de `z.string()` |
 
 ### Analyse du code
 
 **Backend** — `scrutins/routes.ts` :
+
 ```typescript
 theme: z.string().optional(),   // ← Aucune contrainte de format/longueur
 ```
 
 **Repository** — `scrutins/repository.ts` :
+
 ```typescript
 if (filters.theme) {
   conditions.push(
     inArray(
       scrutins.id,
-      db.select({ scrutinId: scrutinThemes.scrutinId })
+      db
+        .select({ scrutinId: scrutinThemes.scrutinId })
         .from(scrutinThemes)
         .innerJoin(themes, eq(scrutinThemes.themeId, themes.id))
-        .where(eq(themes.slug, filters.theme)),  // ← Drizzle paramétrise → pas d'injection SQL
+        .where(eq(themes.slug, filters.theme)), // ← Drizzle paramétrise → pas d'injection SQL
     ),
   );
 }
 ```
 
 **Frontend** — `recherche.tsx` :
+
 ```typescript
 theme: typeof search.theme === "string" ? search.theme : undefined,  // ← N'importe quelle string
 ```
@@ -209,25 +213,26 @@ theme: typeof search.theme === "string" ? search.theme : undefined,  // ← N'im
 
 ### Recommandation
 
-| Priorité | Action | Effort |
-|----------|--------|--------|
-| **P1** | Ajouter validation Zod : `z.string().min(1).max(50).regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/)` sur le paramètre `theme` dans `scrutins/routes.ts` | 15min |
-| **P2** | Ajouter validation identique côté frontend dans `validateSearch` de `recherche.tsx` | 10min |
-| **P3** | Envisager un rate-limit spécifique sur le paramètre `theme` pour prévenir le cache stuffing (si Redis montre des signes de saturation) | 30min |
+| Priorité | Action                                                                                                                                        | Effort |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **P1**   | Ajouter validation Zod : `z.string().min(1).max(50).regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/)` sur le paramètre `theme` dans `scrutins/routes.ts` | 15min  |
+| **P2**   | Ajouter validation identique côté frontend dans `validateSearch` de `recherche.tsx`                                                           | 10min  |
+| **P3**   | Envisager un rate-limit spécifique sur le paramètre `theme` pour prévenir le cache stuffing (si Redis montre des signes de saturation)        | 30min  |
 
 ---
 
 ## Item 5 — Routes OG non branchées (Satori SSR)
 
-| Attribut | Valeur |
-|----------|--------|
-| **Sévérité** | 🔴 **HIGH** (potentiel — bombes à retardement) |
-| **Catégorie** | CWE-79: Cross-Site Scripting / CWE-116: Improper Output Encoding |
-| **Vecteur** | Input utilisateur non validé dans le rendu Satori → SVG non échappé si activé |
+| Attribut      | Valeur                                                                        |
+| ------------- | ----------------------------------------------------------------------------- |
+| **Sévérité**  | 🔴 **HIGH** (potentiel — bombes à retardement)                                |
+| **Catégorie** | CWE-79: Cross-Site Scripting / CWE-116: Improper Output Encoding              |
+| **Vecteur**   | Input utilisateur non validé dans le rendu Satori → SVG non échappé si activé |
 
 ### État des lieux
 
 **Fichiers concernés** :
+
 - `apps/frontend/src/routes/api/og/comparateur.tsx` (paramètre `score` non validé)
 - `apps/frontend/src/routes/api/og/depute.tsx` (paramètre `slug` non validé)
 - `apps/frontend/src/routes/api/og/scrutin.tsx` (paramètre `id` non validé)
@@ -241,21 +246,22 @@ Ces stubs sont des **bombes à retardement** :
 1. **Activation silencieuse** : la mise à jour de TanStack Start vers ≥1.170 exportera `createAPIFileRoute`. Le générateur de route tree de TanStack Router **auto-découvre** les fichiers dans `src/routes/`. Si la nouvelle version inclut les routes API, ces stubs deviendront **immédiatement accessibles** sans modification de code.
 
 2. **Rendu non échappé** : les 3 fichiers prennent des paramètres URL et les injectent directement dans le JSX :
+
    ```tsx
    // comparateur.tsx
    const score = searchParams.get("score") ?? "0";
    // ... puis dans le JSX :
-   <div style={{ fontSize: "96px" }}>{score}</div>
-   
+   <div style={{ fontSize: "96px" }}>{score}</div>;
+
    // depute.tsx
    const slug = searchParams.get("slug") ?? "depute";
    // ... puis :
-   <div style={{ fontSize: "48px" }}>{slug}</div>
-   
-   // scrutin.tsx  
+   <div style={{ fontSize: "48px" }}>{slug}</div>;
+
+   // scrutin.tsx
    const id = searchParams.get("id") ?? "scrutin";
    // ... puis :
-   <div>Scrutin n°{id}</div>
+   <div>Scrutin n°{id}</div>;
    ```
 
 3. **Satori génère du SVG** : bien que JSX échappe les nœuds texte (`<div>{score}</div>` → Satori encode `<` et `>`), les inputs sont tout de même **injectés dans le DOM SVG sans validation de longueur ni de contenu**. Si Satori a un bug d'échappement dans une future version, ces routes deviennent des vecteurs XSS.
@@ -266,45 +272,48 @@ Ces stubs sont des **bombes à retardement** :
 
 ### Recommandation
 
-| Priorité | Action | Effort |
-|----------|--------|--------|
-| **P0** | **Supprimer les 3 stubs** ou les déplacer hors de `src/routes/` (ex : `src/stubs/og/`) pour éviter l'auto-découverte par TanStack Router | 5min |
-| **P0** | Si les stubs sont conservés pour usage futur : ajouter `// IGNORE: do not activate without security review` en en-tête + `.gitattributes` marquant ces fichiers comme `linguist-generated` | 5min |
-| **P1** | Avant toute activation : valider `score` avec `z.coerce.number().min(0).max(100)`, `slug` avec `z.string().regex(/^[a-z0-9-]+$/).max(255)`, `id` avec `z.string().regex(/^[A-Z0-9]+$/).max(50)` | 30min |
-| **P1** | Ajouter `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'` sur les réponses OG pour défense en profondeur | 15min |
-| **P1** | Réduire `max-age` à 3600 (1h) au lieu de 86400 (24h) pour limiter la persistance de contenu malveillant en cache | 5min |
+| Priorité | Action                                                                                                                                                                                          | Effort |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **P0**   | **Supprimer les 3 stubs** ou les déplacer hors de `src/routes/` (ex : `src/stubs/og/`) pour éviter l'auto-découverte par TanStack Router                                                        | 5min   |
+| **P0**   | Si les stubs sont conservés pour usage futur : ajouter `// IGNORE: do not activate without security review` en en-tête + `.gitattributes` marquant ces fichiers comme `linguist-generated`      | 5min   |
+| **P1**   | Avant toute activation : valider `score` avec `z.coerce.number().min(0).max(100)`, `slug` avec `z.string().regex(/^[a-z0-9-]+$/).max(255)`, `id` avec `z.string().regex(/^[A-Z0-9]+$/).max(50)` | 30min  |
+| **P1**   | Ajouter `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'` sur les réponses OG pour défense en profondeur                                                                 | 15min  |
+| **P1**   | Réduire `max-age` à 3600 (1h) au lieu de 86400 (24h) pour limiter la persistance de contenu malveillant en cache                                                                                | 5min   |
 
 ---
 
 ## Synthèse des priorités
 
-| # | Item | Sévérité | Bloquant ? | Action prioritaire |
-|---|------|----------|------------|-------------------|
-| 3 | Biais/injection suggestions recherche | 🔴 HIGH | ✅ OUI | **Corriger `toPrefixTsQuery`** — remplacer par `plainto_tsquery` ou préfixer chaque mot |
-| 5 | Routes OG non branchées | 🔴 HIGH | ✅ OUI | **Supprimer ou déplacer les stubs** hors de `src/routes/` |
-| 1 | Couverture tests | 🔴 HIGH | NON | Ajouter tests sur `toPrefixTsQuery`, `resolveDeputyId`, `rethrowTextSearchValidationError` |
-| 2 | Intégration/E2E | 🟠 MEDIUM | NON | Ajouter test d'intégration `search` via `app.inject()` |
-| 4 | Filtre thématique | 🟡 LOW | NON | Ajouter validation Zod `theme: z.string().regex(...)` |
+| #   | Item                                  | Sévérité  | Bloquant ? | Action prioritaire                                                                         |
+| --- | ------------------------------------- | --------- | ---------- | ------------------------------------------------------------------------------------------ |
+| 3   | Biais/injection suggestions recherche | 🔴 HIGH   | ✅ OUI     | **Corriger `toPrefixTsQuery`** — remplacer par `plainto_tsquery` ou préfixer chaque mot    |
+| 5   | Routes OG non branchées               | 🔴 HIGH   | ✅ OUI     | **Supprimer ou déplacer les stubs** hors de `src/routes/`                                  |
+| 1   | Couverture tests                      | 🔴 HIGH   | NON        | Ajouter tests sur `toPrefixTsQuery`, `resolveDeputyId`, `rethrowTextSearchValidationError` |
+| 2   | Intégration/E2E                       | 🟠 MEDIUM | NON        | Ajouter test d'intégration `search` via `app.inject()`                                     |
+| 4   | Filtre thématique                     | 🟡 LOW    | NON        | Ajouter validation Zod `theme: z.string().regex(...)`                                      |
 
 ---
 
 ## Plan de remédiation recommandé
 
 ### Semaine 1 (blocages)
+
 1. Déplacer `apps/frontend/src/routes/api/og/*.tsx` → `apps/frontend/src/stubs/og/` (5 min)
 2. Corriger `toPrefixTsQuery` dans `apps/backend/src/modules/search/routes.ts` (1 h) : préfixer chaque mot
 3. Ajouter tests unitaires pour `toPrefixTsQuery` (1 h)
 
 ### Semaine 2 (durcissement)
+
 4. Ajouter validation Zod sur `theme` dans `scrutins/routes.ts` (15 min)
 5. Ajouter test d'intégration search (2 h)
 6. Ajouter tests `resolveDeputyId` (30 min)
 
 ### Semaine 3 (couverture)
+
 7. Tests `scrutins/repository.ts` — filtre thématique (1 h)
 8. Tests frontend `recherche.tsx` — validation search params (2 h)
 9. Smoke test E2E Playwright (2 h)
 
 ---
 
-*Rapport généré automatiquement. Toute déviation du plan de remédiation doit être documentée avec justification et approbation du tech-lead.*
+_Rapport généré automatiquement. Toute déviation du plan de remédiation doit être documentée avec justification et approbation du tech-lead._
