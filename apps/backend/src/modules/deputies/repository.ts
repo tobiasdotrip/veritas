@@ -213,7 +213,7 @@ export function createDeputyRepository(db: Database) {
       if (cursor) {
         const decoded = decodeCursor(cursor);
         conditions.push(
-          sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`,
+          sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${decoded.date}::date, ${decoded.id})`,
         );
       }
 
@@ -232,10 +232,10 @@ export function createDeputyRepository(db: Database) {
           groupPosition: scrutinGroupVotes.positionMajoritaire,
           alignment: sql<"aligned" | "opposed" | "neutral">`
             CASE
-              WHEN ${scrutinVotes.position} = ${scrutinGroupVotes.positionMajoritaire} THEN 'aligned'
-              WHEN ${scrutinVotes.position} IN ('pour', 'contre')
+              WHEN ${scrutinVotes.position}::text = ${scrutinGroupVotes.positionMajoritaire} THEN 'aligned'
+              WHEN ${scrutinVotes.position}::text IN ('pour', 'contre')
                    AND ${scrutinGroupVotes.positionMajoritaire} IN ('pour', 'contre')
-                   AND ${scrutinVotes.position} != ${scrutinGroupVotes.positionMajoritaire} THEN 'opposed'
+                   AND ${scrutinVotes.position}::text != ${scrutinGroupVotes.positionMajoritaire} THEN 'opposed'
               ELSE 'neutral'
             END
           `,
@@ -257,7 +257,7 @@ export function createDeputyRepository(db: Database) {
         .limit(limit + 1);
 
       return buildCursorResponse(rows, limit, (item) => ({
-        date: (item.dateScrutin as Date).toISOString(),
+        date: (item.dateScrutin as Date).toISOString().slice(0, 10),
         id: item.scrutinId as string,
       }));
     },
@@ -301,7 +301,7 @@ export function createDeputyRepository(db: Database) {
             eq(scrutinVotes.deputyId, deputyId),
             eq(scrutins.legislature, legislature),
             sql`${scrutinVotes.position} != 'nonVotant'`,
-            sql`${scrutinVotes.position} = ${scrutinGroupVotes.positionMajoritaire}`,
+            sql`${scrutinVotes.position}::text = ${scrutinGroupVotes.positionMajoritaire}`,
           ),
         );
       const votesWithGroup = loyaltyResult[0]?.total ?? 0;
@@ -325,7 +325,7 @@ export function createDeputyRepository(db: Database) {
             eq(scrutinVotes.deputyId, deputyId),
             eq(scrutins.legislature, legislature),
             sql`${scrutinVotes.position} != 'nonVotant'`,
-            sql`${scrutinVotes.position} != ${scrutinGroupVotes.positionMajoritaire}`,
+            sql`${scrutinVotes.position}::text != ${scrutinGroupVotes.positionMajoritaire}`,
             sql`${scrutinGroupVotes.positionMajoritaire} IS NOT NULL`,
           ),
         );

@@ -73,11 +73,11 @@ export function createScrutinRepository(db: Database) {
         const decoded = decodeCursor(cursor);
         if (filters.sort === "date_asc") {
           conditions.push(
-            sql`(${scrutins.dateScrutin}, ${scrutins.id}) > (${new Date(decoded.date)}, ${decoded.id})`,
+            sql`(${scrutins.dateScrutin}, ${scrutins.id}) > (${decoded.date}::date, ${decoded.id})`,
           );
         } else {
           conditions.push(
-            sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${new Date(decoded.date)}, ${decoded.id})`,
+            sql`(${scrutins.dateScrutin}, ${scrutins.id}) < (${decoded.date}::date, ${decoded.id})`,
           );
         }
       }
@@ -116,7 +116,7 @@ export function createScrutinRepository(db: Database) {
           .limit(limit + 1);
 
         return buildCursorResponse(rows, limit, (item) => ({
-          date: (item.dateScrutin as Date).toISOString(),
+          date: (item.dateScrutin as Date).toISOString().slice(0, 10),
           id: item.id as string,
         }));
       };

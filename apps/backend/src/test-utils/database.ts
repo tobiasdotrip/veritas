@@ -3,13 +3,30 @@ import { fileURLToPath } from "node:url";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
+import type { Pool } from "pg";
+import { Pool as PgPool } from "pg";
 import * as schema from "../db/schema.js";
+import { resetTestFixtures } from "./fixtures.js";
 
 const backendRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
+let migratePromise: Promise<void> | undefined;
+
 export function getTestDatabaseUrl(): string | undefined {
   return process.env.DATABASE_URL;
+}
+
+async function ensureMigrated(db: ReturnType<typeof drizzle>): Promise<void> {
+  if (!migratePromise) {
+    migratePromise = (async () => {
+      await migrate(db, {
+        migrationsFolder: join(backendRoot, "drizzle"),
+      });
+      await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "pg_trgm"`);
+      await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "unaccent"`);
+    })();
+  }
+  await migratePromise;
 }
 
 export async function setupTestDatabase(): Promise<Pool> {
@@ -18,24 +35,11 @@ export async function setupTestDatabase(): Promise<Pool> {
     throw new Error("DATABASE_URL is required for integration tests");
   }
 
-  const pool = new Pool({ connectionString });
+  const pool = new PgPool({ connectionString });
   const db = drizzle(pool, { schema });
 
-  await migrate(db, {
-    migrationsFolder: join(backendRoot, "drizzle"),
-  });
-
-  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "pg_trgm"`);
-  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "unaccent"`);
-
-  await db
-    .insert(schema.legislatures)
-    .values({
-      id: "17",
-      startDate: new Date("2024-07-18"),
-      isCurrent: true,
-    })
-    .onConflictDoNothing();
+  await ensureMigrated(db);
+  await resetTestFixtures(pool);
 
   return pool;
 }

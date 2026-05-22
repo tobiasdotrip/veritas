@@ -82,17 +82,24 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             slug: deputies.slug,
             rank: sql<number>`ts_rank(
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
-            to_tsquery('french', unaccent(${tsQuery}))
+            to_tsquery('french', ${tsQuery})
           ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
           })
           .from(deputies)
           .where(
             sql`
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')))
-            @@ to_tsquery('french', unaccent(${tsQuery}))
+            @@ to_tsquery('french', ${tsQuery})
           `,
           )
-          .orderBy(desc(sql`ts_rank`))
+          .orderBy(
+            desc(
+              sql`ts_rank(
+            to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
+            to_tsquery('french', ${tsQuery})
+          ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
+            ),
+          )
           .limit(maxResults);
 
         scrutinRows = await db
@@ -103,17 +110,24 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             slug: scrutins.id,
             rank: sql<number>`ts_rank(
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
-            to_tsquery('french', unaccent(${tsQuery}))
+            to_tsquery('french', ${tsQuery})
           ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
           })
           .from(scrutins)
           .where(
             sql`
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
-            @@ to_tsquery('french', unaccent(${tsQuery}))
+            @@ to_tsquery('french', ${tsQuery})
           `,
           )
-          .orderBy(desc(sql`ts_rank`))
+          .orderBy(
+            desc(
+              sql`ts_rank(
+            to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
+            to_tsquery('french', ${tsQuery})
+          ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
+            ),
+          )
           .limit(maxResults);
       } catch (err) {
         rethrowTextSearchValidationError(err);

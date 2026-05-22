@@ -73,6 +73,12 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Integration tests
+        run: pnpm --filter @veritas/backend test:integration
+        env:
+          DATABASE_URL: postgresql://veritas:veritas_dev@localhost:5432/veritas
+          REDIS_URL: redis://localhost:6379
+
       - name: Start backend for E2E
         run: pnpm --filter @veritas/backend start &
         env:
