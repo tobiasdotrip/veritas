@@ -68,7 +68,7 @@ const ScrutinVoteSchema = z.object({
 const plugin: FastifyPluginAsyncZod = async function (fastify) {
   const db = getDb();
   const repo = createScrutinRepository(db);
-  const cache = new CacheService(getRedis());
+  const cache = new CacheService(await getRedis());
   const service = createScrutinService(repo, cache);
 
   fastify.route({

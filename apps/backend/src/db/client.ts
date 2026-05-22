@@ -26,7 +26,6 @@ export function getPool(): Pool {
     });
 
     pool.on("error", (err) => {
-      // eslint-disable-next-line no-console
       console.error("Unexpected PostgreSQL pool error", err);
     });
   }

@@ -115,7 +115,7 @@ async function resolveDeputyId(
 const plugin: FastifyPluginAsyncZod = async function (fastify) {
   const db = getDb();
   const repo = createDeputyRepository(db);
-  const cache = new CacheService(getRedis());
+  const cache = new CacheService(await getRedis());
   const service = createDeputyService(repo, cache);
 
   fastify.route({

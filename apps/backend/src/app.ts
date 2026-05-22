@@ -7,6 +7,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { getRedis } from "./modules/common/cache.js";
+import { createRedisV5RateLimitStore } from "./modules/common/redis-rate-limit-store.js";
 import { registerErrorHandler } from "./plugins/error-handler.js";
 import { registerJsonBodyParser } from "./plugins/json-body.js";
 import { registerRequestLogger } from "./plugins/request-logger.js";
@@ -50,11 +51,13 @@ export async function buildApp() {
 
   await registerSecurityHeaders(app);
 
+  const redisClient = await getRedis();
+
   await app.register(rateLimit, {
     max: 60,
     timeWindow: "1 minute",
     keyGenerator: (req) => req.ips?.[0] ?? req.ip,
-    redis: getRedis(),
+    store: createRedisV5RateLimitStore(redisClient),
     errorResponseBuilder: (_req, context) => ({
       type: "https://veritas.fr/errors/rate-limit",
       title: "Too Many Requests",

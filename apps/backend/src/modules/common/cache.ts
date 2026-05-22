@@ -1,28 +1,55 @@
-import { Redis } from "ioredis";
+import { createClient, type RedisClientType } from "redis";
 import { createHash } from "node:crypto";
+import { RATE_LIMIT_LUA } from "./redis-rate-limit-store.js";
 
 const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
 
-let redis: Redis | undefined;
+let client: RedisClientType | undefined;
 
-export function getRedis(): Redis {
-  if (!redis) {
-    redis = new Redis(REDIS_URL, {
-      maxRetriesPerRequest: 3,
-      enableReadyCheck: true,
-    });
+export async function getRedis(): Promise<RedisClientType> {
+  if (!client) {
+    client = createClient({
+      url: REDIS_URL,
+      scripts: {
+        rateLimit: {
+          SCRIPT: RATE_LIMIT_LUA,
+          NUMBER_OF_KEYS: 1,
+          transformArguments(
+            key: string,
+            timeWindow: number,
+            max: number,
+            continueExceeding: boolean,
+            exponentialBackoff: boolean,
+          ): Array<string> {
+            return [
+              key,
+              timeWindow.toString(),
+              max.toString(),
+              String(continueExceeding),
+              String(exponentialBackoff),
+            ];
+          },
+          transformReply(reply: [number, number]): [number, number] {
+            return reply;
+          },
+        },
+      },
+    } as any);
 
-    redis.on("error", (err: Error) => {
-      // eslint-disable-next-line no-console
+    client.on("error", (err: Error) => {
       console.error("Redis error", err);
     });
+
+    await client.connect();
   }
-  return redis;
+  return client;
 }
 
 export async function closeRedis(): Promise<void> {
-  await redis?.quit();
-  redis = undefined;
+  if (client) {
+    await client.destroy();
+    client = undefined;
+  }
 }
 
 export function hashCacheKeyPart(value: unknown): string {
@@ -33,9 +60,9 @@ export function hashCacheKeyPart(value: unknown): string {
 }
 
 export class CacheService {
-  private redis: Redis;
+  private redis: RedisClientType;
 
-  constructor(redisInstance: Redis = getRedis()) {
+  constructor(redisInstance: RedisClientType) {
     this.redis = redisInstance;
   }
 
@@ -74,10 +101,10 @@ export class CacheService {
     ttlSeconds: number,
   ): Promise<void> {
     const gen = await this.getGeneration(namespace);
-    await this.redis.setex(
+    await this.redis.set(
       this.cacheKey(namespace, gen, key),
-      ttlSeconds,
       JSON.stringify(value),
+      { EX: ttlSeconds },
     );
   }
 

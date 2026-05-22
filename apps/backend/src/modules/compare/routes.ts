@@ -57,7 +57,7 @@ const CompareResponseSchema = z.object({
 const plugin: FastifyPluginAsyncZod = async function (fastify) {
   const db = getDb();
   const repo = createCompareRepository(db);
-  const cache = new CacheService(getRedis());
+  const cache = new CacheService(await getRedis());
   const service = createCompareService(repo, cache);
 
   async function resolveDeputyId(idOrSlug: string): Promise<string | null> {
