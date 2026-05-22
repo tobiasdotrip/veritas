@@ -12,7 +12,10 @@
  */
 
 import type { RedisClientType } from "redis";
-import type { FastifyRateLimitOptions, FastifyRateLimitStore } from "@fastify/rate-limit";
+import type {
+  FastifyRateLimitOptions,
+  FastifyRateLimitStore,
+} from "@fastify/rate-limit";
 
 // ─── Lua script (identical logic to @fastify/rate-limit's RedisStore) ──────
 
@@ -64,8 +67,7 @@ export function createRedisV5RateLimitStore(
     constructor(options: FastifyRateLimitOptions & Record<string, unknown>) {
       this.redis = clientWithScript;
       this.key = (options.nameSpace as string) ?? "fastify-rate-limit-";
-      this.continueExceeding =
-        (options.continueExceeding as boolean) ?? false;
+      this.continueExceeding = (options.continueExceeding as boolean) ?? false;
       this.exponentialBackoff =
         (options.exponentialBackoff as boolean) ?? false;
     }

@@ -21,15 +21,15 @@
 
 **Pour la recherche, ta conviction est juste et déjà prouvée** : PostgreSQL 17 gère 100 % des besoins de recherche du projet Veritas (MVP et V1) avec `to_tsvector` + GIN + `pg_trgm` + `unaccent`. Meilisearch a été retiré avec raison. Aucun service externe n'est nécessaire jusqu'à ~100 000 documents indexés.
 
-**Pour le cache, la réponse est plus nuancée.** PostgreSQL *peut* techniquement servir de cache (table UNLOGGED, vues matérialisées), mais Redis reste supérieur pour ce cas d'usage spécifique. Cependant, si l'objectif est de réduire la complexité opérationnelle au maximum, remplacer Redis par un cache PostgreSQL est **faisable et défendable** pour le volume de Veritas.
+**Pour le cache, la réponse est plus nuancée.** PostgreSQL _peut_ techniquement servir de cache (table UNLOGGED, vues matérialisées), mais Redis reste supérieur pour ce cas d'usage spécifique. Cependant, si l'objectif est de réduire la complexité opérationnelle au maximum, remplacer Redis par un cache PostgreSQL est **faisable et défendable** pour le volume de Veritas.
 
-| Fonction                    | PostgreSQL actuel | Redis actuel | Verdict                                 |
-| --------------------------- | ----------------- | ------------ | --------------------------------------- |
-| **Recherche full-text**     | ✅ Déjà en place  | —            | PostgreSQL parfait                      |
-| **Typo-tolerance**          | ✅ `pg_trgm` dispo | —            | À activer si besoin utilisateur         |
-| **Cache applicatif**        | Faisable          | ✅ En place   | Redis meilleur, mais PG suffisant au MVP |
-| **Rate limiting**           | Faisable          | ✅ En place   | Redis meilleur (sliding window native)  |
-| **Invalidation de cache**   | Faisable          | ✅ En place   | Redis plus simple (génération counter)  |
+| Fonction                  | PostgreSQL actuel  | Redis actuel | Verdict                                  |
+| ------------------------- | ------------------ | ------------ | ---------------------------------------- |
+| **Recherche full-text**   | ✅ Déjà en place   | —            | PostgreSQL parfait                       |
+| **Typo-tolerance**        | ✅ `pg_trgm` dispo | —            | À activer si besoin utilisateur          |
+| **Cache applicatif**      | Faisable           | ✅ En place  | Redis meilleur, mais PG suffisant au MVP |
+| **Rate limiting**         | Faisable           | ✅ En place  | Redis meilleur (sliding window native)   |
+| **Invalidation de cache** | Faisable           | ✅ En place  | Redis plus simple (génération counter)   |
 
 ---
 
@@ -40,12 +40,14 @@
 Le projet utilise déjà PostgreSQL pour **toute** la recherche, sans aucun service externe :
 
 **Extensions activées** (`apps/backend/src/db/seed.ts`) :
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 ```
 
 **Index GIN full-text** (`packages/shared/src/db/schema.ts`) :
+
 ```sql
 -- Députés : recherche sur nom + prénom
 CREATE INDEX idx_deputies_search ON deputies
@@ -57,41 +59,42 @@ CREATE INDEX idx_scrutins_search ON scrutins
 ```
 
 **Requêtes de recherche** (`apps/backend/src/modules/search/routes.ts`) :
+
 - **Autocomplétion** (`/search/suggestions`) : `to_tsquery('french', 'jean:*')` + `ts_rank()` → < 5 ms
 - **Recherche full-text** (`/search`) : `plainto_tsquery('french', ...)` + `ts_rank()` avec jointures groupe
 
 ### 2.2. Fonctionnalités déjà couvertes
 
-| Capacité                       | Implémentation PostgreSQL                    | Statut |
-| ------------------------------ | -------------------------------------------- | ------ |
-| Recherche full-text français   | `to_tsvector('french', ...)` + GIN           | ✅     |
-| Recherche par préfixe          | `to_tsquery('french', 'mot:*')`              | ✅     |
-| Ranking par pertinence         | `ts_rank()`                                  | ✅     |
-| Insensibilité aux accents      | Extension `unaccent`                         | ✅     |
-| Stemming français              | Dictionnaire français intégré                | ✅     |
-| Stop words français            | Intégré (le, la, les, de, du, des...)        | ✅     |
-| Recherche combinée députés+scrutins | Deux requêtes parallèles                  | ✅     |
-| Filtrage par groupe/département | Index B-Tree + `WHERE`                      | ✅     |
+| Capacité                            | Implémentation PostgreSQL             | Statut |
+| ----------------------------------- | ------------------------------------- | ------ |
+| Recherche full-text français        | `to_tsvector('french', ...)` + GIN    | ✅     |
+| Recherche par préfixe               | `to_tsquery('french', 'mot:*')`       | ✅     |
+| Ranking par pertinence              | `ts_rank()`                           | ✅     |
+| Insensibilité aux accents           | Extension `unaccent`                  | ✅     |
+| Stemming français                   | Dictionnaire français intégré         | ✅     |
+| Stop words français                 | Intégré (le, la, les, de, du, des...) | ✅     |
+| Recherche combinée députés+scrutins | Deux requêtes parallèles              | ✅     |
+| Filtrage par groupe/département     | Index B-Tree + `WHERE`                | ✅     |
 
 ### 2.3. Fonctionnalités disponibles mais non activées
 
-| Capacité                  | Comment l'activer                                        | Coût           |
-| ------------------------- | -------------------------------------------------------- | -------------- |
-| **Typo-tolerance**        | Index GIN trigramme + `similarity()` + opérateur `%`     | 1 migration    |
-| **Recherche floue (2+ fautes)** | `pg_trgm` + `similarity()` avec seuil              | 1 index        |
-| **Pondération avancée**   | `setweight()` sur `tsvector` (titre > objet > nom)       | Modification requête |
-| **Synonymes**             | Dictionnaire de synonymes PostgreSQL (`thesaurus`)       | Configuration  |
-| **Faceting temps réel**   | `COUNT(*) GROUP BY` + index                              | Déjà possible  |
-| **Highlighting**          | `ts_headline()`                                          | 1 colonne SELECT |
+| Capacité                        | Comment l'activer                                    | Coût                 |
+| ------------------------------- | ---------------------------------------------------- | -------------------- |
+| **Typo-tolerance**              | Index GIN trigramme + `similarity()` + opérateur `%` | 1 migration          |
+| **Recherche floue (2+ fautes)** | `pg_trgm` + `similarity()` avec seuil                | 1 index              |
+| **Pondération avancée**         | `setweight()` sur `tsvector` (titre > objet > nom)   | Modification requête |
+| **Synonymes**                   | Dictionnaire de synonymes PostgreSQL (`thesaurus`)   | Configuration        |
+| **Faceting temps réel**         | `COUNT(*) GROUP BY` + index                          | Déjà possible        |
+| **Highlighting**                | `ts_headline()`                                      | 1 colonne SELECT     |
 
 ### 2.4. Ce que PostgreSQL NE fait PAS (et pourquoi c'est acceptable)
 
-| Fonctionnalité absente     | Impact sur Veritas              | Alternative si besoin         |
-| -------------------------- | ------------------------------- | ----------------------------- |
-| Recherche géospatiale      | Non prévue dans le MVP/V1       | `earthdistance` + lat/lng     |
-| Faceting avec counts       | Faisable avec `GROUP BY` + index | Déjà assez rapide sur 3k docs |
-| Ranking ML/vectoriel       | Non nécessaire pour noms propres| `pgvector` si besoin un jour  |
-| UI d'administration search | Pas critique                    | `pg_stat_user_indexes` + DBeaver |
+| Fonctionnalité absente     | Impact sur Veritas               | Alternative si besoin            |
+| -------------------------- | -------------------------------- | -------------------------------- |
+| Recherche géospatiale      | Non prévue dans le MVP/V1        | `earthdistance` + lat/lng        |
+| Faceting avec counts       | Faisable avec `GROUP BY` + index | Déjà assez rapide sur 3k docs    |
+| Ranking ML/vectoriel       | Non nécessaire pour noms propres | `pgvector` si besoin un jour     |
+| UI d'administration search | Pas critique                     | `pg_stat_user_indexes` + DBeaver |
 
 ### 2.5. Performance mesurée / estimée
 
@@ -123,6 +126,7 @@ Le `CacheService` (`apps/backend/src/modules/common/cache.ts`) utilise Redis pou
 3. **Rate limiting** : via `@fastify/rate-limit` (store Redis) — sliding window
 
 **Clients actuels du cache :**
+
 - Fiches députés (TTL 15 min)
 - Votes d'un député (TTL 10 min)
 - Détail scrutin (TTL 30 min)
@@ -161,12 +165,14 @@ DELETE FROM app_cache WHERE expires < now();
 ```
 
 **Avantages par rapport à Redis :**
+
 - ✅ Une seule BDD à gérer
 - ✅ Pas de service supplémentaire
 - ✅ Persistance native (survivable aux crashs si table LOGGED, mais plus lent)
 - ✅ Transactions ACID (mise à jour atomique cache + données)
 
 **Inconvénients :**
+
 - ❌ ~10-50× plus lent que Redis (0.5-2 ms vs 0.02 ms)
 - ❌ Pas de TTL automatique natif (nécessite un cron de purge)
 - ❌ Pas de Pub/Sub pour l'invalidation temps réel
@@ -213,6 +219,7 @@ RETURNING count;
 ```
 
 **Problèmes :**
+
 - ❌ **Très lent** comparé à Redis (écritures fréquentes, contention sur la PK)
 - ❌ Beaucoup de dead tuples (nécessite `VACUUM` agressif)
 - ❌ Le `@fastify/rate-limit` n'a pas de store PostgreSQL natif → code custom nécessaire
@@ -221,12 +228,12 @@ C'est le **plus gros point de friction** : le rate limiting est un mauvais candi
 
 ### 3.3. Alternatives hybrides
 
-| Approche                              | Cache           | Rate Limiting | Complexité |
-| ------------------------------------- | --------------- | ------------- | ---------- |
-| **Redis seul** (actuel)               | Redis           | Redis         | 2 services |
-| **PostgreSQL seul** (puriste)         | UNLOGGED table  | Table PG      | 1 service  |
-| **Hybride léger** (recommandé)        | PostgreSQL      | Rate limit mémoire | 1 service |
-| **Cache L1 mémoire + L2 PG**         | `Map` mémoire   | `Map` mémoire | 1 service  |
+| Approche                       | Cache          | Rate Limiting      | Complexité |
+| ------------------------------ | -------------- | ------------------ | ---------- |
+| **Redis seul** (actuel)        | Redis          | Redis              | 2 services |
+| **PostgreSQL seul** (puriste)  | UNLOGGED table | Table PG           | 1 service  |
+| **Hybride léger** (recommandé) | PostgreSQL     | Rate limit mémoire | 1 service  |
+| **Cache L1 mémoire + L2 PG**   | `Map` mémoire  | `Map` mémoire      | 1 service  |
 
 ---
 
@@ -234,40 +241,40 @@ C'est le **plus gros point de friction** : le rate limiting est un mauvais candi
 
 ### 4.1. Performance
 
-| Métrique                   | Redis 8              | PostgreSQL UNLOGGED    | PostgreSQL LOGGED     |
-| -------------------------- | -------------------- | ---------------------- | --------------------- |
-| Latence `GET`              | 0.02-0.1 ms          | 0.5-2 ms               | 1-5 ms                |
-| Latence `SET` (avec TTL)   | 0.03-0.1 ms          | 0.5-3 ms               | 2-10 ms               |
-| Débit (req/s, 1 thread)    | 100 000+             | 5 000-20 000           | 2 000-10 000          |
-| Coût mémoire par entrée    | ~200 octets          | ~500 octets            | ~1 000 octets         |
-| TTL natif                  | ✅ Oui               | ❌ Manuel (cron purge) | ❌ Manuel             |
-| Persistance crash           | ❌ (ou RDB/AOF lent) | ❌ (UNLOGGED perdu)    | ✅                    |
-| Pas de service séparé      | ❌                   | ✅                     | ✅                    |
+| Métrique                 | Redis 8              | PostgreSQL UNLOGGED    | PostgreSQL LOGGED |
+| ------------------------ | -------------------- | ---------------------- | ----------------- |
+| Latence `GET`            | 0.02-0.1 ms          | 0.5-2 ms               | 1-5 ms            |
+| Latence `SET` (avec TTL) | 0.03-0.1 ms          | 0.5-3 ms               | 2-10 ms           |
+| Débit (req/s, 1 thread)  | 100 000+             | 5 000-20 000           | 2 000-10 000      |
+| Coût mémoire par entrée  | ~200 octets          | ~500 octets            | ~1 000 octets     |
+| TTL natif                | ✅ Oui               | ❌ Manuel (cron purge) | ❌ Manuel         |
+| Persistance crash        | ❌ (ou RDB/AOF lent) | ❌ (UNLOGGED perdu)    | ✅                |
+| Pas de service séparé    | ❌                   | ✅                     | ✅                |
 
 ### 4.2. Fonctionnalités
 
-| Fonctionnalité                | Redis                         | PostgreSQL                     |
-| ----------------------------- | ----------------------------- | ------------------------------ |
-| Cache clé-valeur              | ✅ Natif (but premier)        | ✅ Faisable (table)            |
-| TTL automatique               | ✅ `EXPIRE` natif             | ⚠️ `expires` colonne + cron    |
-| Invalidation pattern          | ✅ `SCAN` ou génération       | ⚠️ Génération uniquement       |
-| Pub/Sub (invalidation temps réel) | ✅ `PUBLISH/SUBSCRIBE`    | ✅ `LISTEN/NOTIFY`             |
-| Rate limiting (sliding window) | ✅ Modèles connus             | ⚠️ Lent, contention            |
-| Transactions                  | ⚠️ `MULTI/EXEC` limité        | ✅ ACID complet                 |
-| Jointure avec données BDD     | ❌ Non                        | ✅ Oui (cache + données)        |
-| Atomicité cache+données       | ❌ Deux systèmes               | ✅ Même transaction             |
+| Fonctionnalité                    | Redis                   | PostgreSQL                  |
+| --------------------------------- | ----------------------- | --------------------------- |
+| Cache clé-valeur                  | ✅ Natif (but premier)  | ✅ Faisable (table)         |
+| TTL automatique                   | ✅ `EXPIRE` natif       | ⚠️ `expires` colonne + cron |
+| Invalidation pattern              | ✅ `SCAN` ou génération | ⚠️ Génération uniquement    |
+| Pub/Sub (invalidation temps réel) | ✅ `PUBLISH/SUBSCRIBE`  | ✅ `LISTEN/NOTIFY`          |
+| Rate limiting (sliding window)    | ✅ Modèles connus       | ⚠️ Lent, contention         |
+| Transactions                      | ⚠️ `MULTI/EXEC` limité  | ✅ ACID complet             |
+| Jointure avec données BDD         | ❌ Non                  | ✅ Oui (cache + données)    |
+| Atomicité cache+données           | ❌ Deux systèmes        | ✅ Même transaction         |
 
 ### 4.3. Opérationnel
 
-| Critère                  | Redis                    | PostgreSQL                |
-| ------------------------ | ------------------------ | ------------------------- |
-| Services à maintenir     | 2                        | 1                         |
-| Mémoire nécessaire       | 50-200 Mo (cache seul)   | Incluse dans PG           |
-| Backup                   | RDB/AOF séparé           | Inclus dans backup PG     |
-| Monitoring               | `redis-cli INFO`         | `pg_stat_user_tables`     |
-| Réplication              | Redis Sentinel/Cluster   | Streaming replication PG  |
-| Montée en charge          | Verticale + Cluster      | Verticale + read replicas |
-| Risque divergence cache  | Oui (2 systèmes)         | Non (même BDD)            |
+| Critère                 | Redis                  | PostgreSQL                |
+| ----------------------- | ---------------------- | ------------------------- |
+| Services à maintenir    | 2                      | 1                         |
+| Mémoire nécessaire      | 50-200 Mo (cache seul) | Incluse dans PG           |
+| Backup                  | RDB/AOF séparé         | Inclus dans backup PG     |
+| Monitoring              | `redis-cli INFO`       | `pg_stat_user_tables`     |
+| Réplication             | Redis Sentinel/Cluster | Streaming replication PG  |
+| Montée en charge        | Verticale + Cluster    | Verticale + read replicas |
+| Risque divergence cache | Oui (2 systèmes)       | Non (même BDD)            |
 
 ---
 
@@ -300,7 +307,7 @@ Modifications:
   - Créer table UNLOGGED app_cache
   - Créer table cache_generations
   - Adapter CacheService (remplacer ioredis par pg)
-  - Rate limiting : mémoire (Map) ou table PG avec cron vacuum
+  - Rate limiting: mémoire (Map) ou table PG avec cron vacuum
   - Cron purge cache (toutes les 5 min)
 Avantages:
   - Un seul service
@@ -339,14 +346,14 @@ Inconvénients:
 
 ### 5.4. Quand Redis redevient nécessaire
 
-| Seuil                             | Pourquoi Redis redevient pertinent             |
-| --------------------------------- | ---------------------------------------------- |
-| > 100 req/s de cache              | `app_cache` PostgreSQL devient un bottleneck   |
-| > 3 instances backend             | Rate limiting doit être partagé                |
-| Jobs asynchrones (V1)             | Besoin de file d'attente persistante           |
-| Pub/Sub temps réel (alertes V1)   | `LISTEN/NOTIFY` moins pratique que Redis       |
-| TTL très courts (< 5 secondes)    | PostgreSQL purge trop lourde                   |
-| Cache > 100 000 entrées           | PostgreSQL stockage moins efficace que Redis   |
+| Seuil                           | Pourquoi Redis redevient pertinent           |
+| ------------------------------- | -------------------------------------------- |
+| > 100 req/s de cache            | `app_cache` PostgreSQL devient un bottleneck |
+| > 3 instances backend           | Rate limiting doit être partagé              |
+| Jobs asynchrones (V1)           | Besoin de file d'attente persistante         |
+| Pub/Sub temps réel (alertes V1) | `LISTEN/NOTIFY` moins pratique que Redis     |
+| TTL très courts (< 5 secondes)  | PostgreSQL purge trop lourde                 |
+| Cache > 100 000 entrées         | PostgreSQL stockage moins efficace que Redis |
 
 ---
 
@@ -357,6 +364,7 @@ Inconvénients:
 **Action immédiate :** Corriger les deux bugs identifiés (biais suggestions, filtre thématique).
 
 **Action court terme (si besoin utilisateur) :** Activer la typo-tolerance `pg_trgm` :
+
 ```sql
 -- Index trigramme pour recherche floue
 CREATE INDEX idx_deputies_name_trgm ON deputies
@@ -377,6 +385,7 @@ LIMIT 5;
 **Ma recommandation :** Garder Redis pour le MVP. C'est stable, le code est écrit, et ça évite de la réécriture. Redis n'est pas un service complexe à opérer — il ne tombe pratiquement jamais en panne, et même s'il tombe, le site continue de fonctionner (cache vide = requêtes directes PostgreSQL, aucune perte de données).
 
 **Si tu veux vraiment tout sur PostgreSQL, le scénario C (hybride) est le meilleur compromis :**
+
 - Cache applicatif → table UNLOGGED PostgreSQL (1-2 ms, acceptable)
 - Rate limiting → `Map` en mémoire Node.js
 - Suppression de Redis du `docker-compose.yml`
@@ -439,6 +448,6 @@ LIMIT 5;
 Tu avais raison sur le principe :
 
 - **Recherche** : PostgreSQL est la bonne solution, et vous l'avez déjà prouvé en production. Meilisearch était de la sur-ingénierie pour ce volume de données, et l'étude `meilisearch-bullmq-analysis.md` le confirme chiffres à l'appui.
-- **Cache** : PostgreSQL *peut* techniquement remplacer Redis, et pour le volume de Veritas (~577 députés, ~2 500 scrutins), un cache PostgreSQL (table UNLOGGED) avec 1-2 ms de latence est parfaitement viable. La vraie question est : vaut-il mieux investir 1-2h à supprimer Redis pour gagner en simplicité opérationnelle, ou garder Redis qui fonctionne déjà très bien ?
+- **Cache** : PostgreSQL _peut_ techniquement remplacer Redis, et pour le volume de Veritas (~577 députés, ~2 500 scrutins), un cache PostgreSQL (table UNLOGGED) avec 1-2 ms de latence est parfaitement viable. La vraie question est : vaut-il mieux investir 1-2h à supprimer Redis pour gagner en simplicité opérationnelle, ou garder Redis qui fonctionne déjà très bien ?
 
 C'est un choix de philosophie d'architecture plus que de capacité technique. PostgreSQL peut tout faire dans ton cas.
