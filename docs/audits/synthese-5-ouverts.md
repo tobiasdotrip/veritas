@@ -351,7 +351,7 @@ Le security-engineer voit un **risque latent** (bombe à retardement) là où le
 | --- | ---------------------------------------------- | ------ |
 | 27  | Module OG backend Fastify (3 endpoints Satori) | ✅     |
 | 28  | Validation Zod inputs OG                       | ✅     |
-| 29  | Tests snapshots Satori + E2E OG                  | ✅     |
+| 29  | Tests snapshots Satori + E2E OG                | ✅     |
 | 30  | Tests `groups/routes.ts`                       | ✅     |
 | 31  | Fallback `pg_trgm` recherche                   | ✅     |
 

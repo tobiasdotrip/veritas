@@ -161,69 +161,69 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             )
             .limit(maxResults);
         } else {
-        deputyRows = await db
-          .select({
-            id: deputies.id,
-            firstName: deputies.firstName,
-            lastName: deputies.lastName,
-            slug: deputies.slug,
-            rank: sql<number>`ts_rank(
+          deputyRows = await db
+            .select({
+              id: deputies.id,
+              firstName: deputies.firstName,
+              lastName: deputies.lastName,
+              slug: deputies.slug,
+              rank: sql<number>`ts_rank(
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
             to_tsquery('french', ${tsQuery})
           ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
-          })
-          .from(deputies)
-          .where(
-            sql`
+            })
+            .from(deputies)
+            .where(
+              sql`
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')))
             @@ to_tsquery('french', ${tsQuery})
           `,
-          )
-          .orderBy(
-            desc(
-              sql`ts_rank(
+            )
+            .orderBy(
+              desc(
+                sql`ts_rank(
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
             to_tsquery('french', ${tsQuery})
           ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
-            ),
-          )
-          .limit(maxResults);
+              ),
+            )
+            .limit(maxResults);
 
-        scrutinRows = await db
-          .select({
-            id: scrutins.id,
-            numero: scrutins.numero,
-            titre: scrutins.titre,
-            slug: scrutins.id,
-            rank: sql<number>`ts_rank(
+          scrutinRows = await db
+            .select({
+              id: scrutins.id,
+              numero: scrutins.numero,
+              titre: scrutins.titre,
+              slug: scrutins.id,
+              rank: sql<number>`ts_rank(
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
             to_tsquery('french', ${tsQuery})
           ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
-          })
-          .from(scrutins)
-          .where(
-            scrutinThemeFilter
-              ? and(
-                  sql`
+            })
+            .from(scrutins)
+            .where(
+              scrutinThemeFilter
+                ? and(
+                    sql`
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
             @@ to_tsquery('french', ${tsQuery})
           `,
-                  scrutinThemeFilter,
-                )
-              : sql`
+                    scrutinThemeFilter,
+                  )
+                : sql`
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
             @@ to_tsquery('french', ${tsQuery})
           `,
-          )
-          .orderBy(
-            desc(
-              sql`ts_rank(
+            )
+            .orderBy(
+              desc(
+                sql`ts_rank(
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
             to_tsquery('french', ${tsQuery})
           ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
-            ),
-          )
-          .limit(maxResults);
+              ),
+            )
+            .limit(maxResults);
         }
       } catch (err) {
         rethrowTextSearchValidationError(err);
@@ -308,7 +308,10 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
               )
               .leftJoin(
                 politicalGroups,
-                eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
+                eq(
+                  deputyGroupAffiliations.politicalGroupId,
+                  politicalGroups.id,
+                ),
               )
               .where(
                 sql`word_similarity(
@@ -326,44 +329,47 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
               )
               .limit(maxResults);
           } else {
-          deputyRows = await db
-            .select({
-              id: deputies.id,
-              firstName: deputies.firstName,
-              lastName: deputies.lastName,
-              slug: deputies.slug,
-              photoUrl: deputies.photoUrl,
-              circoLabel: deputies.circoLabel,
-              departmentId: deputies.departmentId,
-              groupAbbreviation: politicalGroups.abbreviation,
-            })
-            .from(deputies)
-            .leftJoin(
-              deputyGroupAffiliations,
-              and(
-                eq(deputyGroupAffiliations.deputyId, deputies.id),
-                sql`${deputyGroupAffiliations.endDate} IS NULL`,
-              ),
-            )
-            .leftJoin(
-              politicalGroups,
-              eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
-            )
-            .where(
-              sql`
+            deputyRows = await db
+              .select({
+                id: deputies.id,
+                firstName: deputies.firstName,
+                lastName: deputies.lastName,
+                slug: deputies.slug,
+                photoUrl: deputies.photoUrl,
+                circoLabel: deputies.circoLabel,
+                departmentId: deputies.departmentId,
+                groupAbbreviation: politicalGroups.abbreviation,
+              })
+              .from(deputies)
+              .leftJoin(
+                deputyGroupAffiliations,
+                and(
+                  eq(deputyGroupAffiliations.deputyId, deputies.id),
+                  sql`${deputyGroupAffiliations.endDate} IS NULL`,
+                ),
+              )
+              .leftJoin(
+                politicalGroups,
+                eq(
+                  deputyGroupAffiliations.politicalGroupId,
+                  politicalGroups.id,
+                ),
+              )
+              .where(
+                sql`
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')))
             @@ plainto_tsquery('french', unaccent(${q}))
           `,
-            )
-            .orderBy(
-              desc(
-                sql`ts_rank(
+              )
+              .orderBy(
+                desc(
+                  sql`ts_rank(
               to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
               plainto_tsquery('french', unaccent(${q}))
             ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
-              ),
-            )
-            .limit(maxResults);
+                ),
+              )
+              .limit(maxResults);
           }
         }
 

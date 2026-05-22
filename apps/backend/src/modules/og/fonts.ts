@@ -3,9 +3,8 @@ import { createRequire } from "node:module";
 import type { Font } from "satori";
 
 const require = createRequire(import.meta.url);
-const fontPath = require.resolve(
-  "@fontsource/inter/files/inter-latin-400-normal.woff",
-);
+const fontPath =
+  require.resolve("@fontsource/inter/files/inter-latin-400-normal.woff");
 
 let cachedFonts: Font[] | undefined;
 

@@ -100,7 +100,7 @@ apps/frontend/
 | `/compare`  | `compare`  | Concordance multi-députés                                          |
 | `/search`   | `search`   | Suggestions + recherche full-text PostgreSQL (`to_tsvector` + GIN) |
 | `/themes`   | `themes`   | Liste thématiques + compteurs scrutins par législature             |
-| `/og`       | `og`       | Images Open Graph Satori (député, scrutin, comparateur)              |
+| `/og`       | `og`       | Images Open Graph Satori (député, scrutin, comparateur)            |
 
 ### Validation
 
@@ -153,11 +153,11 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 ## Qualité & CI
 
-| Élément                    | État                                                                   |
-| -------------------------- | ---------------------------------------------------------------------- |
+| Élément                    | État                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------ |
 | Tests automatisés          | Vitest + Playwright, 227 Vitest (148 unit. + 65 intég. + 14 frontend) + 16 E2E |
-| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests        |
-| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                                  |
+| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests                |
+| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                                          |
 
 ---
 

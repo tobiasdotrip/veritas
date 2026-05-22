@@ -9,9 +9,7 @@ test.describe("API OG images", () => {
   });
 
   test("deputy OG endpoint returns SVG", async ({ request }) => {
-    const response = await request.get(
-      "/api/v1/og/comparateur?score=42",
-    );
+    const response = await request.get("/api/v1/og/comparateur?score=42");
     expect(response.ok()).toBeTruthy();
     expect(response.headers()["content-type"]).toContain("image/svg+xml");
     const body = await response.text();
@@ -20,16 +18,12 @@ test.describe("API OG images", () => {
   });
 
   test("OG comparateur rejects invalid score", async ({ request }) => {
-    const response = await request.get(
-      "/api/v1/og/comparateur?score=999",
-    );
+    const response = await request.get("/api/v1/og/comparateur?score=999");
     expect(response.status()).toBe(400);
   });
 
   test("OG depute rejects invalid slug", async ({ request }) => {
-    const response = await request.get(
-      "/api/v1/og/depute?slug=INVALID SLUG!",
-    );
+    const response = await request.get("/api/v1/og/depute?slug=INVALID SLUG!");
     expect(response.status()).toBe(400);
   });
 });
