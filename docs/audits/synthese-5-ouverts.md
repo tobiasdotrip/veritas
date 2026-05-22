@@ -286,5 +286,44 @@ Le security-engineer voit un **risque latent** (bombe à retardement) là où le
 
 ---
 
+---
+
+## 6. Suivi d'exécution
+
+### Semaine 1 — Blocages et quick wins ✅ (2026-05-22)
+
+| # | Action | Statut |
+|---|--------|--------|
+| 1 | Déplacer stubs OG hors `src/routes/` → `apps/frontend/stubs/og/` | ✅ |
+| 2 | Corriger `toPrefixTsQuery` (préfixe tous les mots) → `ts-query.ts` | ✅ |
+| 3 | Ajouter `unaccent()` dans les requêtes PG | ✅ |
+| 4 | Tests unitaires `toPrefixTsQuery` (15 cas) → `ts-query.test.ts` | ✅ |
+| 5 | Validation Zod `ThemeSlug` backend → `ThemeSlug.regex(...).max(50)` | ✅ |
+| 6 | Validation Zod `theme` frontend → `ThemeSlugOptional.safeParse()` | ✅ |
+| 7 | Normalisation `ts_rank / length()` inter-types | ✅ |
+| 8 | Interleave députés/scrutins | ⚠️ Non implémenté (normalisation `ts_rank` rend le tri global cohérent) |
+
+### Semaine 2 — Intégration et tests critiques ✅ (2026-05-22)
+
+| # | Action | Statut |
+|---|--------|--------|
+| 9 | Fixtures de seed déterministes (`test-utils/fixtures.ts`) | ✅ |
+| 10 | Service PostgreSQL dans CI (`.github/workflows/ci.yml`) | ✅ |
+| 11 | Tests intégration `search.integration.test.ts` (5 scénarios) | ✅ |
+| 12 | Tests intégration `compare.integration.test.ts` (6 scénarios) | ✅ |
+| 13 | Tests intégration `scrutins.integration.test.ts` (4 scénarios) | ✅ |
+| 14 | Tests intégration `deputies.integration.test.ts` (4 scénarios) | ✅ |
+| — | Tests intégration `repository.integration.test.ts` (5 scénarios) | ✅ |
+| — | Tests intégration `health.integration.test.ts` (1 scénario) | ✅ |
+| — | Bugs corrigés : ORDER BY ts_rank, vote_position ::text, curseurs ::date, flush Redis | ✅ |
+
+**Total** : 125 unitaires + 25 intégration = **150 tests**
+
+### Semaine 3 — Couverture backend (à venir)
+### Semaine 4 — Thèmes, E2E, frontend (à venir)
+### Semaine 5 — OG et finitions (à venir)
+
+---
+
 _Synthèse produite par croisement des audits security-engineer, qa-engineer et backend-developer du 2026-05-22._  
-_Le plan d'action ci-dessus attend validation du tech-lead._
+_Dernière mise à jour : 2026-05-22 (semaines 1-2 terminées)._

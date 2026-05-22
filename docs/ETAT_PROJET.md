@@ -153,7 +153,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 | Élément                    | État                                                            |
 | -------------------------- | --------------------------------------------------------------- |
-| Tests automatisés          | Vitest, ~16 fichiers, 77+ tests (ETL 35, Backend 42)            |
+| Tests automatisés          | Vitest, ~18 fichiers, 150 tests (125 unitaires + 25 intégration) |
 | GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests |
 | `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                           |
 
@@ -172,8 +172,20 @@ Corrigés récemment (voir historique PR / agents) :
 - ETL : scan complet des entrées ZIP (`assertSafeZipArchive`, filtre types spéciaux, symlinks)
 - Backend : limite cursor (`MAX_CURSOR_LENGTH` = 2048, `ValidationError` si trop grand)
 - Backend : tests CacheService (13 tests, mock Redis en mémoire)
+- Backend : `toPrefixTsQuery` corrigé (préfixe chaque mot), extrait dans `ts-query.ts` + 15 tests
+- Backend : `unaccent()` + normalisation `ts_rank / length()` dans toutes les requêtes full-text
+- Backend : validation Zod `ThemeSlug` (regex + max 50) sur `scrutins/routes.ts` et `recherche.tsx`
+- Frontend : stubs OG déplacés `routes/api/og/` → `stubs/og/` (hors `src/`, neutralise activation silencieuse)
+- Backend : infrastructure intégration (`fixtures.ts`, `integration.ts`, `vitest.integration.config.ts`)
+- Backend : 25 tests d'intégration (search 5, compare 6, scrutins 4, deputies 4, repository 5, health 1)
+- CI : étape Integration tests avec PostgreSQL + Redis
 
-**Toujours ouverts** (à traiter) : couverture tests, intégration/E2E, biais suggestions recherche, filtre thématique croisé, route OG non branchée.
+**En cours** (semaines suivantes) :
+- 🔴 Couverture tests — 150/150 passent, reste modules `groups`, routes frontend, hooks React
+- 🟠 Intégration/E2E — 25 tests intégration backend faits, reste E2E Playwright (7 scénarios)
+- 🟠 Biais suggestions recherche — `toPrefixTsQuery` + `unaccent` + `ts_rank` corrigés, reste ranking avancé et fallback trigram
+- 🟡 Filtre thématique croisé — validation Zod faite, reste module `GET /themes` + `GET /search?theme=`
+- 🟢 Route OG — stubs neutralisés, reste implémentation backend Satori (module `og/` Fastify)
 
 ---
 
@@ -184,7 +196,10 @@ _Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits ré
 ## Notes 2026-05-22
 
 - **Docs obsolètes supprimés** : `BENCHMARK_JEST_VS_VITEST.md` (décision prise, Vitest adopté), `SECURITY_AUDIT_TESTS.md` (recommandations intégrées ci-dessus), `.DS_Store`.
-- **Tests** : ETL 35 passés, Backend 42 passés (2 health ignorés sans `DATABASE_URL`).
+- **Semaine 1** (blocages) : `toPrefixTsQuery` corrigé, `unaccent()`, `ts_rank` normalisé, validation `ThemeSlug`, OG stubs déplacés, 3 audits croisés (`docs/audits/`).
+- **Semaine 2** (intégration) : fixtures déterministes, 25 tests intégration, CI PostgreSQL + Redis.
+- **Tests** : 125 unitaires (ETL 36, Shared 28, Backend 59, Frontend 2) + 25 intégration = 150 total.
+- **Roadmap** : voir `docs/audits/synthese-5-ouverts.md` pour le plan complet semaines 3-5.
 
 ## Notes 2026-05-21
 
