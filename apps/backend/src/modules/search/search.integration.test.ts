@@ -77,4 +77,49 @@ describeIntegration("GET /api/v1/search", () => {
       response.body.data.some((item) => item.id === FIXTURE.deputies.dupont.id),
     ).toBe(true);
   });
+
+  it("lists scrutins by theme without text query", async () => {
+    const response = await ctx.injectJson<{
+      data: { deputies: unknown[]; scrutins: { id: string }[] };
+    }>(ctx.app, {
+      method: "GET",
+      url: `/api/v1/search?theme=${FIXTURE.theme.slug}&limit=10`,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.deputies).toEqual([]);
+    expect(response.body.data.scrutins).toHaveLength(1);
+    expect(response.body.data.scrutins[0]!.id).toBe(FIXTURE.scrutins.sante.id);
+  });
+
+  it("filters search scrutins by theme when q is provided", async () => {
+    const response = await ctx.injectJson<{
+      data: { scrutins: { id: string }[] };
+    }>(ctx.app, {
+      method: "GET",
+      url: `/api/v1/search?q=projet&theme=${FIXTURE.theme.slug}&limit=10`,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.scrutins).toHaveLength(1);
+    expect(response.body.data.scrutins[0]!.id).toBe(FIXTURE.scrutins.sante.id);
+  });
+
+  it("rejects search without q or theme", async () => {
+    const response = await ctx.injectJson(ctx.app, {
+      method: "GET",
+      url: "/api/v1/search?limit=10",
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects invalid theme slug on search", async () => {
+    const response = await ctx.injectJson(ctx.app, {
+      method: "GET",
+      url: "/api/v1/search?theme=INVALID SLUG!",
+    });
+
+    expect(response.status).toBe(400);
+  });
 });

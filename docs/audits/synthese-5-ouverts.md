@@ -330,11 +330,24 @@ Le security-engineer voit un **risque latent** (bombe à retardement) là où le
 
 **Total** : 125 unitaires + 50 intégration = **175 tests**
 
-### Semaine 4 — Thèmes, E2E, frontend (à venir)
+### Semaine 4 — Thèmes, E2E, frontend ✅ (2026-05-22)
+
+| #   | Action                                                                  | Statut |
+| --- | ----------------------------------------------------------------------- | ------ |
+| 19  | Module `GET /api/v1/themes`                                             | ✅     |
+| 20  | `GET /api/v1/search?theme=X` (+ suggestions)                            | ✅     |
+| 21  | Tests intégration themes + search filtré (6 scénarios)                  | ✅     |
+| 22  | E2E Playwright : recherche + comparateur (3 scénarios API)              | ✅     |
+| 23  | E2E Playwright : filtre thématique + pagination (frontend)              | ✅     |
+| 24  | E2E Playwright : mobile + erreurs (frontend)                            | ✅     |
+| 25  | Tests hooks frontend (`useSearch`, `useComparison`, `useThemeScrutins`) | ✅     |
+| 26  | Tests composants frontend (EmptyState, ErrorFallback, SkeletonCard)     | ✅     |
+
+**Total** : 137 unitaires + 56 intégration + 13 E2E = **206 tests** (193 Vitest + 13 Playwright)
 
 ### Semaine 5 — OG et finitions (à venir)
 
 ---
 
 _Synthèse produite par croisement des audits security-engineer, qa-engineer et backend-developer du 2026-05-22._  
-_Dernière mise à jour : 2026-05-22 (semaines 1-3 terminées)._
+_Dernière mise à jour : 2026-05-22 (semaines 1-4 terminées)._

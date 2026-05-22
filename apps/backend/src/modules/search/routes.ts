@@ -1,16 +1,28 @@
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { sql, desc, eq, and } from "drizzle-orm";
+import { ThemeSlugOptional } from "@veritas/shared/schemas";
+import { sql, desc, eq, and, inArray } from "drizzle-orm";
 import { getDb } from "../../db/client.js";
 import {
   deputies,
   scrutins,
   deputyGroupAffiliations,
   politicalGroups,
+  scrutinThemes,
+  themes,
 } from "../../db/schema.js";
 import { DateString } from "../common/schemas.js";
 import { rethrowTextSearchValidationError } from "../common/db-errors.js";
 import { toPrefixTsQuery } from "./ts-query.js";
+import type { Database } from "../../db/client.js";
+
+function themeScrutinIds(db: Database, themeSlug: string) {
+  return db
+    .select({ scrutinId: scrutinThemes.scrutinId })
+    .from(scrutinThemes)
+    .innerJoin(themes, eq(scrutinThemes.themeId, themes.id))
+    .where(eq(themes.slug, themeSlug));
+}
 
 const SuggestionSchema = z.object({
   type: z.enum(["deputy", "scrutin"]),
@@ -56,6 +68,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       tags: ["Recherche"],
       querystring: z.object({
         q: z.string().min(1).max(100),
+        theme: ThemeSlugOptional,
         limit: z.coerce.number().min(1).max(20).default(10),
       }),
       response: {
@@ -65,11 +78,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       },
     },
     handler: async (req, reply) => {
-      const { q, limit: maxResults } = req.query;
+      const { q, theme, limit: maxResults } = req.query;
       const tsQuery = toPrefixTsQuery(q);
       if (!tsQuery) {
         return reply.send({ data: [] });
       }
+
+      const scrutinThemeFilter = theme
+        ? inArray(scrutins.id, themeScrutinIds(db, theme))
+        : undefined;
 
       let deputyRows;
       let scrutinRows;
@@ -115,7 +132,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
           })
           .from(scrutins)
           .where(
-            sql`
+            scrutinThemeFilter
+              ? and(
+                  sql`
+            to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
+            @@ to_tsquery('french', ${tsQuery})
+          `,
+                  scrutinThemeFilter,
+                )
+              : sql`
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
             @@ to_tsquery('french', ${tsQuery})
           `,
@@ -163,10 +188,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     url: "/search",
     schema: {
       tags: ["Recherche"],
-      querystring: z.object({
-        q: z.string().min(1).max(200),
-        limit: z.coerce.number().min(1).max(20).default(10),
-      }),
+      querystring: z
+        .object({
+          q: z.string().min(1).max(200).optional(),
+          theme: ThemeSlugOptional,
+          limit: z.coerce.number().min(1).max(20).default(10),
+        })
+        .refine((data) => data.q ?? data.theme, {
+          message: "Either q or theme is required",
+        }),
       response: {
         200: z.object({
           data: SearchPayloadSchema,
@@ -178,77 +208,110 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       },
     },
     handler: async (req, reply) => {
-      const { q, limit: maxResults } = req.query;
+      const { q, theme, limit: maxResults } = req.query;
 
       let deputyRows;
       let scrutinRows;
+
       try {
-        deputyRows = await db
-          .select({
-            id: deputies.id,
-            firstName: deputies.firstName,
-            lastName: deputies.lastName,
-            slug: deputies.slug,
-            photoUrl: deputies.photoUrl,
-            circoLabel: deputies.circoLabel,
-            departmentId: deputies.departmentId,
-            groupAbbreviation: politicalGroups.abbreviation,
-          })
-          .from(deputies)
-          .leftJoin(
-            deputyGroupAffiliations,
-            and(
-              eq(deputyGroupAffiliations.deputyId, deputies.id),
-              sql`${deputyGroupAffiliations.endDate} IS NULL`,
-            ),
-          )
-          .leftJoin(
-            politicalGroups,
-            eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
-          )
-          .where(
-            sql`
+        if (q) {
+          deputyRows = await db
+            .select({
+              id: deputies.id,
+              firstName: deputies.firstName,
+              lastName: deputies.lastName,
+              slug: deputies.slug,
+              photoUrl: deputies.photoUrl,
+              circoLabel: deputies.circoLabel,
+              departmentId: deputies.departmentId,
+              groupAbbreviation: politicalGroups.abbreviation,
+            })
+            .from(deputies)
+            .leftJoin(
+              deputyGroupAffiliations,
+              and(
+                eq(deputyGroupAffiliations.deputyId, deputies.id),
+                sql`${deputyGroupAffiliations.endDate} IS NULL`,
+              ),
+            )
+            .leftJoin(
+              politicalGroups,
+              eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
+            )
+            .where(
+              sql`
             to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')))
             @@ plainto_tsquery('french', unaccent(${q}))
           `,
-          )
-          .orderBy(
-            desc(
-              sql`ts_rank(
+            )
+            .orderBy(
+              desc(
+                sql`ts_rank(
               to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
               plainto_tsquery('french', unaccent(${q}))
             ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
-            ),
-          )
-          .limit(maxResults);
+              ),
+            )
+            .limit(maxResults);
+        }
 
-        scrutinRows = await db
-          .select({
-            id: scrutins.id,
-            numero: scrutins.numero,
-            dateScrutin: scrutins.dateScrutin,
-            titre: scrutins.titre,
-            sortCode: scrutins.sortCode,
-            nombrePour: scrutins.nombrePour,
-            nombreContre: scrutins.nombreContre,
-            nombreAbstentions: scrutins.nombreAbstentions,
-          })
-          .from(scrutins)
-          .where(
-            sql`
+        const scrutinThemeFilter = theme
+          ? inArray(scrutins.id, themeScrutinIds(db, theme))
+          : undefined;
+
+        if (q) {
+          scrutinRows = await db
+            .select({
+              id: scrutins.id,
+              numero: scrutins.numero,
+              dateScrutin: scrutins.dateScrutin,
+              titre: scrutins.titre,
+              sortCode: scrutins.sortCode,
+              nombrePour: scrutins.nombrePour,
+              nombreContre: scrutins.nombreContre,
+              nombreAbstentions: scrutins.nombreAbstentions,
+            })
+            .from(scrutins)
+            .where(
+              scrutinThemeFilter
+                ? and(
+                    sql`
             to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
             @@ plainto_tsquery('french', unaccent(${q}))
           `,
-          )
-          .orderBy(
-            desc(
-              sql`ts_rank(
+                    scrutinThemeFilter,
+                  )
+                : sql`
+            to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
+            @@ plainto_tsquery('french', unaccent(${q}))
+          `,
+            )
+            .orderBy(
+              desc(
+                sql`ts_rank(
               to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
               plainto_tsquery('french', unaccent(${q}))
             ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
-            ),
-          )
-          .limit(maxResults);
+              ),
+            )
+            .limit(maxResults);
+        } else if (theme) {
+          scrutinRows = await db
+            .select({
+              id: scrutins.id,
+              numero: scrutins.numero,
+              dateScrutin: scrutins.dateScrutin,
+              titre: scrutins.titre,
+              sortCode: scrutins.sortCode,
+              nombrePour: scrutins.nombrePour,
+              nombreContre: scrutins.nombreContre,
+              nombreAbstentions: scrutins.nombreAbstentions,
+            })
+            .from(scrutins)
+            .where(scrutinThemeFilter!)
+            .orderBy(desc(scrutins.dateScrutin), desc(scrutins.id))
+            .limit(maxResults);
+        }
       } catch (err) {
         rethrowTextSearchValidationError(err);
         throw err;
@@ -256,11 +319,11 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
 
       return reply.send({
         data: {
-          deputies: deputyRows,
-          scrutins: scrutinRows,
+          deputies: deputyRows ?? [],
+          scrutins: scrutinRows ?? [],
         },
         meta: {
-          total: deputyRows.length + scrutinRows.length,
+          total: (deputyRows?.length ?? 0) + (scrutinRows?.length ?? 0),
           hasMore: false,
         },
       });

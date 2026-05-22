@@ -99,6 +99,7 @@ apps/frontend/
 | `/groups`   | `groups`   | Groupes politiques + stats                                         |
 | `/compare`  | `compare`  | Concordance multi-députés                                          |
 | `/search`   | `search`   | Suggestions + recherche full-text PostgreSQL (`to_tsvector` + GIN) |
+| `/themes`   | `themes`   | Liste thématiques + compteurs scrutins par législature             |
 
 ### Validation
 
@@ -153,7 +154,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 | Élément                    | État                                                             |
 | -------------------------- | ---------------------------------------------------------------- |
-| Tests automatisés          | Vitest, ~20 fichiers, 175 tests (125 unitaires + 50 intégration) |
+| Tests automatisés          | Vitest + Playwright, 193 tests Vitest (137 unit. + 56 intég.) + 13 E2E |
 | GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests  |
 | `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                            |
 
@@ -177,15 +178,18 @@ Corrigés récemment (voir historique PR / agents) :
 - Backend : validation Zod `ThemeSlug` (regex + max 50) sur `scrutins/routes.ts` et `recherche.tsx`
 - Frontend : stubs OG déplacés `routes/api/og/` → `stubs/og/` (hors `src/`, neutralise activation silencieuse)
 - Backend : infrastructure intégration (`fixtures.ts`, `integration.ts`, `vitest.integration.config.ts`)
-- Backend : 50 tests d'intégration (search 5, compare 9, scrutins 9, deputies 8, deputy repo 5, scrutin repo 9, compare repo 4, health 1)
+- Backend : module `GET /api/v1/themes`, paramètre `theme` sur `/search` et `/search/suggestions`
+- Backend : 56 tests d'intégration (search 9, themes 2, compare 9, scrutins 9, deputies 8, repos 18, health 1)
+- E2E : 13 scénarios Playwright (5 API en CI, 7 frontend + 1 smoke si `E2E_FRONTEND_BASE_URL`)
+- Frontend : 14 tests Vitest (hooks + composants UI)
 - CI : étape Integration tests avec PostgreSQL + Redis
 
 **En cours** (semaines suivantes) :
 
-- 🔴 Couverture tests — 175/175 passent, reste modules `groups`, routes frontend, hooks React
-- 🟠 Intégration/E2E — 50 tests intégration backend faits, reste E2E Playwright (7 scénarios)
-- 🟠 Biais suggestions recherche — `toPrefixTsQuery` + `unaccent` + `ts_rank` corrigés, reste ranking avancé et fallback trigram
-- 🟡 Filtre thématique croisé — validation Zod faite, reste module `GET /themes` + `GET /search?theme=`
+- 🔴 Couverture tests — 193 tests Vitest passent, reste module `groups`, pages frontend
+- 🟠 Intégration/E2E — 56 intégration + 5 E2E API en CI (frontend E2E skip sans URL dédiée)
+- 🟠 Biais suggestions recherche — `toPrefixTsQuery` + `unaccent` + `ts_rank` corrigés, reste fallback trigram
+- 🟡 Filtre thématique croisé — `GET /themes` + `GET /search?theme=` livrés ; frontend conserve double appel `/scrutins?theme=`
 - 🟢 Route OG — stubs neutralisés, reste implémentation backend Satori (module `og/` Fastify)
 
 ---
@@ -200,8 +204,9 @@ _Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits ré
 - **Semaine 1** (blocages) : `toPrefixTsQuery` corrigé, `unaccent()`, `ts_rank` normalisé, validation `ThemeSlug`, OG stubs déplacés, 3 audits croisés (`docs/audits/`).
 - **Semaine 2** (intégration) : fixtures déterministes, 25 tests intégration, CI PostgreSQL + Redis.
 - **Semaine 3** (couverture backend) : tests repository scrutins (9), routes deputies (8), routes scrutins (9), compare routes+repo (13).
-- **Tests** : 125 unitaires (ETL 36, Shared 28, Backend 59, Frontend 2) + 50 intégration = 175 total.
-- **Roadmap** : voir `docs/audits/synthese-5-ouverts.md` pour le plan complet semaines 4-5.
+- **Semaine 4** (thèmes, E2E, frontend) : module themes, `search?theme=`, 6 tests intégration themes/search, 13 E2E, 14 tests frontend.
+- **Tests** : 137 unitaires (ETL 36, Shared 28, Backend 59, Frontend 14) + 56 intégration = 193 Vitest.
+- **Roadmap** : voir `docs/audits/synthese-5-ouverts.md` pour la semaine 5 (OG, groups, pg_trgm).
 
 ## Notes 2026-05-21
 

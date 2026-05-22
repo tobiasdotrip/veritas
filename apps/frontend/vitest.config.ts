@@ -10,6 +10,7 @@ export default mergeConfig(
       include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
       globals: true,
       css: false,
+      setupFiles: ["src/test-setup.ts"],
     },
   }),
 );

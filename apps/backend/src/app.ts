@@ -19,6 +19,7 @@ import scrutinsRoutes from "./modules/scrutins/routes.js";
 import compareRoutes from "./modules/compare/routes.js";
 import groupsRoutes from "./modules/groups/routes.js";
 import searchRoutes from "./modules/search/routes.js";
+import themesRoutes from "./modules/themes/routes.js";
 
 const customSerializerCompiler = createSerializerCompiler({
   replacer(_key, value) {
@@ -76,6 +77,7 @@ export async function buildApp() {
   await app.register(compareRoutes, { prefix: "/api/v1" });
   await app.register(groupsRoutes, { prefix: "/api/v1" });
   await app.register(searchRoutes, { prefix: "/api/v1" });
+  await app.register(themesRoutes, { prefix: "/api/v1" });
 
   app.get("/health", async () => {
     return { status: "ok" };

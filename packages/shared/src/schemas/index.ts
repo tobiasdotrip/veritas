@@ -54,6 +54,16 @@ export const ScrutinVotesQuery = z.object({
   ...OffsetPaginationQuery.shape,
 });
 
+export const SearchQuery = z
+  .object({
+    q: z.string().min(1).max(200).optional(),
+    theme: ThemeSlugOptional,
+    limit: z.coerce.number().min(1).max(20).default(10),
+  })
+  .refine((data) => data.q ?? data.theme, {
+    message: "Either q or theme is required",
+  });
+
 export const CompareQuery = z.object({
   deputies: z.string().regex(/^PA\d+(,PA\d+){1,4}$/, {
     error: "2 à 5 députés requis (séparés par des virgules)",
