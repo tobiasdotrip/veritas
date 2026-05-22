@@ -1,6 +1,6 @@
 # État du projet — Veritas
 
-**Dernière mise à jour** : 2026-05-20  
+**Dernière mise à jour** : 2026-05-22  
 **Branche de référence** : monorepo `pnpm` workspaces (apps + packages)
 
 Ce document décrit l’**implémentation réelle** du dépôt. Les specs de conception (`docs/architecture/`, `docs/research/`) restent la cible produit ; en cas de divergence, ce fichier et le code font foi.
@@ -150,11 +150,11 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 ## Qualité & CI
 
-| Élément                    | État                                                              |
-| -------------------------- | ----------------------------------------------------------------- |
-| Tests automatisés          | Vitest installé, 8 fichiers de test, ~67 tests, couverture 3,58 % |
-| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests   |
-| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                             |
+| Élément                    | État                                                            |
+| -------------------------- | --------------------------------------------------------------- |
+| Tests automatisés          | Vitest, 10 fichiers, 90 tests, couverture 3,58 %                |
+| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests |
+| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                           |
 
 ---
 
@@ -168,13 +168,27 @@ Corrigés récemment (voir historique PR / agents) :
 - Zod 4 sur backend + shared
 - ETL : zip slip, validation URLs, hash téléchargement (stream unique)
 
-**Toujours ouverts** (à traiter) : couverture tests, intégration/E2E, biais suggestions recherche, filtre thématique croisé, route OG non branchée. Voir rapports d'audit récents pour le détail.
+**Toujours ouverts** (à traiter) : couverture tests, intégration/E2E, biais suggestions recherche, filtre thématique croisé, route OG non branchée.
+
+### Points de vigilance sécurité (audit 2026-05-21)
+
+| Priorité | Action                                                  | Fichier concerné                                |
+| -------- | ------------------------------------------------------- | ----------------------------------------------- |
+| Haute    | Valider le port dans `validateEtlUrl` (port ≠ 443)      | `packages/etl/src/config.ts`                    |
+| Haute    | Limiter la taille du cursor dans `decodeCursor` (~2 KB) | `apps/backend/src/modules/common/pagination.ts` |
+| Moyenne  | Tests d'intégration CacheService (mock Redis)           | `apps/backend/src/modules/common/cache.ts`      |
+| Faible   | Vérifier le type d'entrée ZIP (symlinks)                | `packages/etl/src/parser/zip-extract.ts`        |
 
 ---
 
 _Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits récents : rapports QA, Security et Tech Lead (voir historique agents)._
 
 ---
+
+## Notes 2026-05-22
+
+- **Docs obsolètes supprimés** : `BENCHMARK_JEST_VS_VITEST.md` (décision prise, Vitest adopté), `SECURITY_AUDIT_TESTS.md` (recommandations intégrées ci-dessus), `.DS_Store`.
+- **Tests** : 10 fichiers, 90 tests (88 passés, 2 skipped).
 
 ## Notes 2026-05-21
 

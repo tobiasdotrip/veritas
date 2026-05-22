@@ -1,6 +1,6 @@
 # Stack technique — Versions et implémentation
 
-**Dernière validation** : 2026-05-20  
+**Dernière validation** : 2026-05-22  
 **Lockfile** : `pnpm-lock.yaml` (overrides racine : `zod`, `h3`)
 
 > **État du code** : voir [ETAT_PROJET.md](./ETAT_PROJET.md) pour ce qui est réellement branché dans le monorepo.
@@ -104,10 +104,10 @@ Schémas routes : inline dans `apps/backend/src/modules/*/routes.ts` + `common/s
 | ------------------ | --------------------------------------------------------------------------------------- |
 | **TanStack Start** | RC — verrouiller la version exacte en production                                        |
 | **TypeScript 6**   | Non adopté — monorepo en 5.9 ; migration quand l’écosystème (Drizzle Kit, plugins) suit |
-| **Tests / CI**     | Vitest présent, 0 tests ; pas de GitHub Actions                                         |
+| **Tests / CI**     | Vitest, 10 fichiers, 90 tests ; GitHub Actions (`.github/workflows/ci.yml`)             |
 | **Satori / OG**    | Routes stub, non exposées au route tree                                                 |
 | **Redis 8**        | Licence RSALv2/SSPL — vérifier conformité déploiement                                   |
 
 ---
 
-_Document aligné sur le dépôt — 2026-05-20_
+_Document aligné sur le dépôt — 2026-05-22_

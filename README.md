@@ -42,21 +42,28 @@ veritas/
 │   └── shared/            # Schéma Drizzle, types, schémas Zod
 ├── docs/
 │   ├── ETAT_PROJET.md     # État réel de l'implémentation
-│   ├── STACK_VERSIONS.md
+│   ├── STACK_VERSIONS.md  # Versions et conventions
 │   ├── research/          # Produit, UX, études techniques
-│   └── architecture/      # Conception technique
+│   └── architecture/      # Conception technique (cible produit)
 ├── docker-compose.yml     # Postgres 17, Redis 8
 └── package.json           # pnpm workspaces + overrides (zod, h3)
 ```
 
 ## Documentation
 
-| Document                                                            | Contenu                                             |
-| ------------------------------------------------------------------- | --------------------------------------------------- |
-| [État du projet](docs/ETAT_PROJET.md)                               | Implémentation actuelle, écarts, structure des apps |
-| [Architecture globale](docs/architecture/architecture-technique.md) | Vue d'ensemble, flux, scaling                       |
-| [Design backend](docs/architecture/backend-design.md)               | API, Drizzle, ETL                                   |
-| [Design frontend](docs/architecture/frontend-design.md)             | Routes, composants, comparateur (cible produit)     |
+| Document                                                                       | Contenu                                             |
+| ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| [État du projet](docs/ETAT_PROJET.md)                                          | Implémentation actuelle, écarts, structure des apps |
+| [Stack versions](docs/STACK_VERSIONS.md)                                       | Versions, conventions Zod 4, breaking changes       |
+| [Architecture globale](docs/architecture/architecture-technique.md)            | Vue d'ensemble, flux, scaling (cible produit)       |
+| [Design backend](docs/architecture/backend-design.md)                          | API, Drizzle, ETL (cible produit)                   |
+| [Design frontend](docs/architecture/frontend-design.md)                        | Routes, composants, comparateur (cible produit)     |
+| [Analyse Meilisearch/BullMQ](docs/research/meilisearch-bullmq-analysis.md)     | Justification du retrait, comparaison PostgreSQL    |
+| [PostgreSQL cache & recherche](docs/research/postgresql-cache-et-recherche.md) | Faisabilité cache PG, recherche full-text           |
+| [Sources API officielles](docs/research/api-officielles.md)                    | Formats, endpoints, contraintes Open Data AN        |
+| [Plateformes tierces](docs/research/plateformes-tierces.md)                    | Écosystème : NosDéputés, Datan, CIVIX, Poligraph    |
+| [Spécifications produit](docs/research/produit-specs.md)                       | Vision, personas, user stories, roadmap             |
+| [Conception UX](docs/research/ux-design.md)                                    | Parcours, wireframes, design system                 |
 
 ## Démarrage rapide
 
