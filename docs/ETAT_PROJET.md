@@ -152,7 +152,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 | Élément                    | État                                                            |
 | -------------------------- | --------------------------------------------------------------- |
-| Tests automatisés          | Vitest, 10 fichiers, 90 tests, couverture 3,58 %                |
+| Tests automatisés          | Vitest, ~15 fichiers, 70+ tests (ETL 28, Backend 42)            |
 | GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests |
 | `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                           |
 
@@ -167,17 +167,17 @@ Corrigés récemment (voir historique PR / agents) :
 - Frontend : migration Vinxi → Vite
 - Zod 4 sur backend + shared
 - ETL : zip slip, validation URLs, hash téléchargement (stream unique)
+- ETL : validation port dans `validateEtlUrl` (production rejette port ≠ 443)
+- Backend : limite cursor (`MAX_CURSOR_LENGTH` = 2048, `ValidationError` si trop grand)
+- Backend : tests CacheService (13 tests, mock Redis en mémoire)
 
 **Toujours ouverts** (à traiter) : couverture tests, intégration/E2E, biais suggestions recherche, filtre thématique croisé, route OG non branchée.
 
 ### Points de vigilance sécurité (audit 2026-05-21)
 
-| Priorité | Action                                                  | Fichier concerné                                |
-| -------- | ------------------------------------------------------- | ----------------------------------------------- |
-| Haute    | Valider le port dans `validateEtlUrl` (port ≠ 443)      | `packages/etl/src/config.ts`                    |
-| Haute    | Limiter la taille du cursor dans `decodeCursor` (~2 KB) | `apps/backend/src/modules/common/pagination.ts` |
-| Moyenne  | Tests d'intégration CacheService (mock Redis)           | `apps/backend/src/modules/common/cache.ts`      |
-| Faible   | Vérifier le type d'entrée ZIP (symlinks)                | `packages/etl/src/parser/zip-extract.ts`        |
+| Priorité | Action                                   | Fichier concerné                         |
+| -------- | ---------------------------------------- | ---------------------------------------- |
+| Faible   | Vérifier le type d'entrée ZIP (symlinks) | `packages/etl/src/parser/zip-extract.ts` |
 
 ---
 
@@ -188,7 +188,7 @@ _Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits ré
 ## Notes 2026-05-22
 
 - **Docs obsolètes supprimés** : `BENCHMARK_JEST_VS_VITEST.md` (décision prise, Vitest adopté), `SECURITY_AUDIT_TESTS.md` (recommandations intégrées ci-dessus), `.DS_Store`.
-- **Tests** : 10 fichiers, 90 tests (88 passés, 2 skipped).
+- **Tests** : ETL 28 passés, Backend 42 passés (2 health ignorés sans `DATABASE_URL`).
 
 ## Notes 2026-05-21
 
