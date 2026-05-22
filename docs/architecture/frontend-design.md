@@ -629,13 +629,11 @@ export const APIRoute = createAPIFileRoute("/api/sitemap.xml")({
         priority: 0.9,
         lastmod: d.updatedAt,
       })),
-      ...scrutins
-        .slice(0, 1000)
-        .map((s) => ({
-          loc: `/scrutin/${s.id}`,
-          priority: 0.8,
-          lastmod: s.dateScrutin,
-        })),
+      ...scrutins.slice(0, 1000).map((s) => ({
+        loc: `/scrutin/${s.id}`,
+        priority: 0.8,
+        lastmod: s.dateScrutin,
+      })),
     ];
 
     const xml = generateSitemapXml(urls);
