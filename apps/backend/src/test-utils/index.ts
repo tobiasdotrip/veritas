@@ -10,8 +10,4 @@ export {
   type IntegrationContext,
   type InjectedResponse,
 } from "./integration.js";
-export {
-  createTestApp,
-  destroyTestApp,
-  injectJson,
-} from "./http.js";
+export { createTestApp, destroyTestApp, injectJson } from "./http.js";

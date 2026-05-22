@@ -61,7 +61,9 @@ describeIntegration("GET /api/v1/scrutins", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.id).toBe(FIXTURE.scrutins.sante.id);
-    expect(response.body.data.themes.some((t) => t.slug === FIXTURE.theme.slug)).toBe(true);
+    expect(
+      response.body.data.themes.some((t) => t.slug === FIXTURE.theme.slug),
+    ).toBe(true);
   });
 
   it("rejects invalid theme slug", async () => {

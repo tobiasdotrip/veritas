@@ -7,10 +7,7 @@ import {
   injectJson,
   type InjectedResponse,
 } from "./http.js";
-import {
-  setupTestDatabase,
-  teardownTestDatabase,
-} from "./database.js";
+import { setupTestDatabase, teardownTestDatabase } from "./database.js";
 import { resetTestFixtures } from "./fixtures.js";
 
 export const describeIntegration = process.env.DATABASE_URL

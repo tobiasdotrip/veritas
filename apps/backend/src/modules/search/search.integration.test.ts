@@ -17,7 +17,11 @@ describeIntegration("GET /api/v1/search", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body.data.scrutins.some((s) => s.id === FIXTURE.scrutins.sante.id)).toBe(true);
+    expect(
+      response.body.data.scrutins.some(
+        (s) => s.id === FIXTURE.scrutins.sante.id,
+      ),
+    ).toBe(true);
   });
 
   it("returns empty arrays for a query with no matches", async () => {

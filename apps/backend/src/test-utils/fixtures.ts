@@ -99,8 +99,7 @@ export async function resetTestFixtures(pool: Pool): Promise<void> {
 
 export async function seedTestFixtures(pool: Pool): Promise<void> {
   const db = drizzle(pool, { schema });
-  const { legislatureId, theme, group, deputies, mandates, scrutins } =
-    FIXTURE;
+  const { legislatureId, theme, group, deputies, mandates, scrutins } = FIXTURE;
 
   await db
     .insert(schema.legislatures)
