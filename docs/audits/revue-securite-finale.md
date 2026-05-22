@@ -4,6 +4,7 @@
 **Auditeur** : Security Engineer (shift-left, Checkpoint 5 — Pre-Release)  
 **Périmètre** : Codebase complète avant push — tous les modules backend + frontend stubs + ETL  
 **Références** :
+
 - `docs/ETAT_PROJET.md` (état implémenté 2026-05-22)
 - `audit-securite-ouverts.md` (5 éléments, 2 blocages)
 - `docs/audits/synthese-5-ouverts.md` (convergence 3 auditeurs)
@@ -20,26 +21,32 @@
 
 ### ✅ Blocage 1 — `toPrefixTsQuery` (audit Item 3)
 
-| Élément | Statut |
-|---------|--------|
-| Fichier | `apps/backend/src/modules/search/ts-query.ts` |
-| Correction | Chaque mot préfixé individuellement : `split(/\s+/).filter(Boolean).map(w => w + ':*').join(' & ')` |
-| Tests | **17 tests** Vitest dans `ts-query.test.ts` |
-| Couverture injection | `' OR 1=1 --` → `OR:* & 11:*` (opérateurs tsquery et quotes supprimés) |
-| Couverture SQLi | `'"; DROP TABLE deputies; --` → `DROP:* & TABLE:* & deputies:*` |
-| Regex | `[^\p{L}\p{N}\s]` — conserve Unicode (accents, idéogrammes), supprime ponctuation/opérateurs |
+| Élément              | Statut                                                                                              |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| Fichier              | `apps/backend/src/modules/search/ts-query.ts`                                                       |
+| Correction           | Chaque mot préfixé individuellement : `split(/\s+/).filter(Boolean).map(w => w + ':*').join(' & ')` |
+| Tests                | **17 tests** Vitest dans `ts-query.test.ts`                                                         |
+| Couverture injection | `' OR 1=1 --` → `OR:* & 11:*` (opérateurs tsquery et quotes supprimés)                              |
+| Couverture SQLi      | `'"; DROP TABLE deputies; --` → `DROP:* & TABLE:* & deputies:*`                                     |
+| Regex                | `[^\p{L}\p{N}\s]` — conserve Unicode (accents, idéogrammes), supprime ponctuation/opérateurs        |
 
 **Preuve** (extrait) :
+
 ```typescript
 // ts-query.ts
 export function toPrefixTsQuery(q: string): string {
   const safeQ = q.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
   if (!safeQ) return "";
-  return safeQ.split(/\s+/).filter(Boolean).map((w) => `${w}:*`).join(" & ");
+  return safeQ
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => `${w}:*`)
+    .join(" & ");
 }
 ```
 
 **Ligne de défense contre l'injection** :
+
 1. Regex stripping → élimine tous les opérateurs tsquery (`&`, `|`, `!`, `(`, `)`, `'`, `"`, `;`, `--`)
 2. `to_tsquery('french', ...)` PostgreSQL parse le résultat → si malgré tout un résidu passe, PostgreSQL rejette
 3. `rethrowTextSearchValidationError` intercepte le code `42601` → transforme en `ValidationError` (400)
@@ -51,17 +58,18 @@ export function toPrefixTsQuery(q: string): string {
 
 ### ✅ Blocage 2 — Stubs OG dans `src/routes/` (audit Item 5)
 
-| Élément | Statut |
-|---------|--------|
-| Ancien emplacement | `apps/frontend/src/routes/api/og/*.tsx` |
-| Nouvel emplacement | `apps/frontend/stubs/og/*.tsx` |
-| Fichiers | `depute.tsx`, `scrutin.tsx`, `comparateur.tsx` |
-| Dans `src/` ? | ❌ NON — hors de l'arbre de découverte TanStack Router |
-| Références dans `src/` | ❌ AUCUNE — grep `api/og` → 0 match |
-| Route `src/routes/api/` | Répertoire vide (vestige inoffensif) |
-| Protection | `@ts-nocheck` + commentaire `IGNORE: security review required before activation` |
+| Élément                 | Statut                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| Ancien emplacement      | `apps/frontend/src/routes/api/og/*.tsx`                                          |
+| Nouvel emplacement      | `apps/frontend/stubs/og/*.tsx`                                                   |
+| Fichiers                | `depute.tsx`, `scrutin.tsx`, `comparateur.tsx`                                   |
+| Dans `src/` ?           | ❌ NON — hors de l'arbre de découverte TanStack Router                           |
+| Références dans `src/`  | ❌ AUCUNE — grep `api/og` → 0 match                                              |
+| Route `src/routes/api/` | Répertoire vide (vestige inoffensif)                                             |
+| Protection              | `@ts-nocheck` + commentaire `IGNORE: security review required before activation` |
 
 **Preuve** :
+
 ```
 apps/frontend/stubs/og/
 ├── comparateur.tsx
@@ -81,11 +89,11 @@ apps/frontend/src/routes/api/   → répertoire vide (0 fichier)
 
 **Fichier** : `apps/backend/src/modules/og/schemas.ts`
 
-| Schéma | Contraintes | Injection testée |
-|--------|-------------|------------------|
-| `OgDeputeQuery.slug` | `min(1).max(100).regex(/^(PA[A-Z0-9_]+|[a-z0-9][a-z0-9-]*[a-z0-9])$/)` | `../etc/passwd` → rejeté ✅ |
-| `OgScrutinQuery.id` | `min(1).max(50)` | — |
-| `OgCompareQuery.score` | `coerce.number().min(0).max(100)` | `150` → 400 ✅, `-1` → 400 ✅ |
+| Schéma                 | Contraintes                            | Injection testée                 |
+| ---------------------- | -------------------------------------- | -------------------------------- | --------------------------- |
+| `OgDeputeQuery.slug`   | `min(1).max(100).regex(/^(PA[A-Z0-9_]+ | [a-z0-9][a-z0-9-]\*[a-z0-9])$/)` | `../etc/passwd` → rejeté ✅ |
+| `OgScrutinQuery.id`    | `min(1).max(50)`                       | —                                |
+| `OgCompareQuery.score` | `coerce.number().min(0).max(100)`      | `150` → 400 ✅, `-1` → 400 ✅    |
 
 Tests unitaires dans `schemas.test.ts` (4 tests) + tests d'intégration dans `og.integration.test.ts` (5 tests).
 
@@ -138,14 +146,14 @@ Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'
 
 Vérifié sur **toutes** les requêtes PostgreSQL :
 
-| Chemin | `unaccent()` | Fichier |
-|--------|:-----------:|---------|
-| Trigram députés (suggestions) | ✅ | `search/routes.ts:107-108` |
-| Trigram scrutins (suggestions) | ✅ | `search/routes.ts:135-136` |
-| tsvector députés (suggestions) | ✅ | `search/routes.ts:171,173` |
-| tsvector scrutins (suggestions) | ✅ | `search/routes.ts:199,201` |
-| Recherche principale députés | ✅ | `search/routes.ts:318-319,360-361,367-369` |
-| Recherche principale scrutins | ✅ | `search/routes.ts:397-398,410-412` |
+| Chemin                          | `unaccent()` | Fichier                                    |
+| ------------------------------- | :----------: | ------------------------------------------ |
+| Trigram députés (suggestions)   |      ✅      | `search/routes.ts:107-108`                 |
+| Trigram scrutins (suggestions)  |      ✅      | `search/routes.ts:135-136`                 |
+| tsvector députés (suggestions)  |      ✅      | `search/routes.ts:171,173`                 |
+| tsvector scrutins (suggestions) |      ✅      | `search/routes.ts:199,201`                 |
+| Recherche principale députés    |      ✅      | `search/routes.ts:318-319,360-361,367-369` |
+| Recherche principale scrutins   |      ✅      | `search/routes.ts:397-398,410-412`         |
 
 **Extension activée** au seed : `CREATE EXTENSION IF NOT EXISTS "unaccent"` (`db/seed.ts:10`)
 
@@ -166,6 +174,7 @@ Vérifié sur **toutes** les requêtes PostgreSQL :
 ### ✅ 3.4 Normalisation `ts_rank / length()`
 
 Présente dans **toutes** les requêtes full-text :
+
 ```
 ts_rank(...) / greatest(length(unaccent(coalesce(...))), 1)
 ```
@@ -183,6 +192,7 @@ ts_rank(...) / greatest(length(unaccent(coalesce(...))), 1)
 ### ✅ 4.1 Pas d'injection SQL
 
 Toutes les requêtes utilisent Drizzle avec paramètres liés :
+
 ```typescript
 .where(eq(themes.slug, themeSlug))           // → $1
 .where(eq(scrutins.legislature, legislature)) // → $2
@@ -233,15 +243,15 @@ apps/frontend/stubs/og/
 
 ### ✅ Aucun secret commité
 
-| Scan | Résultat |
-|------|----------|
-| `.env` files committés | ❌ AUCUN — seul `.env.example` présent |
-| `.gitignore` couvre `.env` | ✅ `.env`, `.env.local`, `.env.*.local` |
-| Hardcoded passwords | ✅ Docker Compose dev uniquement : `veritas_dev` |
-| Hardcoded API keys | ❌ AUCUN trouvé |
-| ETL URL credentials | ✅ Rejetés par `validateEtlUrl` |
-| `innerHTML` non échappé | ℹ️ `seo.ts:72` — JSON-LD standard, pas d'input utilisateur |
-| `eval`/`exec`/`system` | ❌ AUCUN trouvé |
+| Scan                       | Résultat                                                   |
+| -------------------------- | ---------------------------------------------------------- |
+| `.env` files committés     | ❌ AUCUN — seul `.env.example` présent                     |
+| `.gitignore` couvre `.env` | ✅ `.env`, `.env.local`, `.env.*.local`                    |
+| Hardcoded passwords        | ✅ Docker Compose dev uniquement : `veritas_dev`           |
+| Hardcoded API keys         | ❌ AUCUN trouvé                                            |
+| ETL URL credentials        | ✅ Rejetés par `validateEtlUrl`                            |
+| `innerHTML` non échappé    | ℹ️ `seo.ts:72` — JSON-LD standard, pas d'input utilisateur |
+| `eval`/`exec`/`system`     | ❌ AUCUN trouvé                                            |
 
 ---
 
@@ -249,13 +259,13 @@ apps/frontend/stubs/og/
 
 **Fichier** : `packages/etl/src/config.ts`
 
-| Contrôle | Implémentation |
-|----------|---------------|
-| Protocole HTTPS | ✅ `parsed.protocol !== "https:"` → erreur |
-| Credentials dans URL | ✅ `parsed.username \|\| parsed.password` → erreur |
-| Hostname whitelist | ✅ `data.assemblee-nationale.fr` uniquement |
-| Port non-standard | ✅ Rejeté en production (`NODE_ENV !== "development"`) |
-| Surcharge env vars | ✅ `ETL_URL_SCRUTINS`, `ETL_URL_DEPUTIES`, `ETL_URL_ORGANES` |
+| Contrôle             | Implémentation                                               |
+| -------------------- | ------------------------------------------------------------ |
+| Protocole HTTPS      | ✅ `parsed.protocol !== "https:"` → erreur                   |
+| Credentials dans URL | ✅ `parsed.username \|\| parsed.password` → erreur           |
+| Hostname whitelist   | ✅ `data.assemblee-nationale.fr` uniquement                  |
+| Port non-standard    | ✅ Rejeté en production (`NODE_ENV !== "development"`)       |
+| Surcharge env vars   | ✅ `ETL_URL_SCRUTINS`, `ETL_URL_DEPUTIES`, `ETL_URL_ORGANES` |
 
 → **SSRF impossible.**
 
@@ -263,31 +273,32 @@ apps/frontend/stubs/og/
 
 ## 8. Synthèse des vérifications
 
-| # | Point de vigilance | Statut |
-|---|-------------------|--------|
-| 1 | `toPrefixTsQuery` corrigé | ✅ RÉSOLU |
-| 2 | OG stubs déplacés hors `src/` | ✅ RÉSOLU |
-| 3 | OG backend : Zod validation | ✅ OK |
-| 4 | OG backend : cache TTL (24h) | ✅ OK (documenté) |
-| 5 | OG backend : CSP headers | ⚠️ RÉSERVE #1 |
-| 6 | `unaccent()` dans toutes les requêtes | ✅ OK |
-| 7 | `toPrefixTsQuery` extrait + 17 tests | ✅ OK |
-| 8 | Fallback `pg_trgm` ≤ 3 caractères | ✅ OK |
-| 9 | `ts_rank / length()` normalisation | ✅ OK |
-| 10 | Themes : pas d'injection SQL | ✅ OK |
-| 11 | `ThemeSlug` Zod regex + max(50) | ✅ OK |
-| 12 | Stubs OG hors de `src/` | ✅ OK |
-| 13 | Aucun secret/token commité | ✅ OK |
-| 14 | ETL : validation URL anti-SSRF | ✅ OK |
-| 15 | `rethrowTextSearchValidationError` récursif | ✅ OK |
-| 16 | `src/routes/api/` vide (vestige) | ℹ️ RÉSERVE #2 |
-| 17 | `innerHTML` dans `seo.ts` (JSON-LD) | ℹ️ RÉSERVE #3 |
+| #   | Point de vigilance                          | Statut            |
+| --- | ------------------------------------------- | ----------------- |
+| 1   | `toPrefixTsQuery` corrigé                   | ✅ RÉSOLU         |
+| 2   | OG stubs déplacés hors `src/`               | ✅ RÉSOLU         |
+| 3   | OG backend : Zod validation                 | ✅ OK             |
+| 4   | OG backend : cache TTL (24h)                | ✅ OK (documenté) |
+| 5   | OG backend : CSP headers                    | ⚠️ RÉSERVE #1     |
+| 6   | `unaccent()` dans toutes les requêtes       | ✅ OK             |
+| 7   | `toPrefixTsQuery` extrait + 17 tests        | ✅ OK             |
+| 8   | Fallback `pg_trgm` ≤ 3 caractères           | ✅ OK             |
+| 9   | `ts_rank / length()` normalisation          | ✅ OK             |
+| 10  | Themes : pas d'injection SQL                | ✅ OK             |
+| 11  | `ThemeSlug` Zod regex + max(50)             | ✅ OK             |
+| 12  | Stubs OG hors de `src/`                     | ✅ OK             |
+| 13  | Aucun secret/token commité                  | ✅ OK             |
+| 14  | ETL : validation URL anti-SSRF              | ✅ OK             |
+| 15  | `rethrowTextSearchValidationError` récursif | ✅ OK             |
+| 16  | `src/routes/api/` vide (vestige)            | ℹ️ RÉSERVE #2     |
+| 17  | `innerHTML` dans `seo.ts` (JSON-LD)         | ℹ️ RÉSERVE #3     |
 
 ---
 
 ## 9. Réserves (non bloquantes)
 
 ### Réserve #1 — CSP headers absents des réponses OG
+
 - **Sévérité** : 🟡 LOW (Info)
 - **Fichier** : `apps/backend/src/modules/og/render.ts`
 - **Recommandation** : Ajouter `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'` dans `OG_CACHE_HEADERS`
@@ -295,12 +306,14 @@ apps/frontend/stubs/og/
 - **Effort** : 5 minutes, 1 ligne
 
 ### Réserve #2 — Répertoire vide `src/routes/api/`
+
 - **Sévérité** : ℹ️ INFO
 - **Fichier** : `apps/frontend/src/routes/api/` (répertoire vide)
 - **Recommandation** : Supprimer le répertoire pour éviter toute confusion future
 - **Effort** : `rm -r apps/frontend/src/routes/api/`
 
 ### Réserve #3 — `innerHTML` dans `jsonLdScript`
+
 - **Sévérité** : ℹ️ INFO
 - **Fichier** : `apps/frontend/src/lib/seo.ts:72`
 - **Contexte** : `jsonLdScript()` utilise `innerHTML: JSON.stringify(json)` pour injecter du JSON-LD dans le `<head>`
@@ -312,18 +325,18 @@ apps/frontend/stubs/og/
 
 ## 10. Checklist hardening (Checkpoint 5)
 
-| Contrôle | Statut |
-|----------|--------|
-| Aucun secret dans le repo | ✅ PASS |
-| `.env` dans `.gitignore` | ✅ PASS |
-| HTTPS/TLS requis (ETL) | ✅ PASS |
-| CSP headers (OG) | ⚠️ À AJOUTER (non bloquant) |
-| Least-privilege IAM | N/A (pas d'IAM cloud) |
-| Container non-root | N/A (pas de Dockerfile custom) |
-| CI : pas de secrets dans les logs | ✅ PASS |
-| Dépendances : pas de CVE connues | ✅ PASS (voir `docs/STACK_VERSIONS.md`) |
-| CORS wildcard | ❌ AUCUN trouvé |
-| Rate limiting | ℹ️ Store Redis présent, non vérifié en test |
+| Contrôle                          | Statut                                      |
+| --------------------------------- | ------------------------------------------- |
+| Aucun secret dans le repo         | ✅ PASS                                     |
+| `.env` dans `.gitignore`          | ✅ PASS                                     |
+| HTTPS/TLS requis (ETL)            | ✅ PASS                                     |
+| CSP headers (OG)                  | ⚠️ À AJOUTER (non bloquant)                 |
+| Least-privilege IAM               | N/A (pas d'IAM cloud)                       |
+| Container non-root                | N/A (pas de Dockerfile custom)              |
+| CI : pas de secrets dans les logs | ✅ PASS                                     |
+| Dépendances : pas de CVE connues  | ✅ PASS (voir `docs/STACK_VERSIONS.md`)     |
+| CORS wildcard                     | ❌ AUCUN trouvé                             |
+| Rate limiting                     | ℹ️ Store Redis présent, non vérifié en test |
 
 ---
 
