@@ -83,7 +83,7 @@ apps/frontend/
 
 ### Non implémenté / stubs
 
-- Routes `src/routes/api/og/*` : stubs Satori (`createAPIFileRoute` non branché au route tree)
+- Stubs OG frontend (`apps/frontend/stubs/og/`) — remplacés par le backend `/api/v1/og/*`
 - Server Functions / prefetch SSR documentés dans `frontend-design.md` : **non** utilisés ; fetching **client** via TanStack Query vers le backend
 
 ---
@@ -100,6 +100,7 @@ apps/frontend/
 | `/compare`  | `compare`  | Concordance multi-députés                                          |
 | `/search`   | `search`   | Suggestions + recherche full-text PostgreSQL (`to_tsvector` + GIN) |
 | `/themes`   | `themes`   | Liste thématiques + compteurs scrutins par législature             |
+| `/og`       | `og`       | Images Open Graph Satori (député, scrutin, comparateur)              |
 
 ### Validation
 
@@ -154,7 +155,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 | Élément                    | État                                                                   |
 | -------------------------- | ---------------------------------------------------------------------- |
-| Tests automatisés          | Vitest + Playwright, 193 tests Vitest (137 unit. + 56 intég.) + 13 E2E |
+| Tests automatisés          | Vitest + Playwright, 227 Vitest (148 unit. + 65 intég. + 14 frontend) + 16 E2E |
 | GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests        |
 | `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                                  |
 
@@ -179,18 +180,19 @@ Corrigés récemment (voir historique PR / agents) :
 - Frontend : stubs OG déplacés `routes/api/og/` → `stubs/og/` (hors `src/`, neutralise activation silencieuse)
 - Backend : infrastructure intégration (`fixtures.ts`, `integration.ts`, `vitest.integration.config.ts`)
 - Backend : module `GET /api/v1/themes`, paramètre `theme` sur `/search` et `/search/suggestions`
-- Backend : 56 tests d'intégration (search 9, themes 2, compare 9, scrutins 9, deputies 8, repos 18, health 1)
-- E2E : 13 scénarios Playwright (5 API en CI, 7 frontend + 1 smoke si `E2E_FRONTEND_BASE_URL`)
+- Backend : fallback `pg_trgm` via `word_similarity` pour requêtes ≤ 3 caractères
+- Backend : module OG Satori `/api/v1/og/*` (validation Zod, police Inter, cache HTTP 24h)
+- Backend : correction `groups/routes.ts` (`position::text` dans CTE loyauté)
+- Backend : 65 tests d'intégration (+ groups 3, og 5, trigram 1)
+- E2E : 16 scénarios Playwright (8 API en CI)
 - Frontend : 14 tests Vitest (hooks + composants UI)
 - CI : étape Integration tests avec PostgreSQL + Redis
 
-**En cours** (semaines suivantes) :
+**En cours** (hors roadmap audits) :
 
-- 🔴 Couverture tests — 193 tests Vitest passent, reste module `groups`, pages frontend
-- 🟠 Intégration/E2E — 56 intégration + 5 E2E API en CI (frontend E2E skip sans URL dédiée)
-- 🟠 Biais suggestions recherche — `toPrefixTsQuery` + `unaccent` + `ts_rank` corrigés, reste fallback trigram
-- 🟡 Filtre thématique croisé — `GET /themes` + `GET /search?theme=` livrés ; frontend conserve double appel `/scrutins?theme=`
-- 🟢 Route OG — stubs neutralisés, reste implémentation backend Satori (module `og/` Fastify)
+- 🔴 Couverture tests — 227 Vitest passent ; reste pages/composants frontend métier
+- 🟠 Intégration/E2E — frontend E2E skip CI sans `E2E_FRONTEND_BASE_URL` + seed production
+- 🟡 Filtre thématique croisé — frontend conserve double appel `/scrutins?theme=` (API unifiée disponible)
 
 ---
 
@@ -205,8 +207,8 @@ _Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits ré
 - **Semaine 2** (intégration) : fixtures déterministes, 25 tests intégration, CI PostgreSQL + Redis.
 - **Semaine 3** (couverture backend) : tests repository scrutins (9), routes deputies (8), routes scrutins (9), compare routes+repo (13).
 - **Semaine 4** (thèmes, E2E, frontend) : module themes, `search?theme=`, 6 tests intégration themes/search, 13 E2E, 14 tests frontend.
-- **Tests** : 137 unitaires (ETL 36, Shared 28, Backend 59, Frontend 14) + 56 intégration = 193 Vitest.
-- **Roadmap** : voir `docs/audits/synthese-5-ouverts.md` pour la semaine 5 (OG, groups, pg_trgm).
+- **Semaine 5** (OG, groups, pg_trgm) : module `/api/v1/og/*`, tests groups (3), fallback trigram, 16 E2E.
+- **Tests** : 148 unitaires + 65 intégration + 14 frontend = 227 Vitest ; roadmap audits (`synthese-5-ouverts.md`) terminée.
 
 ## Notes 2026-05-21
 

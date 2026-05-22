@@ -169,7 +169,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         WITH member_loyalty AS (
           SELECT
             sv.deputy_id,
-            COUNT(*) FILTER (WHERE sv.position = sgp.position_majoritaire)::float
+            COUNT(*) FILTER (WHERE sv.position::text = sgp.position_majoritaire)::float
               / NULLIF(COUNT(*) FILTER (WHERE sv.position != 'nonVotant'), 0) AS loyalty_rate
           FROM ${scrutinVotes} sv
           INNER JOIN ${scrutins} s ON sv.scrutin_id = s.id

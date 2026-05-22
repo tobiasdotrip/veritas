@@ -345,9 +345,19 @@ Le security-engineer voit un **risque latent** (bombe à retardement) là où le
 
 **Total** : 137 unitaires + 56 intégration + 13 E2E = **206 tests** (193 Vitest + 13 Playwright)
 
-### Semaine 5 — OG et finitions (à venir)
+### Semaine 5 — OG et finitions ✅ (2026-05-22)
+
+| #   | Action                                         | Statut |
+| --- | ---------------------------------------------- | ------ |
+| 27  | Module OG backend Fastify (3 endpoints Satori) | ✅     |
+| 28  | Validation Zod inputs OG                       | ✅     |
+| 29  | Tests snapshots Satori + E2E OG                  | ✅     |
+| 30  | Tests `groups/routes.ts`                       | ✅     |
+| 31  | Fallback `pg_trgm` recherche                   | ✅     |
+
+**Total** : 148 unitaires + 65 intégration + 14 frontend = **227 Vitest** + 16 E2E
 
 ---
 
 _Synthèse produite par croisement des audits security-engineer, qa-engineer et backend-developer du 2026-05-22._  
-_Dernière mise à jour : 2026-05-22 (semaines 1-4 terminées)._
+_Dernière mise à jour : 2026-05-22 (semaines 1-5 terminées — roadmap audits close)._

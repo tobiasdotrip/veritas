@@ -14,6 +14,10 @@ import {
 import { DateString } from "../common/schemas.js";
 import { rethrowTextSearchValidationError } from "../common/db-errors.js";
 import { toPrefixTsQuery } from "./ts-query.js";
+import {
+  shouldUseTrigramFallback,
+  TRIGRAM_SIMILARITY_THRESHOLD,
+} from "./trigram-search.js";
 import type { Database } from "../../db/client.js";
 
 function themeScrutinIds(db: Database, themeSlug: string) {
@@ -79,8 +83,9 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     },
     handler: async (req, reply) => {
       const { q, theme, limit: maxResults } = req.query;
+      const useTrigram = shouldUseTrigramFallback(q);
       const tsQuery = toPrefixTsQuery(q);
-      if (!tsQuery) {
+      if (!useTrigram && !tsQuery) {
         return reply.send({ data: [] });
       }
 
@@ -91,6 +96,71 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
       let deputyRows;
       let scrutinRows;
       try {
+        if (useTrigram) {
+          deputyRows = await db
+            .select({
+              id: deputies.id,
+              firstName: deputies.firstName,
+              lastName: deputies.lastName,
+              slug: deputies.slug,
+              rank: sql<number>`word_similarity(
+                unaccent(${q}),
+                unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
+              )`,
+            })
+            .from(deputies)
+            .where(
+              sql`word_similarity(
+                unaccent(${q}),
+                unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
+              ) > ${TRIGRAM_SIMILARITY_THRESHOLD}`,
+            )
+            .orderBy(
+              desc(
+                sql`word_similarity(
+                  unaccent(${q}),
+                  unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
+                )`,
+              ),
+            )
+            .limit(maxResults);
+
+          scrutinRows = await db
+            .select({
+              id: scrutins.id,
+              numero: scrutins.numero,
+              titre: scrutins.titre,
+              slug: scrutins.id,
+              rank: sql<number>`word_similarity(
+                unaccent(${q}),
+                unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
+              )`,
+            })
+            .from(scrutins)
+            .where(
+              scrutinThemeFilter
+                ? and(
+                    sql`word_similarity(
+                      unaccent(${q}),
+                      unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
+                    ) > ${TRIGRAM_SIMILARITY_THRESHOLD}`,
+                    scrutinThemeFilter,
+                  )
+                : sql`word_similarity(
+                    unaccent(${q}),
+                    unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
+                  ) > ${TRIGRAM_SIMILARITY_THRESHOLD}`,
+            )
+            .orderBy(
+              desc(
+                sql`word_similarity(
+                  unaccent(${q}),
+                  unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
+                )`,
+              ),
+            )
+            .limit(maxResults);
+        } else {
         deputyRows = await db
           .select({
             id: deputies.id,
@@ -154,6 +224,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             ),
           )
           .limit(maxResults);
+        }
       } catch (err) {
         rethrowTextSearchValidationError(err);
         throw err;
@@ -215,6 +286,46 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
 
       try {
         if (q) {
+          if (shouldUseTrigramFallback(q)) {
+            deputyRows = await db
+              .select({
+                id: deputies.id,
+                firstName: deputies.firstName,
+                lastName: deputies.lastName,
+                slug: deputies.slug,
+                photoUrl: deputies.photoUrl,
+                circoLabel: deputies.circoLabel,
+                departmentId: deputies.departmentId,
+                groupAbbreviation: politicalGroups.abbreviation,
+              })
+              .from(deputies)
+              .leftJoin(
+                deputyGroupAffiliations,
+                and(
+                  eq(deputyGroupAffiliations.deputyId, deputies.id),
+                  sql`${deputyGroupAffiliations.endDate} IS NULL`,
+                ),
+              )
+              .leftJoin(
+                politicalGroups,
+                eq(deputyGroupAffiliations.politicalGroupId, politicalGroups.id),
+              )
+              .where(
+                sql`word_similarity(
+                  unaccent(${q}),
+                  unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
+                ) > ${TRIGRAM_SIMILARITY_THRESHOLD}`,
+              )
+              .orderBy(
+                desc(
+                  sql`word_similarity(
+                    unaccent(${q}),
+                    unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
+                  )`,
+                ),
+              )
+              .limit(maxResults);
+          } else {
           deputyRows = await db
             .select({
               id: deputies.id,
@@ -253,6 +364,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
               ),
             )
             .limit(maxResults);
+          }
         }
 
         const scrutinThemeFilter = theme

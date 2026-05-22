@@ -122,4 +122,18 @@ describeIntegration("GET /api/v1/search", () => {
 
     expect(response.status).toBe(400);
   });
+
+  it("uses pg_trgm fallback for short suggestion queries", async () => {
+    const response = await ctx.injectJson<{
+      data: { type: string; id: string }[];
+    }>(ctx.app, {
+      method: "GET",
+      url: "/api/v1/search/suggestions?q=Dup&limit=10",
+    });
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.some((item) => item.id === FIXTURE.deputies.dupont.id),
+    ).toBe(true);
+  });
 });
