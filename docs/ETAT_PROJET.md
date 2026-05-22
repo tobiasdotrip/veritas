@@ -144,6 +144,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 | CVE-2026-45321 (TanStack Router/Start) | Versions hors fenêtre malveillante ; `pnpm audit:tanstack` ; deps `>= 1.170.5` / `>= 1.168.7` |
 | SSRF ETL                               | `validateEtlUrl` (HTTPS + hôte AN)                                                            |
 | Zip slip                               | `resolveSafeZipEntryPath` avant extraction                                                    |
+| Zip entry types                        | `assertSafeZipArchive` (rejette symlink, FIFO, device, socket)                               |
 | Dépendances                            | Voir `docs/STACK_VERSIONS.md`                                                                 |
 
 ---
@@ -152,7 +153,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 | Élément                    | État                                                            |
 | -------------------------- | --------------------------------------------------------------- |
-| Tests automatisés          | Vitest, ~15 fichiers, 70+ tests (ETL 28, Backend 42)            |
+| Tests automatisés          | Vitest, ~16 fichiers, 77+ tests (ETL 35, Backend 42)            |
 | GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests |
 | `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                           |
 
@@ -168,16 +169,11 @@ Corrigés récemment (voir historique PR / agents) :
 - Zod 4 sur backend + shared
 - ETL : zip slip, validation URLs, hash téléchargement (stream unique)
 - ETL : validation port dans `validateEtlUrl` (production rejette port ≠ 443)
+- ETL : scan complet des entrées ZIP (`assertSafeZipArchive`, filtre types spéciaux, symlinks)
 - Backend : limite cursor (`MAX_CURSOR_LENGTH` = 2048, `ValidationError` si trop grand)
 - Backend : tests CacheService (13 tests, mock Redis en mémoire)
 
 **Toujours ouverts** (à traiter) : couverture tests, intégration/E2E, biais suggestions recherche, filtre thématique croisé, route OG non branchée.
-
-### Points de vigilance sécurité (audit 2026-05-21)
-
-| Priorité | Action                                   | Fichier concerné                         |
-| -------- | ---------------------------------------- | ---------------------------------------- |
-| Faible   | Vérifier le type d'entrée ZIP (symlinks) | `packages/etl/src/parser/zip-extract.ts` |
 
 ---
 
@@ -188,7 +184,7 @@ _Pour les versions cibles et CVE : `docs/STACK_VERSIONS.md`. Pour les audits ré
 ## Notes 2026-05-22
 
 - **Docs obsolètes supprimés** : `BENCHMARK_JEST_VS_VITEST.md` (décision prise, Vitest adopté), `SECURITY_AUDIT_TESTS.md` (recommandations intégrées ci-dessus), `.DS_Store`.
-- **Tests** : ETL 28 passés, Backend 42 passés (2 health ignorés sans `DATABASE_URL`).
+- **Tests** : ETL 35 passés, Backend 42 passés (2 health ignorés sans `DATABASE_URL`).
 
 ## Notes 2026-05-21
 
