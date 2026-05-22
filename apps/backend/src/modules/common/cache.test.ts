@@ -119,7 +119,7 @@ describe("CacheService", () => {
     });
 
     it("returns factory result when Redis get fails", async () => {
-      redis.get.mockRejectedValueOnce(new Error("Redis unavailable"));
+      (redis.get as any).mockRejectedValueOnce(new Error("Redis unavailable"));
       const factory = vi.fn().mockResolvedValue({ rate: 60 });
 
       const result = await cache.getOrSet("compare", "PA1,PA2", 300, factory);
@@ -129,7 +129,7 @@ describe("CacheService", () => {
     });
 
     it("returns factory result when Redis set fails after miss", async () => {
-      redis.set.mockRejectedValueOnce(new Error("Redis write failed"));
+      (redis.set as any).mockRejectedValueOnce(new Error("Redis write failed"));
       const factory = vi.fn().mockResolvedValue({ rate: 55 });
 
       const result = await cache.getOrSet("compare", "PA1,PA2", 300, factory);
