@@ -1,4 +1,4 @@
-import { createClient, type RedisClientType } from "redis";
+import { createClient, defineScript, type RedisClientType } from "redis";
 import { createHash } from "node:crypto";
 import { RATE_LIMIT_LUA } from "./redis-rate-limit-store.js";
 
@@ -11,30 +11,31 @@ export async function getRedis(): Promise<RedisClientType> {
     client = createClient({
       url: REDIS_URL,
       scripts: {
-        rateLimit: {
+        rateLimit: defineScript({
           SCRIPT: RATE_LIMIT_LUA,
           NUMBER_OF_KEYS: 1,
-          transformArguments(
+          parseCommand(
+            parser,
             key: string,
             timeWindow: number,
             max: number,
             continueExceeding: boolean,
             exponentialBackoff: boolean,
-          ): Array<string> {
-            return [
-              key,
+          ): void {
+            parser.pushKey(key);
+            parser.push(
               timeWindow.toString(),
               max.toString(),
               String(continueExceeding),
               String(exponentialBackoff),
-            ];
+            );
           },
           transformReply(reply: [number, number]): [number, number] {
             return reply;
           },
-        },
+        }),
       },
-    } as any);
+    });
 
     client.on("error", (err: Error) => {
       console.error("Redis error", err);
