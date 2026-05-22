@@ -23,7 +23,9 @@ describe("EmptyState", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Réessayer" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Réessayer" }),
+    ).toBeInTheDocument();
   });
 });
 

@@ -152,11 +152,11 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 
 ## Qualité & CI
 
-| Élément                    | État                                                             |
-| -------------------------- | ---------------------------------------------------------------- |
+| Élément                    | État                                                                   |
+| -------------------------- | ---------------------------------------------------------------------- |
 | Tests automatisés          | Vitest + Playwright, 193 tests Vitest (137 unit. + 56 intég.) + 13 E2E |
-| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests  |
-| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                            |
+| GitHub Actions             | Configuré (`.github/workflows/ci.yml`) — lint, typecheck, tests        |
+| `pnpm typecheck` / `build` | OK sur shared, backend, etl, frontend                                  |
 
 ---
 

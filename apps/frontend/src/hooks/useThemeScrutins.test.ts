@@ -26,7 +26,9 @@ describe("useThemeScrutins", () => {
 
   it("fetches scrutins filtered by theme slug", async () => {
     mockApiFetch.mockResolvedValue({
-      data: [{ id: "VT1", numero: 1, titre: "Test", dateScrutin: "2024-01-01" }],
+      data: [
+        { id: "VT1", numero: 1, titre: "Test", dateScrutin: "2024-01-01" },
+      ],
     });
 
     const { result } = renderHook(() => useThemeScrutins("sante", 20), {

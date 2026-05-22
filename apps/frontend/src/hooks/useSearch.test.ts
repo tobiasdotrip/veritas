@@ -38,7 +38,9 @@ describe("useSearch", () => {
 
     await waitForHook(result, (r) => r.isSuccess);
 
-    expect(mockApiFetch).toHaveBeenCalledWith("/search?q=jean&offset=0&limit=20");
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      "/search?q=jean&offset=0&limit=20",
+    );
     expect(result.current.data?.deputies).toHaveLength(1);
   });
 });

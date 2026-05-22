@@ -8,7 +8,10 @@ test.describe("Frontend journeys", () => {
       testInfo.project.name !== "frontend-smoke",
       "Frontend journey tests only run in the frontend-smoke project",
     );
-    test.skip(!hasFrontend, "Set E2E_FRONTEND_BASE_URL to run frontend journeys");
+    test.skip(
+      !hasFrontend,
+      "Set E2E_FRONTEND_BASE_URL to run frontend journeys",
+    );
   });
 
   test("search page loads and accepts input", async ({ page }) => {
@@ -31,9 +34,7 @@ test.describe("Frontend journeys", () => {
     await expect(
       page.getByRole("heading", { name: "Comparateur de votes" }),
     ).toBeVisible();
-    await expect(
-      page.getByText("Aucun député sélectionné"),
-    ).toBeVisible();
+    await expect(page.getByText("Aucun député sélectionné")).toBeVisible();
   });
 
   test("depute page shows load-more control when votes exist", async ({
@@ -45,7 +46,9 @@ test.describe("Frontend journeys", () => {
       test.skip(true, "No deputy data available for pagination test");
     }
     await deputyLink.first().click();
-    await expect(page.getByRole("heading", { level: 2, name: "Votes" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Votes" }),
+    ).toBeVisible();
     const loadMore = page.getByRole("button", { name: "Charger plus" });
     if ((await loadMore.count()) > 0) {
       await expect(loadMore).toBeVisible();
@@ -59,7 +62,9 @@ test.describe("Frontend journeys", () => {
       page.getByRole("heading", { name: "Transparence des votes" }),
     ).toBeVisible();
     await page.goto("/recherche");
-    await expect(page.getByRole("heading", { name: "Recherche" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Recherche" }),
+    ).toBeVisible();
   });
 
   test("search page shows error fallback when API fails", async ({ page }) => {
@@ -75,7 +80,9 @@ test.describe("Frontend journeys", () => {
   test("scrutin results link navigates from search", async ({ page }) => {
     await page.goto("/recherche?q=projet&type=scrutin");
     await page.waitForTimeout(500);
-    const scrutinLink = page.getByRole("link").filter({ hasText: "Scrutin n°" });
+    const scrutinLink = page
+      .getByRole("link")
+      .filter({ hasText: "Scrutin n°" });
     if ((await scrutinLink.count()) === 0) {
       test.skip(true, "No scrutin data available for navigation test");
     }
