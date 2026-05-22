@@ -6,6 +6,8 @@ declare module "node-stream-zip" {
     isDirectory: boolean;
     compressedSize: number;
     size: number;
+    /** External file attributes (Unix mode in upper 16 bits when present). */
+    attr: number;
   }
 
   interface StreamZipOptions {

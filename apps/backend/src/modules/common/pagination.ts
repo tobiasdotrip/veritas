@@ -31,7 +31,7 @@ export function encodeCursor(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
-const MAX_CURSOR_LENGTH = 1024;
+const MAX_CURSOR_LENGTH = 2048;
 
 export function decodeCursor(cursor: string): { date: string; id: string } {
   if (cursor.length > MAX_CURSOR_LENGTH) {

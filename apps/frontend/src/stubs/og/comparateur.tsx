@@ -1,4 +1,5 @@
 // @ts-nocheck
+// IGNORE: security review required before activation
 // Stub — createAPIFileRoute n'est pas exporté par @tanstack/react-start 1.168.6
 // Nécessite une mise à jour vers >=1.170 pour les routes API file-based.
 import { createAPIFileRoute } from "@tanstack/react-start";

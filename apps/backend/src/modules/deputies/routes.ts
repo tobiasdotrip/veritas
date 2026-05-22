@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { ThemeSlugOptional } from "@veritas/shared/schemas";
 import { createDeputyRepository } from "./repository.js";
 import { createDeputyService } from "./service.js";
 import { CacheService, getRedis } from "../common/cache.js";
@@ -197,7 +198,7 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         from: z.iso.date().optional(),
         to: z.iso.date().optional(),
         type: z.string().optional(),
-        theme: z.string().optional(),
+        theme: ThemeSlugOptional,
         position: z
           .enum(["pour", "contre", "abstention", "nonVotant"])
           .optional(),

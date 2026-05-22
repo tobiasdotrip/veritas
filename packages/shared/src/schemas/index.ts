@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+/** Slug thématique (ex. "sante", "economie-budget"). */
+export const ThemeSlug = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/)
+  .max(50);
+
+export const ThemeSlugOptional = ThemeSlug.optional();
+
 export const CursorPaginationQuery = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
   cursor: z.string().optional(),
@@ -25,7 +33,7 @@ export const DeputyVotesQuery = z.object({
   type: z
     .enum(["solennel", "motion_censure", "amendement", "budget", "autre"])
     .optional(),
-  theme: z.string().optional(),
+  theme: ThemeSlugOptional,
   position: z.enum(["pour", "contre", "abstention", "nonVotant"]).optional(),
   ...CursorPaginationQuery.shape,
 });
@@ -35,7 +43,7 @@ export const SearchScrutinsQuery = z.object({
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
   type: z.string().optional(),
-  theme: z.string().optional(),
+  theme: ThemeSlugOptional,
   sort: z.enum(["date_desc", "date_asc", "relevance"]).default("date_desc"),
   ...CursorPaginationQuery.shape,
 });

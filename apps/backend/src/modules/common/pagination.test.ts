@@ -46,7 +46,7 @@ describe("encodeCursor / decodeCursor", () => {
   });
 
   it("throws ValidationError on oversized cursor", () => {
-    const huge = "a".repeat(1025);
+    const huge = "a".repeat(2049);
     expect(() => decodeCursor(huge)).toThrow(ValidationError);
     expect(() => decodeCursor(huge)).toThrow("Cursor too large");
   });

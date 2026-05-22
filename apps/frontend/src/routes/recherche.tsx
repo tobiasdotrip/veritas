@@ -18,14 +18,22 @@ import {
   defaultRechercheSearch,
   type RechercheSearch,
 } from "@/lib/route-search";
+import { ThemeSlugOptional } from "@veritas/shared/schemas";
 
 function validateSearch(search: Record<string, unknown>): RechercheSearch {
+  const theme =
+    typeof search.theme === "string"
+      ? ThemeSlugOptional.safeParse(search.theme).success
+        ? search.theme
+        : undefined
+      : undefined;
+
   return {
     q: typeof search.q === "string" ? search.q : undefined,
     type: ["depute", "scrutin", "all"].includes(search.type as string)
       ? (search.type as "depute" | "scrutin" | "all")
       : defaultRechercheSearch.type,
-    theme: typeof search.theme === "string" ? search.theme : undefined,
+    theme,
   };
 }
 

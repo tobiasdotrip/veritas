@@ -1,16 +1,11 @@
 import StreamZip from "node-stream-zip";
 import { resolveSafeZipEntryPath } from "./safe-zip-path.js";
-
-interface ZipEntry {
-  name: string;
-  attr: number;
-}
-
-function isZipEntrySymlink(entry: ZipEntry): boolean {
-  // Info-ZIP stores Unix file mode in the upper 16 bits of external attributes
-  const mode = (entry.attr >>> 16) & 0xffff;
-  return (mode & 0o170000) === 0o120000; // S_IFLNK
-}
+import {
+  assertJsonZipEntry,
+  assertSafeZipArchive,
+  isZipEntrySymlink,
+  type ZipEntryAttributes,
+} from "./zip-entry-type.js";
 
 /**
  * Extracts the first JSON entry from a ZIP archive.
@@ -27,7 +22,7 @@ export async function extractJsonEntryFromZip(
   const zip = new (
     StreamZip as unknown as {
       async: new (opts: { file: string }) => {
-        entries: () => Promise<Record<string, ZipEntry>>;
+        entries: () => Promise<Record<string, ZipEntryAttributes>>;
         extract: (name: string, path: string) => Promise<void>;
         close: () => Promise<void>;
       };
@@ -36,12 +31,15 @@ export async function extractJsonEntryFromZip(
 
   try {
     const entries = await zip.entries();
+    assertSafeZipArchive(entries);
+
     const jsonEntry = Object.values(entries).find((e) =>
       e.name.endsWith(".json"),
     );
     if (!jsonEntry) {
       throw new Error(`No JSON entry found in ${zipPath}`);
     }
+    assertJsonZipEntry(jsonEntry);
 
     const extractedPath = resolveSafeZipEntryPath(
       tempDir,

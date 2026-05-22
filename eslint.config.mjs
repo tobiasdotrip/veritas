@@ -10,7 +10,7 @@ export default tseslint.config(
       "**/.output/**",
       "**/drizzle/**",
       "apps/frontend/src/routeTree.gen.ts",
-      "**/routes/api/og/**",
+      "apps/frontend/src/stubs/og/**",
     ],
   },
   eslint.configs.recommended,

@@ -10,11 +10,7 @@ import {
 } from "../../db/schema.js";
 import { DateString } from "../common/schemas.js";
 import { rethrowTextSearchValidationError } from "../common/db-errors.js";
-
-function toPrefixTsQuery(q: string): string {
-  const safeQ = q.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
-  return safeQ ? `${safeQ}:*` : "";
-}
+import { toPrefixTsQuery } from "./ts-query.js";
 
 const SuggestionSchema = z.object({
   type: z.enum(["deputy", "scrutin"]),
@@ -85,15 +81,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             lastName: deputies.lastName,
             slug: deputies.slug,
             rank: sql<number>`ts_rank(
-            to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')),
-            to_tsquery('french', ${tsQuery})
-          )`,
+            to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
+            to_tsquery('french', unaccent(${tsQuery}))
+          ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
           })
           .from(deputies)
           .where(
             sql`
-            to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
-            @@ to_tsquery('french', ${tsQuery})
+            to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')))
+            @@ to_tsquery('french', unaccent(${tsQuery}))
           `,
           )
           .orderBy(desc(sql`ts_rank`))
@@ -106,15 +102,15 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
             titre: scrutins.titre,
             slug: scrutins.id,
             rank: sql<number>`ts_rank(
-            to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')),
-            to_tsquery('french', ${tsQuery})
-          )`,
+            to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
+            to_tsquery('french', unaccent(${tsQuery}))
+          ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
           })
           .from(scrutins)
           .where(
             sql`
-            to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
-            @@ to_tsquery('french', ${tsQuery})
+            to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
+            @@ to_tsquery('french', unaccent(${tsQuery}))
           `,
           )
           .orderBy(desc(sql`ts_rank`))
@@ -198,16 +194,16 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
           )
           .where(
             sql`
-            to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))
-            @@ plainto_tsquery('french', ${q})
+            to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')))
+            @@ plainto_tsquery('french', unaccent(${q}))
           `,
           )
           .orderBy(
             desc(
               sql`ts_rank(
-              to_tsvector('french', coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, '')),
-              plainto_tsquery('french', ${q})
-            )`,
+              to_tsvector('french', unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))),
+              plainto_tsquery('french', unaccent(${q}))
+            ) / greatest(length(unaccent(coalesce(${deputies.lastName}, '') || ' ' || coalesce(${deputies.firstName}, ''))), 1)`,
             ),
           )
           .limit(maxResults);
@@ -226,16 +222,16 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
           .from(scrutins)
           .where(
             sql`
-            to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))
-            @@ plainto_tsquery('french', ${q})
+            to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')))
+            @@ plainto_tsquery('french', unaccent(${q}))
           `,
           )
           .orderBy(
             desc(
               sql`ts_rank(
-              to_tsvector('french', coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, '')),
-              plainto_tsquery('french', ${q})
-            )`,
+              to_tsvector('french', unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))),
+              plainto_tsquery('french', unaccent(${q}))
+            ) / greatest(length(unaccent(coalesce(${scrutins.titre}, '') || ' ' || coalesce(${scrutins.objet}, ''))), 1)`,
             ),
           )
           .limit(maxResults);

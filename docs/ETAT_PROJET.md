@@ -144,7 +144,7 @@ Voir `apps/backend/.env.example`. Le backend charge `dotenv` au démarrage ; l�
 | CVE-2026-45321 (TanStack Router/Start) | Versions hors fenêtre malveillante ; `pnpm audit:tanstack` ; deps `>= 1.170.5` / `>= 1.168.7` |
 | SSRF ETL                               | `validateEtlUrl` (HTTPS + hôte AN)                                                            |
 | Zip slip                               | `resolveSafeZipEntryPath` avant extraction                                                    |
-| Zip entry types                        | `assertSafeZipArchive` (rejette symlink, FIFO, device, socket)                               |
+| Zip entry types                        | `assertSafeZipArchive` (rejette symlink, FIFO, device, socket)                                |
 | Dépendances                            | Voir `docs/STACK_VERSIONS.md`                                                                 |
 
 ---

@@ -1,13 +1,14 @@
 // @ts-nocheck
+// IGNORE: security review required before activation
 // Stub — createAPIFileRoute n'est pas exporté par @tanstack/react-start 1.168.6
 // Nécessite une mise à jour vers >=1.170 pour les routes API file-based.
 import { createAPIFileRoute } from "@tanstack/react-start";
 import satori from "satori";
 
-export const APIRoute = createAPIFileRoute("/api/og/depute")({
+export const APIRoute = createAPIFileRoute("/api/og/scrutin")({
   GET: async ({ request }: { request: Request }) => {
     const { searchParams } = new URL(request.url);
-    const slug = searchParams.get("slug") ?? "depute";
+    const id = searchParams.get("id") ?? "scrutin";
 
     const svg = await satori(
       <div
@@ -24,28 +25,16 @@ export const APIRoute = createAPIFileRoute("/api/og/depute")({
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: "24px",
+            flexDirection: "column",
+            gap: "16px",
             marginBottom: "32px",
           }}
         >
-          <div
-            style={{
-              width: "120px",
-              height: "120px",
-              borderRadius: "9999px",
-              backgroundColor: "#f3f4f6",
-            }}
-          />
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div
-              style={{ fontSize: "48px", fontWeight: 700, color: "#111827" }}
-            >
-              {slug}
-            </div>
-            <div style={{ fontSize: "24px", color: "#4b5563" }}>
-              Fiche député — Veritas
-            </div>
+          <div style={{ fontSize: "24px", color: "#4b5563" }}>
+            Scrutin n°{id}
+          </div>
+          <div style={{ fontSize: "48px", fontWeight: 700, color: "#111827" }}>
+            Résultat du scrutin
           </div>
         </div>
         <div
@@ -56,9 +45,9 @@ export const APIRoute = createAPIFileRoute("/api/og/depute")({
           }}
         >
           {[
-            { label: "Participation", value: "—" },
-            { label: "Loyauté", value: "—" },
-            { label: "Votes", value: "—" },
+            { label: "Pour", value: "—", color: "#15803d" },
+            { label: "Contre", value: "—", color: "#b91c1c" },
+            { label: "Abstentions", value: "—", color: "#b45309" },
           ].map((k) => (
             <div
               key={k.label}
@@ -76,7 +65,7 @@ export const APIRoute = createAPIFileRoute("/api/og/depute")({
                 {k.label}
               </div>
               <div
-                style={{ fontSize: "32px", fontWeight: 700, color: "#111827" }}
+                style={{ fontSize: "32px", fontWeight: 700, color: k.color }}
               >
                 {k.value}
               </div>
