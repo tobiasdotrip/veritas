@@ -38,7 +38,7 @@ describeIntegration("GET /api/v1/groups", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.groupId).toBe(FIXTURE.group.id);
-    expect(response.body.data.totalMembers).toBe(2);
+    expect(response.body.data.totalMembers).toBe(3);
     expect(response.body.data.totalScrutins).toBe(3);
     expect(response.body.data.avgParticipationRate).toBeGreaterThan(0);
     expect(response.body.data.voteDistribution.pour).toBeGreaterThan(0);

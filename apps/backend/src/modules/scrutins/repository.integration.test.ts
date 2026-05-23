@@ -115,10 +115,14 @@ describeIntegration("ScrutinRepository", () => {
       { limit: 10, offset: 0 },
     );
 
-    expect(result.total).toBe(2);
-    expect(result.rows).toHaveLength(2);
+    expect(result.total).toBe(3);
+    expect(result.rows).toHaveLength(3);
     expect(result.rows.map((r) => r.deputySlug).sort()).toEqual(
-      [FIXTURE.deputies.dupont.slug, FIXTURE.deputies.martin.slug].sort(),
+      [
+        FIXTURE.deputies.dupont.slug,
+        FIXTURE.deputies.martin.slug,
+        FIXTURE.deputies.blanc.slug,
+      ].sort(),
     );
   });
 
@@ -129,8 +133,11 @@ describeIntegration("ScrutinRepository", () => {
       { limit: 10, offset: 0 },
     );
 
-    expect(result.total).toBe(1);
-    expect(result.rows[0]!.deputySlug).toBe(FIXTURE.deputies.martin.slug);
-    expect(result.rows[0]!.position).toBe("contre");
+    expect(result.total).toBe(2);
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows.map((r) => r.deputySlug).sort()).toEqual(
+      [FIXTURE.deputies.martin.slug, FIXTURE.deputies.blanc.slug].sort(),
+    );
+    expect(result.rows.every((r) => r.position === "contre")).toBe(true);
   });
 });

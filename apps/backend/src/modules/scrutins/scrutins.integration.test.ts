@@ -119,8 +119,8 @@ describeIntegration("GET /api/v1/scrutins", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body.total).toBe(2);
-    expect(response.body.data).toHaveLength(2);
+    expect(response.body.total).toBe(3);
+    expect(response.body.data).toHaveLength(3);
   });
 
   it("filters scrutin votes by position", async () => {
@@ -133,10 +133,11 @@ describeIntegration("GET /api/v1/scrutins", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body.total).toBe(1);
-    expect(response.body.data[0]!.deputySlug).toBe(
-      FIXTURE.deputies.martin.slug,
+    expect(response.body.total).toBe(2);
+    expect(response.body.data).toHaveLength(2);
+    expect(response.body.data.map((v) => v.deputySlug).sort()).toEqual(
+      [FIXTURE.deputies.martin.slug, FIXTURE.deputies.blanc.slug].sort(),
     );
-    expect(response.body.data[0]!.position).toBe("contre");
+    expect(response.body.data.every((v) => v.position === "contre")).toBe(true);
   });
 });
