@@ -5,10 +5,7 @@ import { createScrutinRepository } from "./repository.js";
 import { createScrutinService } from "./service.js";
 import { CacheService, getRedis } from "../common/cache.js";
 import { getDb } from "../../db/client.js";
-import {
-  CursorPaginationQuery,
-  OffsetPaginationQuery,
-} from "../common/pagination.js";
+import { CursorPaginationQuery } from "../common/pagination.js";
 import { DateString } from "../common/schemas.js";
 
 const ScrutinSchema = z.object({
@@ -64,6 +61,7 @@ const ScrutinVoteSchema = z.object({
   groupId: z.string(),
   groupName: z.string(),
   groupAbbreviation: z.string().nullable(),
+  deputyPhotoUrl: z.string().nullable(),
 });
 
 const plugin: FastifyPluginAsyncZod = async function (fastify) {
@@ -144,7 +142,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
         position: z
           .enum(["pour", "contre", "abstention", "nonVotant"])
           .optional(),
-        ...OffsetPaginationQuery.shape,
+        limit: z.coerce.number().min(1).max(600).default(50),
+        offset: z.coerce.number().min(0).default(0),
       }),
       response: {
         200: z.object({

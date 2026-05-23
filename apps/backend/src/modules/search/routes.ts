@@ -281,9 +281,8 @@ const plugin: FastifyPluginAsyncZod = async function (fastify) {
     handler: async (req, reply) => {
       const { q, theme, limit: maxResults } = req.query;
 
-      // eslint-disable-next-line prefer-const
       let deputyRows: any[] | undefined = undefined;
-      // eslint-disable-next-line prefer-const
+
       let scrutinRows: any[] | undefined = undefined;
 
       try {

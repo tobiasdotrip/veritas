@@ -207,6 +207,7 @@ export function createScrutinRepository(db: Database) {
           deputyFirstName: deputies.firstName,
           deputyLastName: deputies.lastName,
           deputySlug: deputies.slug,
+          deputyPhotoUrl: deputies.photoUrl,
           groupId: politicalGroups.id,
           groupName: politicalGroups.name,
           groupAbbreviation: politicalGroups.abbreviation,

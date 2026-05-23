@@ -10,7 +10,6 @@ import {
 import { setupTestDatabase, teardownTestDatabase } from "./database.js";
 import { resetTestFixtures } from "./fixtures.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const describeIntegration: any = process.env.DATABASE_URL
   ? describe
   : describe.skip;
