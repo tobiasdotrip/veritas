@@ -31,10 +31,20 @@ export const FIXTURE = {
       circoNumber: 2,
       circoLabel: "Rhône 2",
     },
+    blanc: {
+      id: "PA_TEST003",
+      firstName: "Jean-Michel",
+      lastName: "Blanc",
+      slug: "jean-michel-blanc",
+      departmentId: "013",
+      circoNumber: 3,
+      circoLabel: "Bouches-du-Rhône 3",
+    },
   },
   mandates: {
     dupont: { id: "PM_TEST001" },
     martin: { id: "PM_TEST002" },
+    blanc: { id: "PM_TEST003" },
   },
   scrutins: {
     sante: {
@@ -157,6 +167,15 @@ export async function seedTestFixtures(pool: Pool): Promise<void> {
       circoNumber: deputies.martin.circoNumber,
       circoLabel: deputies.martin.circoLabel,
     },
+    {
+      id: deputies.blanc.id,
+      firstName: deputies.blanc.firstName,
+      lastName: deputies.blanc.lastName,
+      slug: deputies.blanc.slug,
+      departmentId: deputies.blanc.departmentId,
+      circoNumber: deputies.blanc.circoNumber,
+      circoLabel: deputies.blanc.circoLabel,
+    },
   ]);
 
   await db.insert(schema.deputyMandates).values([
@@ -178,6 +197,15 @@ export async function seedTestFixtures(pool: Pool): Promise<void> {
       circoNumber: deputies.martin.circoNumber,
       circoLabel: deputies.martin.circoLabel,
     },
+    {
+      id: mandates.blanc.id,
+      deputyId: deputies.blanc.id,
+      legislature: legislatureId,
+      startDate: mandateStart,
+      departmentId: deputies.blanc.departmentId,
+      circoNumber: deputies.blanc.circoNumber,
+      circoLabel: deputies.blanc.circoLabel,
+    },
   ]);
 
   await db.insert(schema.deputyGroupAffiliations).values([
@@ -191,6 +219,12 @@ export async function seedTestFixtures(pool: Pool): Promise<void> {
       deputyId: deputies.martin.id,
       politicalGroupId: group.id,
       mandateId: mandates.martin.id,
+      startDate: mandateStart,
+    },
+    {
+      deputyId: deputies.blanc.id,
+      politicalGroupId: group.id,
+      mandateId: mandates.blanc.id,
       startDate: mandateStart,
     },
   ]);
@@ -298,6 +332,27 @@ export async function seedTestFixtures(pool: Pool): Promise<void> {
       mandateId: mandates.martin.id,
       politicalGroupId: group.id,
       position: "nonVotant",
+    },
+    {
+      scrutinId: scrutins.sante.id,
+      deputyId: deputies.blanc.id,
+      mandateId: mandates.blanc.id,
+      politicalGroupId: group.id,
+      position: "pour",
+    },
+    {
+      scrutinId: scrutins.budget.id,
+      deputyId: deputies.blanc.id,
+      mandateId: mandates.blanc.id,
+      politicalGroupId: group.id,
+      position: "contre",
+    },
+    {
+      scrutinId: scrutins.motion.id,
+      deputyId: deputies.blanc.id,
+      mandateId: mandates.blanc.id,
+      politicalGroupId: group.id,
+      position: "pour",
     },
   ]);
 }

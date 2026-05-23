@@ -22,8 +22,34 @@ describe("toPrefixTsQuery", () => {
     expect(toPrefixTsQuery("martin")).toBe("martin:*");
   });
 
-  it("strips punctuation from hyphenated names", () => {
-    expect(toPrefixTsQuery("jean-michel")).toBe("jeanmichel:*");
+  it("preserves hyphens in compound names", () => {
+    expect(toPrefixTsQuery("jean-michel")).toBe("jean-michel:*");
+  });
+
+  it("handles two-segment compound (most common case)", () => {
+    expect(toPrefixTsQuery("marie-christine")).toBe("marie-christine:*");
+  });
+
+  it("returns empty for double-dash input", () => {
+    expect(toPrefixTsQuery("--")).toBe("");
+  });
+
+  it("strips leading hyphens from words", () => {
+    expect(toPrefixTsQuery("-dupont")).toBe("dupont:*");
+  });
+
+  it("strips trailing hyphens from words", () => {
+    expect(toPrefixTsQuery("dupont-")).toBe("dupont:*");
+  });
+
+  it("collapses repeated hyphens", () => {
+    expect(toPrefixTsQuery("jean--michel")).toBe("jean-michel:*");
+  });
+
+  it("handles multi-hyphen compound names", () => {
+    expect(toPrefixTsQuery("marie-christine-blanc")).toBe(
+      "marie-christine-blanc:*",
+    );
   });
 
   it("preserves accented characters", () => {

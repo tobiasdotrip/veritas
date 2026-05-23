@@ -136,4 +136,33 @@ describeIntegration("GET /api/v1/search", () => {
       response.body.data.some((item) => item.id === FIXTURE.deputies.dupont.id),
     ).toBe(true);
   });
+
+  it("finds deputy with hyphenated first name via prefix tsquery", async () => {
+    const response = await ctx.injectJson<{
+      data: { type: string; id: string }[];
+    }>(ctx.app, {
+      method: "GET",
+      url: "/api/v1/search/suggestions?q=jean-michel&limit=10",
+    });
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.some((item) => item.id === FIXTURE.deputies.blanc.id),
+    ).toBe(true);
+  });
+
+  it("finds compound-name deputy by partial match via trigram fallback", async () => {
+    const response = await ctx.injectJson<{
+      data: { type: string; id: string }[];
+    }>(ctx.app, {
+      method: "GET",
+      url: "/api/v1/search/suggestions?q=mic&limit=10",
+    });
+
+    expect(response.status).toBe(200);
+    // "mic" ≤ 3 chars triggers pg_trgm, should fuzzy-match Jean-Michel
+    expect(
+      response.body.data.some((item) => item.id === FIXTURE.deputies.blanc.id),
+    ).toBe(true);
+  });
 });
