@@ -74,14 +74,18 @@ export interface ScrutinGroupVote {
 }
 
 export interface ScrutinIndividualVote {
-  deputyId: string;
-  firstName: string;
-  lastName: string;
-  photoUrl: string | null;
+  voteId: number;
   position: VotePosition;
-  parDelegation: boolean;
+  parDelegation: boolean | null;
   causePositionVote: string | null;
+  deputyId: string;
+  deputyFirstName: string;
+  deputyLastName: string;
+  deputySlug: string;
+  groupId: string;
+  groupName: string;
   groupAbbreviation: string | null;
+  deputyPhotoUrl: string | null;
 }
 
 export interface ComparisonResult {

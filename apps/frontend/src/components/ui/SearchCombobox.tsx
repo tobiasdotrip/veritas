@@ -39,6 +39,7 @@ export function SearchCombobox({
   const [activeIndex, setActiveIndex] = React.useState(-1);
   const listRef = React.useRef<HTMLUListElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const blurTimeoutRef = React.useRef<ReturnType<typeof setTimeout>>(undefined);
   const id = React.useId();
   const listId = `${id}-listbox`;
 
@@ -49,7 +50,16 @@ export function SearchCombobox({
       if (!map.has(g)) map.set(g, []);
       map.get(g)!.push(opt);
     }
-    return Array.from(map.entries());
+    // Toujours afficher Députés avant Scrutins
+    const order = ["Députés", "Scrutins"];
+    return Array.from(map.entries()).sort(([a], [b]) => {
+      const ia = order.indexOf(a);
+      const ib = order.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return a.localeCompare(b);
+    });
   }, [options]);
 
   React.useEffect(() => {
@@ -57,6 +67,23 @@ export function SearchCombobox({
   }, [options]);
 
   const totalOptions = options.length;
+
+  const closeDropdown = () => {
+    setOpen(false);
+    setActiveIndex(-1);
+  };
+
+  const handleBlur = () => {
+    // Petit délai pour laisser le onClick de l'option se déclencher avant de fermer
+    blurTimeoutRef.current = setTimeout(() => closeDropdown(), 150);
+  };
+
+  // Nettoyage du timeout au démontage
+  React.useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+    };
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
@@ -74,12 +101,10 @@ export function SearchCombobox({
       e.preventDefault();
       if (open && activeIndex >= 0 && options[activeIndex]) {
         onSelect?.(options[activeIndex]);
-        setOpen(false);
-        setActiveIndex(-1);
+        closeDropdown();
       }
     } else if (e.key === "Escape") {
-      setOpen(false);
-      setActiveIndex(-1);
+      closeDropdown();
     }
   };
 
@@ -119,7 +144,11 @@ export function SearchCombobox({
             onChange?.(e.target.value);
             setOpen(true);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+            setOpen(true);
+          }}
+          onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           iconLeft={<Search className="h-4 w-4" aria-hidden="true" />}
           className={inputClassName}
@@ -166,8 +195,7 @@ export function SearchCombobox({
                         onMouseEnter={() => setActiveIndex(globalIndex)}
                         onClick={() => {
                           onSelect?.(opt);
-                          setOpen(false);
-                          setActiveIndex(-1);
+                          closeDropdown();
                         }}
                       >
                         <span className="block">{opt.label}</span>

@@ -1,47 +1,123 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1d4ed8;
-  --color-primary-hover: #1e40af;
-  --color-success: #15803d;
-  --color-success-bg: #dcfce7;
-  --color-danger: #b91c1c;
-  --color-danger-bg: #fee2e2;
-  --color-neutral: #6b7280;
-  --color-neutral-bg: #f3f4f6;
-  --color-warning: #b45309;
-  --color-warning-bg: #fef3c7;
-  --color-surface: #ffffff;
-  --color-surface-raised: #f9fafb;
-  --color-border: #e5e7eb;
-  --color-text-primary: #111827;
-  --color-text-secondary: #4b5563;
-  --color-text-muted: #9ca3af;
+  /*
+   * Palette officielle — Système de Design de l'État (DSFR)
+   * https://www.systeme-de-design.gouv.fr
+   */
 
+  /* ── Primaire : Bleu France ── */
+  --color-primary: #000091;
+  --color-primary-hover: #1212ff;
+  --color-primary-active: #2323ff;
+  --color-primary-light: #6a6af4;
+  --color-primary-bg: #e3e3fd;
+  --color-primary-bg-subtle: #f5f5fe;
+
+  /* ── Accent : Rouge Marianne ── */
+  --color-accent: #e1000f;
+  --color-accent-hover: #b8000c;
+  --color-accent-bg: #fde8ec;
+
+  /* ── Sémantique ── */
+  --color-success: #00a95f;
+  --color-success-bg: #e6f9f0;
+  --color-danger: #e1000f;
+  --color-danger-bg: #fde8ec;
+  --color-warning: #c3992a;
+  --color-warning-bg: #fef3c7;
+  --color-info: #417dc4;
+  --color-info-bg: #e8f0fa;
+
+  /* ── Neutres ── */
+  --color-neutral: #666666;
+  --color-neutral-bg: #f0f0f0;
+
+  /* ── Surfaces ── */
+  --color-surface: #ffffff;
+  --color-surface-raised: #f5f5fe;
+  --color-surface-alt: #f6f6f6;
+  --color-border: #dddddd;
+  --color-border-light: #e8e8e8;
+
+  /* ── Texte ── */
+  --color-text-primary: #161616;
+  --color-text-secondary: #555555;
+  --color-text-muted: #929292;
+  --color-text-inverted: #ffffff;
+
+  /* ── Espacements ── */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
   --space-2xl: 48px;
+  --space-3xl: 64px;
 
-  --radius-sm: 6px;
+  /* ── Rayons ── */
+  --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-  --shadow-focus: 0 0 0 3px rgba(29,78,216,0.3);
+  /* ── Ombres ── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --shadow-focus: 0 0 0 3px rgba(0, 0, 145, 0.25);
 
+  /* ── Transitions ── */
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;
 }
 
+/* ── Keyframes ── */
+@keyframes accordion-down {
+  from { height: 0; opacity: 0; }
+  to   { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to   { height: 0; opacity: 0; }
+}
+
+/* ── Base ── */
+body {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar subtile ── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--color-surface-alt); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* ── Sélection ── */
+::selection {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+/* ── Accessibilité ── */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;
     --duration-base: 0ms;
     --duration-slow: 0ms;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

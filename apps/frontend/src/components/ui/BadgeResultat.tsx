@@ -1,15 +1,15 @@
 import { cn } from "@/lib/utils";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Clock } from "lucide-react";
 
 const config = {
   adopté: {
     label: "Adopté",
-    icon: <CheckCircle2 className="h-4 w-4" aria-hidden="true" />,
+    icon: <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />,
     classes: "bg-success-bg text-success",
   },
   rejeté: {
     label: "Rejeté",
-    icon: <XCircle className="h-4 w-4" aria-hidden="true" />,
+    icon: <XCircle className="h-3.5 w-3.5" aria-hidden="true" />,
     classes: "bg-danger-bg text-danger",
   },
 };
@@ -29,12 +29,13 @@ export function BadgeResultat({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full bg-neutral-bg px-2.5 py-1 text-xs font-medium text-neutral",
+          "inline-flex items-center gap-1.5 rounded-full bg-neutral-bg px-2.5 py-1 text-xs font-semibold text-neutral",
           size === "md" && "px-3 py-1.5 text-sm",
           className,
         )}
         aria-label="Résultat inconnu"
       >
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
         En cours
       </span>
     );
@@ -43,7 +44,7 @@ export function BadgeResultat({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
         c.classes,
         size === "md" && "px-3 py-1.5 text-sm",
         className,

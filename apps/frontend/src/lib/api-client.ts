@@ -47,13 +47,13 @@ function parseErrorBody(
 const API_BASE_URL =
   typeof import.meta.env !== "undefined" && import.meta.env.VITE_API_BASE_URL
     ? import.meta.env.VITE_API_BASE_URL
-    : "http://localhost:3000";
+    : "http://localhost:3000/api/v1";
 
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
 ): Promise<ApiSuccess<T>> {
-  const url = new URL(path, API_BASE_URL).toString();
+  const url = `${API_BASE_URL}${path}`;
   const res = await fetch(url, {
     headers: {
       "Content-Type": "application/json",

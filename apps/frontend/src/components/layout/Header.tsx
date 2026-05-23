@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
 import { Search, Menu, X } from "lucide-react";
@@ -16,6 +16,8 @@ export function Header({
   searchValue: controlledValue,
 }: HeaderProps) {
   const navigate = useNavigate();
+  const routerState = useRouterState();
+  const isHomepage = routerState.location.pathname === "/";
   const [internalQuery, setInternalQuery] = React.useState("");
   const searchValue = controlledValue ?? internalQuery;
   const [scrolled, setScrolled] = React.useState(false);
@@ -43,21 +45,33 @@ export function Header({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b border-transparent bg-surface/90 backdrop-blur transition-all duration-base",
-        scrolled && "border-border shadow-sm",
+        "sticky top-0 z-40 bg-primary text-white transition-shadow duration-base",
+        scrolled && "shadow-lg",
       )}
     >
+      {/* Bande tricolore subtile en haut */}
+      <div className="flex h-1">
+        <div className="flex-1 bg-primary" />
+        <div className="flex-1 bg-white" />
+        <div className="flex-1 bg-accent" />
+      </div>
+
       <Container>
         <div className="flex h-14 items-center gap-4 sm:h-16">
           <Link
             to="/"
-            className="text-lg font-bold tracking-tight text-text-primary focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
+            className="flex items-center gap-2 text-lg font-bold tracking-tight text-white focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/50"
             preload="intent"
           >
+            <span aria-hidden="true" className="text-xl">
+              🏛️
+            </span>
             Veritas
           </Link>
 
-          <div className="hidden flex-1 sm:block">
+          <div
+            className={cn("hidden flex-1 sm:block", isHomepage && "sm:hidden")}
+          >
             <form
               role="search"
               className="mx-auto max-w-md"
@@ -78,25 +92,25 @@ export function Header({
                     setInternalQuery(value);
                   }
                 }}
-                iconLeft={<Search className="h-4 w-4" />}
+                iconLeft={<Search className="h-4 w-4 text-text-muted" />}
                 clearable
                 aria-label="Rechercher"
-                className="h-10"
+                className="h-10 border-white/20 bg-white/10 text-white placeholder:text-white/50 focus-visible:ring-white/30"
               />
             </form>
           </div>
 
-          <nav className="hidden items-center gap-4 sm:flex">
+          <nav className="hidden items-center gap-1 sm:flex">
             <Link
               to="/comparateur"
-              className="text-sm font-medium text-text-secondary hover:text-text-primary focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
+              className="rounded-md px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/30"
               preload="intent"
             >
               Comparateur
             </Link>
             <Link
               to="/methodologie"
-              className="text-sm font-medium text-text-secondary hover:text-text-primary focus-visible:rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
+              className="rounded-md px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/30"
               preload="intent"
             >
               Méthodologie
@@ -106,7 +120,7 @@ export function Header({
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-text-secondary hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 sm:hidden"
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md text-white/80 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/30 sm:hidden"
             aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={mobileOpen}
           >
@@ -119,7 +133,7 @@ export function Header({
         </div>
 
         {mobileOpen && (
-          <div className="space-y-3 border-t border-border pb-4 pt-3 sm:hidden">
+          <div className="space-y-3 border-t border-white/10 pb-4 pt-3 sm:hidden">
             <form
               role="search"
               onSubmit={(e) => {
@@ -140,15 +154,16 @@ export function Header({
                     setInternalQuery(value);
                   }
                 }}
-                iconLeft={<Search className="h-4 w-4" />}
+                iconLeft={<Search className="h-4 w-4 text-text-muted" />}
                 clearable
                 aria-label="Rechercher"
+                className="border-white/20 bg-white/10 text-white placeholder:text-white/50"
               />
             </form>
-            <nav className="flex flex-col gap-2">
+            <nav className="flex flex-col gap-1">
               <Link
                 to="/comparateur"
-                className="rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
+                className="rounded-md px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/30"
                 onClick={() => setMobileOpen(false)}
                 preload="intent"
               >
@@ -156,7 +171,7 @@ export function Header({
               </Link>
               <Link
                 to="/methodologie"
-                className="rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30"
+                className="rounded-md px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/30"
                 onClick={() => setMobileOpen(false)}
                 preload="intent"
               >

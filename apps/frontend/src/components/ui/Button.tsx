@@ -4,21 +4,24 @@ import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 min-h-[44px] min-w-[44px]",
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-all duration-base focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:pointer-events-none disabled:opacity-50 min-h-[44px] min-w-[44px] cursor-pointer",
   {
     variants: {
       variant: {
-        primary: "bg-primary text-white hover:bg-primary-hover",
+        primary:
+          "bg-primary text-white hover:bg-primary-hover active:bg-primary-active shadow-sm",
         secondary:
-          "bg-surface-raised text-text-primary border border-border hover:bg-neutral-bg",
+          "bg-surface-raised text-text-primary border border-border-light hover:bg-primary-bg-subtle hover:border-primary-bg",
         ghost:
-          "bg-transparent text-text-secondary hover:bg-neutral-bg hover:text-text-primary",
-        danger: "bg-danger text-white hover:bg-red-800",
+          "bg-transparent text-text-secondary hover:bg-primary-bg-subtle hover:text-primary",
+        danger: "bg-danger text-white hover:bg-accent-hover shadow-sm",
+        outline:
+          "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-white",
       },
       size: {
-        sm: "px-3 py-1.5 text-sm",
-        md: "px-4 py-2 text-base",
-        lg: "px-6 py-3 text-lg",
+        sm: "px-3 py-1.5 text-sm rounded-md",
+        md: "px-5 py-2.5 text-base rounded-lg",
+        lg: "px-6 py-3 text-lg rounded-lg",
       },
     },
     defaultVariants: {
@@ -33,7 +36,6 @@ export interface ButtonProps
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
-  asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
