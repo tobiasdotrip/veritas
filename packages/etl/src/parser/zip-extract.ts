@@ -1,14 +1,76 @@
 import StreamZip from "node-stream-zip";
-import { resolveSafeZipEntryPath } from "./safe-zip-path.js";
+import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
 import {
-  assertJsonZipEntry,
   assertSafeZipArchive,
+  assertJsonZipEntry,
   isZipEntrySymlink,
   type ZipEntryAttributes,
 } from "./zip-entry-type.js";
 
+type AsyncZip = {
+  entries: () => Promise<Record<string, ZipEntryAttributes>>;
+  extract: (name: string, path: string) => Promise<void>;
+  close: () => Promise<void>;
+};
+
+function openZip(zipPath: string): AsyncZip {
+  const StreamZipAsync = (
+    StreamZip as unknown as { async: new (opts: { file: string }) => AsyncZip }
+  ).async;
+  return new StreamZipAsync({ file: zipPath });
+}
+
 /**
- * Extracts the first JSON entry from a ZIP archive.
+ * Extracts ALL JSON entries from a zip subdirectory (e.g. "json/acteur/")
+ * into a flat directory on disk. Returns the list of extracted file paths.
+ */
+export async function extractAllJsonFromZipDir(
+  zipPath: string,
+  tempDir: string,
+  subDir: string,
+): Promise<string[]> {
+  const zip = openZip(zipPath);
+
+  try {
+    const entries = await zip.entries();
+    assertSafeZipArchive(entries);
+
+    const jsonEntries = Object.entries(entries).filter(
+      ([name, entry]) =>
+        name.startsWith(`${subDir}/`) &&
+        name.endsWith(".json") &&
+        !entry.isDirectory,
+    );
+
+    if (jsonEntries.length === 0) {
+      throw new Error(`No JSON entries found in ${subDir}/ within ${zipPath}`);
+    }
+
+    const outDir = resolve(tempDir, subDir);
+    await mkdir(outDir, { recursive: true });
+
+    const extractedPaths: string[] = [];
+    for (const [name, entry] of jsonEntries) {
+      if (isZipEntrySymlink(entry)) {
+        console.warn(`[etl] Skipping symlink entry in zip: ${name}`);
+        continue;
+      }
+      const fileName = name.split("/").pop()!;
+      const outPath = resolve(outDir, fileName);
+      await zip.extract(name, outPath);
+      extractedPaths.push(outPath);
+    }
+
+    return extractedPaths;
+  } finally {
+    await zip.close();
+  }
+}
+
+/**
+ * Extracts the first JSON entry from a ZIP archive (legacy, for scrutins
+ * where the zip contains a single large JSON file).
  *
  * Security note: symlink entries are rejected and paths are validated against
  * zip slip, but a TOCTOU race remains if a concurrent process creates a
@@ -19,15 +81,7 @@ export async function extractJsonEntryFromZip(
   zipPath: string,
   tempDir: string,
 ): Promise<string> {
-  const zip = new (
-    StreamZip as unknown as {
-      async: new (opts: { file: string }) => {
-        entries: () => Promise<Record<string, ZipEntryAttributes>>;
-        extract: (name: string, path: string) => Promise<void>;
-        close: () => Promise<void>;
-      };
-    }
-  ).async({ file: zipPath });
+  const zip = openZip(zipPath);
 
   try {
     const entries = await zip.entries();
@@ -41,14 +95,18 @@ export async function extractJsonEntryFromZip(
     }
     assertJsonZipEntry(jsonEntry);
 
-    const extractedPath = resolveSafeZipEntryPath(
-      tempDir,
-      jsonEntry.name,
-      isZipEntrySymlink(jsonEntry),
-    );
-    await zip.extract(jsonEntry.name, extractedPath);
-    return extractedPath;
+    const resolvedPath = resolveSafeZipEntryPath(tempDir, jsonEntry.name);
+    await zip.extract(jsonEntry.name, resolvedPath);
+    return resolvedPath;
   } finally {
     await zip.close();
   }
+}
+
+function resolveSafeZipEntryPath(tempDir: string, entryName: string): string {
+  const resolved = resolve(tempDir, entryName);
+  if (!resolved.startsWith(resolve(tempDir))) {
+    throw new Error(`Unsafe zip entry path: ${entryName} (zip slip attempt)`);
+  }
+  return resolved;
 }

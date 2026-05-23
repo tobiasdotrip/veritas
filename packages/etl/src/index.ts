@@ -79,9 +79,9 @@ export async function runEtlPipeline(
       `[etl] Deputies loaded: ${result.deputies.inserted} inserted, ${result.deputies.updated} updated`,
     );
 
-    // Mandates & affiliations sont émis en même temps que les députés ;
-    // on les recharge depuis le même fichier pour simplicité,
-    // ou on les extrait du même iter. Ici on relit le fichier pour itérer à nouveau.
+    // Collect mandates & affiliations from the same file.
+    // Organes (political groups) must be loaded BEFORE affiliations
+    // because affiliations reference political_groups via FK.
     const deputiesIter2 = parseDeputiesFromZip(
       deputiesResult.filePath,
       config.tempDir,
@@ -93,24 +93,6 @@ export async function runEtlPipeline(
       mandates.push(...d.mandates);
       affiliations.push(...d.affiliations);
     }
-    result.mandates = await loadMandates(
-      deps,
-      (async function* () {
-        for (const m of mandates) yield m;
-      })(),
-    );
-    result.affiliations = await loadAffiliations(
-      deps,
-      (async function* () {
-        for (const a of affiliations) yield a;
-      })(),
-    );
-    console.log(
-      `[etl] Mandates loaded: ${result.mandates.inserted} inserted, ${result.mandates.updated} updated`,
-    );
-    console.log(
-      `[etl] Affiliations loaded: ${result.affiliations.inserted} inserted`,
-    );
 
     // ─── 2. Organes ──────────────────────────────────────────────
     console.log("[etl] Step 2/4: Organes");
@@ -131,6 +113,26 @@ export async function runEtlPipeline(
     result.organes = await loadPoliticalGroups(deps, organesIter, config);
     console.log(
       `[etl] Organes loaded: ${result.organes.inserted} inserted, ${result.organes.updated} updated`,
+    );
+
+    // Load mandates and affiliations (now that organes/groups exist)
+    result.mandates = await loadMandates(
+      deps,
+      (async function* () {
+        for (const m of mandates) yield m;
+      })(),
+    );
+    console.log(
+      `[etl] Mandates loaded: ${result.mandates.inserted} inserted, ${result.mandates.updated} updated`,
+    );
+    result.affiliations = await loadAffiliations(
+      deps,
+      (async function* () {
+        for (const a of affiliations) yield a;
+      })(),
+    );
+    console.log(
+      `[etl] Affiliations loaded: ${result.affiliations.inserted} inserted`,
     );
 
     // ─── 3. Scrutins ─────────────────────────────────────────────

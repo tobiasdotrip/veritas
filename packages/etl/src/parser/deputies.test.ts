@@ -16,9 +16,11 @@ describe("parseDeputy", () => {
   it("generates a unique slug from acteur data", () => {
     const parsed = parseDeputy(
       {
-        uid: { "#text": "PA1234" },
-        etatCivil: {
-          ident: { prenom: "Marie", nom: "Dupont" },
+        acteur: {
+          uid: { "#text": "PA1234" },
+          etatCivil: {
+            ident: { prenom: "Marie", nom: "Dupont" },
+          },
         },
       },
       "17",

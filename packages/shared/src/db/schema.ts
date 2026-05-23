@@ -213,9 +213,9 @@ export const scrutins = pgTable(
       .notNull()
       .references(() => legislatures.id),
     numero: integer("numero").notNull(),
-    organeRef: varchar("organe_ref", { length: 20 }),
-    sessionRef: varchar("session_ref", { length: 20 }),
-    seanceRef: varchar("seance_ref", { length: 20 }),
+    organeRef: varchar("organe_ref", { length: 50 }),
+    sessionRef: varchar("session_ref", { length: 50 }),
+    seanceRef: varchar("seance_ref", { length: 50 }),
     dateScrutin: timestamp("date_scrutin", { mode: "date" }).notNull(),
     quantiemeJourSeance: integer("quantieme_jour_seance"),
     codeTypeVote: varchar("code_type_vote", { length: 50 }),

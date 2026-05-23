@@ -41,18 +41,29 @@ declare module "node-stream-zip" {
   export = StreamZip;
 }
 
-declare module "stream-json/Parser" {
+declare module "stream-json/Parser.js" {
   import type { Transform } from "node:stream";
-  export function parser(options?: Record<string, unknown>): Transform;
+  class Parser extends Transform {
+    static parser(options?: Record<string, unknown>): Parser;
+    static make(options?: Record<string, unknown>): Parser;
+  }
+  export default Parser;
 }
 
-declare module "stream-json/filters/Pick" {
+declare module "stream-json/filters/Pick.js" {
   import type { Transform } from "node:stream";
-  export function pick(options?: { filter?: string }): Transform;
+  class Pick extends Transform {
+    static pick(options?: { filter?: string }): Pick;
+    static make(options?: { filter?: string }): Pick;
+  }
+  export default Pick;
 }
 
-declare module "stream-json/streamers/StreamArray" {
+declare module "stream-json/streamers/StreamArray.js" {
   import type { Transform } from "node:stream";
-  export function streamArray(): Transform &
-    AsyncIterable<{ key: number; value: unknown }>;
+  class StreamArray extends Transform {
+    static streamArray(): StreamArray;
+    static make(): StreamArray;
+  }
+  export default StreamArray;
 }

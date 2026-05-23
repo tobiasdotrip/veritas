@@ -1,9 +1,5 @@
-import { createReadStream } from "node:fs";
-import { pipeline } from "node:stream/promises";
-import { parser } from "stream-json/Parser";
-import { extractJsonEntryFromZip } from "./zip-extract.js";
-import { pick } from "stream-json/filters/Pick";
-import { streamArray } from "stream-json/streamers/StreamArray";
+import { readFile } from "node:fs/promises";
+import { extractAllJsonFromZipDir } from "./zip-extract.js";
 
 export interface RawScrutin {
   uid: string;
@@ -14,9 +10,11 @@ export interface RawScrutin {
   seanceRef?: string;
   dateScrutin?: string;
   quantiemeJourSeance?: string;
-  codeTypeVote?: string;
-  libelleTypeVote?: string;
-  typeVote?: { typeMajorite?: string };
+  typeVote?: {
+    codeTypeVote?: string;
+    libelleTypeVote?: string;
+    typeMajorite?: string;
+  };
   sort?: { code?: string; libelle?: string };
   titre?: string;
   demandeur?: { texte?: string } | string;
@@ -31,12 +29,23 @@ export interface RawScrutin {
   };
 }
 
+export interface RawScrutinFile {
+  scrutin: RawScrutin;
+}
+
 interface RawGroupeVote {
   organeRef?: string;
   nombreMembresGroupe?: string;
   vote?: {
     positionMajoritaire?: string;
     decompteVoix?: {
+      // Nouveau format (sans préfixe "nombre")
+      pour?: string;
+      contre?: string;
+      abstentions?: string;
+      nonVotants?: string;
+      nonVotantsVolontaires?: string;
+      // Ancien format (avec préfixe "nombre")
       nombrePour?: string;
       nombreContre?: string;
       nombreAbstentions?: string;
@@ -134,7 +143,7 @@ function parseVotants(votants?: RawVotant | RawVotant[]): ParsedVote[] {
       mandateId: v.mandatRef ?? "UNKNOWN",
       politicalGroupId: "UNKNOWN",
       position: "nonVotant" as const,
-      parDelegation: v.parDelegation === "oui",
+      parDelegation: v.parDelegation === "oui" || v.parDelegation === "true",
       causePositionVote: v.causePositionVote,
     }))
     .filter((v) => v.deputyId !== "UNKNOWN" && v.mandateId !== "UNKNOWN");
@@ -182,21 +191,27 @@ function* extractGroupVotes(raw: RawScrutin): Generator<ParsedGroupVote> {
       politicalGroupId: g.organeRef ?? "UNKNOWN",
       nombreMembresGroupe: toNumber(g.nombreMembresGroupe),
       positionMajoritaire: g.vote?.positionMajoritaire,
-      nombrePour: toNumber(d?.nombrePour),
-      nombreContre: toNumber(d?.nombreContre),
-      nombreAbstentions: toNumber(d?.nombreAbstentions),
-      nombreNonVotants: toNumber(d?.nombreNonVotants),
-      nombreNonVotantsVolontaires: toNumber(d?.nombreNonVotantsVolontaires),
+      nombrePour: toNumber(d?.pour ?? d?.nombrePour),
+      nombreContre: toNumber(d?.contre ?? d?.nombreContre),
+      nombreAbstentions: toNumber(d?.abstentions ?? d?.nombreAbstentions),
+      nombreNonVotants: toNumber(d?.nonVotants ?? d?.nombreNonVotants),
+      nombreNonVotantsVolontaires: toNumber(
+        d?.nonVotantsVolontaires ?? d?.nombreNonVotantsVolontaires,
+      ),
     };
   }
 }
 
-export function parseScrutin(raw: RawScrutin): ParsedScrutin {
+/**
+ * Parse a single scrutin from the new-format JSON file ({scrutin: {...}}).
+ */
+export function parseScrutin(wrapper: RawScrutinFile): ParsedScrutin {
+  const raw = wrapper.scrutin;
   const sortCode = raw.sort?.code;
   const votes = Array.from(extractVotesFromGroup(raw));
   const groupVotes = Array.from(extractGroupVotes(raw));
 
-  // Agrégats globaux depuis les groupes
+  // Global aggregates from group votes
   let nombrePour = 0;
   let nombreContre = 0;
   let nombreAbstentions = 0;
@@ -210,6 +225,11 @@ export function parseScrutin(raw: RawScrutin): ParsedScrutin {
     nombreNonVotantsVolontaires += gv.nombreNonVotantsVolontaires ?? 0;
   }
 
+  // In new format, codeTypeVote/libelleTypeVote are nested in typeVote
+  const codeTypeVote = raw.typeVote?.codeTypeVote;
+  const libelleTypeVote = raw.typeVote?.libelleTypeVote;
+  const typeMajorite = raw.typeVote?.typeMajorite;
+
   return {
     id: raw.uid,
     legislature: raw.legislature ?? "17",
@@ -219,9 +239,9 @@ export function parseScrutin(raw: RawScrutin): ParsedScrutin {
     seanceRef: raw.seanceRef,
     dateScrutin: new Date(raw.dateScrutin ?? "1970-01-01"),
     quantiemeJourSeance: toNumber(raw.quantiemeJourSeance),
-    codeTypeVote: raw.codeTypeVote,
-    libelleTypeVote: raw.libelleTypeVote,
-    typeMajorite: raw.typeVote?.typeMajorite,
+    codeTypeVote,
+    libelleTypeVote,
+    typeMajorite,
     sortCode:
       sortCode === "adopté" || sortCode === "rejeté" ? sortCode : undefined,
     sortLibelle: raw.sort?.libelle,
@@ -241,20 +261,22 @@ export function parseScrutin(raw: RawScrutin): ParsedScrutin {
   };
 }
 
+/**
+ * Parse all scrutins from a zip containing individual JSON files
+ * (json/VTANR5L17V*.json).
+ */
 export async function* parseScrutinsFromZip(
   zipPath: string,
   tempDir: string,
 ): AsyncGenerator<ParsedScrutin> {
-  const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
+  const files = await extractAllJsonFromZipDir(zipPath, tempDir, "json");
 
-  const fileStream = createReadStream(extractedPath);
-  const p = parser();
-  const filter = pick({ filter: "export.scrutins.scrutin" });
-  const array = streamArray();
-
-  await pipeline(fileStream, p, filter, array);
-
-  for await (const chunk of array) {
-    yield parseScrutin(chunk.value as RawScrutin);
+  for (const filePath of files) {
+    const raw = JSON.parse(await readFile(filePath, "utf-8")) as RawScrutinFile;
+    if (!raw.scrutin) {
+      console.warn(`[etl] Skipping non-scrutin JSON: ${filePath}`);
+      continue;
+    }
+    yield parseScrutin(raw);
   }
 }

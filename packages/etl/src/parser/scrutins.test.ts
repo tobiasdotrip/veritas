@@ -31,7 +31,7 @@ describe("parseScrutin", () => {
       },
     };
 
-    const parsed = parseScrutin(raw);
+    const parsed = parseScrutin({ scrutin: raw });
     expect(parsed.votes).toHaveLength(1);
     expect(parsed.votes[0]).toMatchObject({
       deputyId: "PA789",
@@ -71,7 +71,7 @@ describe("parseScrutin", () => {
       },
     };
 
-    const parsed = parseScrutin(raw);
+    const parsed = parseScrutin({ scrutin: raw });
     expect(parsed.votes[0]?.causePositionVote).toBeUndefined();
   });
 });

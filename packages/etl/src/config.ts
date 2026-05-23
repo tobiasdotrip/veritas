@@ -7,9 +7,9 @@ const DEFAULT_URLS = {
   scrutins:
     "https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip",
   deputies:
-    "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs/AMO10_deputes_actifs.json.zip",
+    "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_senateurs_ministres_legislature/AMO20_dep_sen_min_tous_mandats_et_organes.json.zip",
   organes:
-    "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/organe/AMO20_organe.json.zip",
+    "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_senateurs_ministres_legislature/AMO20_dep_sen_min_tous_mandats_et_organes.json.zip",
 } as const;
 
 export function validateEtlUrl(url: string, label: string): string {

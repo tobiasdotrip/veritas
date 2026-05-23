@@ -1,9 +1,5 @@
-import { createReadStream } from "node:fs";
-import { pipeline } from "node:stream/promises";
-import { parser } from "stream-json/Parser";
-import { extractJsonEntryFromZip } from "./zip-extract.js";
-import { pick } from "stream-json/filters/Pick";
-import { streamArray } from "stream-json/streamers/StreamArray";
+import { readFile } from "node:fs/promises";
+import { extractAllJsonFromZipDir } from "./zip-extract.js";
 
 export interface RawActeur {
   uid?: { "#text"?: string };
@@ -13,11 +9,12 @@ export interface RawActeur {
       prenom?: string;
       nom?: string;
     };
-    dateNaissance?: string;
-    lieuNaissance?: {
-      ville?: string;
-      pays?: string;
+    infoNaissance?: {
+      dateNais?: string;
+      villeNais?: string;
+      paysNais?: string;
     };
+    dateDeces?: unknown;
   };
   profession?: {
     libelleCourant?: string;
@@ -26,6 +23,10 @@ export interface RawActeur {
   mandats?: {
     mandat?: RawMandat | RawMandat[];
   };
+}
+
+export interface RawActeurFile {
+  acteur: RawActeur;
 }
 
 export interface RawMandat {
@@ -44,6 +45,7 @@ export interface RawMandat {
     lieu?: {
       region?: string;
       departement?: string;
+      numDepartement?: string;
       numCirco?: string;
     };
   };
@@ -71,6 +73,10 @@ export interface RawOrgane {
     dateAgrement?: string;
     dateFin?: string | null;
   };
+}
+
+export interface RawOrganeFile {
+  organe: RawOrgane;
 }
 
 export interface ParsedMandate {
@@ -141,7 +147,14 @@ export function buildDeputySlug(
   return `${base}-${id.toLowerCase()}`;
 }
 
-export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
+/**
+ * Parse a single deputy from the new-format JSON file ({acteur: {...}}).
+ */
+export function parseDeputy(
+  wrapper: RawActeurFile,
+  legislature: string,
+): ParsedDeputy {
+  const raw = wrapper.acteur;
   const id = raw.uid?.["#text"] ?? "UNKNOWN";
   const firstName = raw.etatCivil?.ident?.prenom ?? "";
   const lastName = raw.etatCivil?.ident?.nom ?? "";
@@ -157,11 +170,13 @@ export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
       ? [rawMandats]
       : [];
 
+  // First pass: collect ASSEMBLEE mandates (may appear after GP mandates)
   for (const m of mandatList) {
     if (!m.uid) continue;
-
     if (m.typeOrgane === "ASSEMBLEE") {
-      const dept = m.election?.lieu?.departement;
+      // New format has numDepartement (code) separate from departement (name)
+      const dept =
+        m.election?.lieu?.numDepartement ?? m.election?.lieu?.departement;
       const circo = toNumber(m.election?.lieu?.numCirco);
       mandates.push({
         id: m.uid,
@@ -175,12 +190,18 @@ export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
         electionCause: m.mandature?.causeMandat,
         endCause: undefined,
       });
-    } else if (m.typeOrgane === "GP" && m.organes?.organeRef) {
-      const parentMandate = mandates.find((x) => x.deputyId === id);
+    }
+  }
+
+  // Second pass: link GP (political group) affiliations to ASSEMBLEE mandate
+  for (const m of mandatList) {
+    if (!m.uid) continue;
+    if (m.typeOrgane === "GP" && m.organes?.organeRef) {
+      const assembleeMandate = mandates.find((x) => x.deputyId === id);
       affiliations.push({
         deputyId: id,
         politicalGroupId: m.organes.organeRef,
-        mandateId: parentMandate?.id ?? m.acteurRef ?? id,
+        mandateId: assembleeMandate?.id ?? m.uid,
         startDate: normalizeDate(m.dateDebut) ?? new Date(),
         endDate: normalizeDate(m.dateFin),
       });
@@ -193,8 +214,8 @@ export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
     lastName,
     slug,
     civility: raw.etatCivil?.ident?.civ,
-    dateOfBirth: normalizeDate(raw.etatCivil?.dateNaissance),
-    placeOfBirth: raw.etatCivil?.lieuNaissance?.ville,
+    dateOfBirth: normalizeDate(raw.etatCivil?.infoNaissance?.dateNais),
+    placeOfBirth: raw.etatCivil?.infoNaissance?.villeNais,
     departmentId: mandates[0]?.departmentId,
     circoNumber: mandates[0]?.circoNumber,
     circoLabel: mandates[0]?.circoLabel,
@@ -205,10 +226,15 @@ export function parseDeputy(raw: RawActeur, legislature: string): ParsedDeputy {
   };
 }
 
+/**
+ * Parse a single organe (political group / committee) from the new-format
+ * JSON file ({organe: {...}}).
+ */
 export function parseOrgane(
-  raw: RawOrgane,
+  wrapper: RawOrganeFile,
   legislature: string,
 ): ParsedPoliticalGroup | undefined {
+  const raw = wrapper.organe;
   if (raw.codeType !== "GP") return undefined;
   return {
     id: raw.uid ?? "UNKNOWN",
@@ -220,41 +246,45 @@ export function parseOrgane(
   };
 }
 
+/**
+ * Parse all deputies from a zip containing individual JSON files
+ * (json/acteur/PA*.json).
+ */
 export async function* parseDeputiesFromZip(
   zipPath: string,
   tempDir: string,
   legislature: string,
 ): AsyncGenerator<ParsedDeputy> {
-  const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
+  const files = await extractAllJsonFromZipDir(zipPath, tempDir, "json/acteur");
 
-  const fileStream = createReadStream(extractedPath);
-  const p = parser();
-  const filter = pick({ filter: "export.acteurs.acteur" });
-  const array = streamArray();
-
-  await pipeline(fileStream, p, filter, array);
-
-  for await (const chunk of array) {
-    yield parseDeputy(chunk.value as RawActeur, legislature);
+  for (const filePath of files) {
+    const raw = JSON.parse(await readFile(filePath, "utf-8")) as RawActeurFile;
+    if (!raw.acteur) {
+      console.warn(`[etl] Skipping non-actor JSON: ${filePath}`);
+      continue;
+    }
+    yield parseDeputy(raw, legislature);
   }
 }
 
+/**
+ * Parse all organes (political groups) from a zip containing individual
+ * JSON files (json/organe/PO*.json).
+ */
 export async function* parseOrganesFromZip(
   zipPath: string,
   tempDir: string,
   legislature: string,
 ): AsyncGenerator<ParsedPoliticalGroup> {
-  const extractedPath = await extractJsonEntryFromZip(zipPath, tempDir);
+  const files = await extractAllJsonFromZipDir(zipPath, tempDir, "json/organe");
 
-  const fileStream = createReadStream(extractedPath);
-  const p = parser();
-  const filter = pick({ filter: "export.organes.organe" });
-  const array = streamArray();
-
-  await pipeline(fileStream, p, filter, array);
-
-  for await (const chunk of array) {
-    const parsed = parseOrgane(chunk.value as RawOrgane, legislature);
+  for (const filePath of files) {
+    const raw = JSON.parse(await readFile(filePath, "utf-8")) as RawOrganeFile;
+    if (!raw.organe) {
+      console.warn(`[etl] Skipping non-organe JSON: ${filePath}`);
+      continue;
+    }
+    const parsed = parseOrgane(raw, legislature);
     if (parsed) yield parsed;
   }
 }

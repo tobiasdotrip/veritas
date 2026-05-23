@@ -5,7 +5,6 @@ import { createHash } from "node:crypto";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
-import fetch from "node-fetch";
 import type { EtlConfig } from "./config.js";
 import { assertPathWithinDir } from "./parser/safe-zip-path.js";
 

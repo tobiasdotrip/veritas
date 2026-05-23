@@ -253,6 +253,7 @@ export async function loadScrutins(
             nombreAbstentions: s.nombreAbstentions ?? null,
             nombreNonVotants: s.nombreNonVotants ?? null,
             nombreNonVotantsVolontaires: s.nombreNonVotantsVolontaires ?? null,
+            syncHash: null,
             updatedAt: new Date(),
           };
 
@@ -261,42 +262,73 @@ export async function loadScrutins(
             .values({ ...scrutinValues, createdAt: new Date() })
             .onConflictDoUpdate({
               target: schema.scrutins.id,
-              set: scrutinValues,
+              set: { updatedAt: new Date() },
             });
 
           if (s.groupVotes.length > 0) {
+            // Ensure all referenced groups exist in political_groups.
+            // The AN sometimes uses placeholder IDs like "PO0".
+            const groupIds = [
+              ...new Set(s.groupVotes.map((gv) => gv.politicalGroupId)),
+            ];
             await trx
-              .insert(schema.scrutinGroupVotes)
+              .insert(schema.politicalGroups)
               .values(
-                s.groupVotes.map((gv) => ({
-                  scrutinId: s.id,
-                  politicalGroupId: gv.politicalGroupId,
-                  nombreMembresGroupe: gv.nombreMembresGroupe ?? null,
-                  positionMajoritaire: gv.positionMajoritaire ?? null,
-                  nombrePour: gv.nombrePour ?? null,
-                  nombreContre: gv.nombreContre ?? null,
-                  nombreAbstentions: gv.nombreAbstentions ?? null,
-                  nombreNonVotants: gv.nombreNonVotants ?? null,
-                  nombreNonVotantsVolontaires:
-                    gv.nombreNonVotantsVolontaires ?? null,
+                groupIds.map((id) => ({
+                  id,
+                  legislature: s.legislature,
+                  name: id === "PO0" ? "Groupe non identifié" : id,
+                  abbreviation: null,
                   createdAt: new Date(),
                 })),
               )
-              .onConflictDoUpdate({
-                target: [
-                  schema.scrutinGroupVotes.scrutinId,
-                  schema.scrutinGroupVotes.politicalGroupId,
-                ],
-                set: {
-                  nombreMembresGroupe: sql`excluded.nombre_membres_groupe`,
-                  positionMajoritaire: sql`excluded.position_majoritaire`,
-                  nombrePour: sql`excluded.nombre_pour`,
-                  nombreContre: sql`excluded.nombre_contre`,
-                  nombreAbstentions: sql`excluded.nombre_abstentions`,
-                  nombreNonVotants: sql`excluded.nombre_non_votants`,
-                  nombreNonVotantsVolontaires: sql`excluded.nombre_non_votants_volontaires`,
-                },
-              });
+              .onConflictDoNothing();
+
+            // Deduplicate group votes that share the same ID within a scrutin
+            // by appending a suffix (e.g. "PO0" → "PO0_1", "PO0_2").
+            const seenInScrutin = new Map<string, number>();
+            const dedupedGroups = s.groupVotes.map((gv) => {
+              const base = gv.politicalGroupId;
+              const count = seenInScrutin.get(base) ?? 0;
+              seenInScrutin.set(base, count + 1);
+              const uniqueId = count === 0 ? base : `${base}_${count}`;
+              return { ...gv, politicalGroupId: uniqueId };
+            });
+
+            // Create deduplicated group entries if needed
+            const dedupedIds = [
+              ...new Set(dedupedGroups.map((gv) => gv.politicalGroupId)),
+            ].filter((id) => !groupIds.includes(id));
+            if (dedupedIds.length > 0) {
+              await trx
+                .insert(schema.politicalGroups)
+                .values(
+                  dedupedIds.map((id) => ({
+                    id,
+                    legislature: s.legislature,
+                    name: `Groupe non identifié (variante ${id.split("_").pop()})`,
+                    abbreviation: null,
+                    createdAt: new Date(),
+                  })),
+                )
+                .onConflictDoNothing();
+            }
+
+            await trx.insert(schema.scrutinGroupVotes).values(
+              dedupedGroups.map((gv) => ({
+                scrutinId: s.id,
+                politicalGroupId: gv.politicalGroupId,
+                nombreMembresGroupe: gv.nombreMembresGroupe ?? null,
+                positionMajoritaire: gv.positionMajoritaire ?? null,
+                nombrePour: gv.nombrePour ?? null,
+                nombreContre: gv.nombreContre ?? null,
+                nombreAbstentions: gv.nombreAbstentions ?? null,
+                nombreNonVotants: gv.nombreNonVotants ?? null,
+                nombreNonVotantsVolontaires:
+                  gv.nombreNonVotantsVolontaires ?? null,
+                createdAt: new Date(),
+              })),
+            );
           }
         }
 
