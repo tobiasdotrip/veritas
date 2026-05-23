@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatTitle } from "@/lib/utils";
 import { BadgeResultat } from "@/components/ui/BadgeResultat";
 import type { ScrutinDetail } from "@/lib/api-types";
 
@@ -15,7 +15,7 @@ export function ScrutinHeader({ scrutin, className }: ScrutinHeaderProps) {
         {scrutin.themes.map((t) => (
           <span
             key={t.slug}
-            className="inline-flex items-center rounded-full bg-surface-raised px-2.5 py-0.5 text-xs font-medium text-text-secondary border border-border"
+            className="inline-flex items-center rounded-full bg-primary-bg px-2.5 py-0.5 text-xs font-semibold text-primary"
           >
             {t.label}
           </span>
@@ -23,11 +23,15 @@ export function ScrutinHeader({ scrutin, className }: ScrutinHeaderProps) {
         <BadgeResultat resultat={scrutin.sortCode} size="md" />
       </div>
       <h1 className="text-xl font-bold leading-snug text-text-primary sm:text-2xl">
-        Scrutin n°{scrutin.numero} — {scrutin.titre}
+        Scrutin n°{scrutin.numero} — {formatTitle(scrutin.titre)}
       </h1>
       <p className="text-sm text-text-secondary">
         {formatDate(scrutin.dateScrutin)}
-        {scrutin.libelleTypeVote ? ` · ${scrutin.libelleTypeVote}` : ""}
+        {scrutin.libelleTypeVote ? (
+          <span> · {formatTitle(scrutin.libelleTypeVote)}</span>
+        ) : (
+          ""
+        )}
       </p>
     </div>
   );

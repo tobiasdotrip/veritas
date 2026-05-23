@@ -8,7 +8,7 @@ import { useDepute } from "@/hooks/useDepute";
 import { useDeputeVotes } from "@/hooks/useDeputeVotes";
 import { DeputeHeader } from "@/components/depute/DeputeHeader";
 import { KPIGrid } from "@/components/depute/KPIGrid";
-import { VoteCard } from "@/components/depute/VoteCard";
+import { VoteTimeline } from "@/components/depute/VoteTimeline";
 import { VoteFilters } from "@/components/depute/VoteFilters";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -165,21 +165,21 @@ function DeputePage() {
                 description="Aucun vote ne correspond aux filtres sélectionnés."
               />
             ) : (
-              <div className="space-y-3">
-                {votes.map((vote) => (
-                  <VoteCard key={vote.scrutinId} vote={vote} />
-                ))}
-              </div>
-            )}
-            {hasNextPage && (
-              <Button
-                variant="secondary"
-                className="w-full"
-                disabled={isFetchingNextPage}
-                onClick={() => fetchNextPage()}
-              >
-                {isFetchingNextPage ? "Chargement…" : "Charger plus"}
-              </Button>
+              <>
+                <VoteTimeline votes={votes} />
+                {hasNextPage && (
+                  <Button
+                    variant="outline"
+                    className="mt-4 w-full"
+                    disabled={isFetchingNextPage}
+                    onClick={() => fetchNextPage()}
+                  >
+                    {isFetchingNextPage
+                      ? "Chargement…"
+                      : "Charger plus de scrutins"}
+                  </Button>
+                )}
+              </>
             )}
           </>
         )}

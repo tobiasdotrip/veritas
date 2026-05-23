@@ -80,6 +80,7 @@ function SearchPage() {
 
   const isLoading = isSearchLoading || (!!search.theme && isThemeLoading);
   const loadError = error ?? themeError;
+  const hasSearch = query.length >= 2 || !!search.theme;
 
   const data = React.useMemo(() => {
     const type = search.type ?? "all";
@@ -158,10 +159,10 @@ function SearchPage() {
             key={t}
             type="button"
             onClick={() => setType(t)}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 ${
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 ${
               search.type === t || (!search.type && t === "all")
-                ? "bg-primary text-white"
-                : "bg-surface-raised text-text-secondary border border-border hover:bg-neutral-bg"
+                ? "bg-primary text-white shadow-sm"
+                : "bg-surface text-text-secondary border border-border-light hover:bg-primary-bg-subtle hover:text-primary"
             }`}
           >
             {t === "all" ? "Tout" : t === "depute" ? "Députés" : "Scrutins"}
@@ -170,10 +171,14 @@ function SearchPage() {
       </div>
 
       {search.theme && (
-        <p className="text-sm text-text-secondary">
-          Thématique :{" "}
-          <span className="font-medium text-text-primary">{search.theme}</span>
-        </p>
+        <div className="flex items-center gap-2 rounded-lg border border-primary-bg bg-primary-bg-subtle px-4 py-2.5">
+          <span className="text-sm font-medium text-text-secondary">
+            Thématique
+          </span>
+          <span className="rounded-full bg-primary px-3 py-0.5 text-sm font-semibold capitalize text-white">
+            {search.theme}
+          </span>
+        </div>
       )}
 
       {isLoading && (
@@ -282,7 +287,7 @@ function SearchPage() {
                           {formatDateShort(s.dateScrutin)}
                         </p>
                         <p className="text-sm text-text-secondary line-clamp-2">
-                          {s.titre}
+                          <span className="capitalize">{s.titre}</span>
                         </p>
                       </a>
                     </Card>
@@ -291,13 +296,19 @@ function SearchPage() {
               </section>
             )}
 
-          {data.deputies.length === 0 && data.scrutins.length === 0 && (
+          {!hasSearch ? (
+            <EmptyState
+              title="Recherchez un député ou un scrutin"
+              description="Saisissez au moins 2 caractères ou sélectionnez une thématique pour afficher des résultats."
+              icon={<Search className="h-10 w-10 text-text-muted" />}
+            />
+          ) : data.deputies.length === 0 && data.scrutins.length === 0 ? (
             <EmptyState
               title="Aucun résultat"
               description="Essayez avec d'autres termes de recherche."
               icon={<Search className="h-10 w-10 text-text-muted" />}
             />
-          )}
+          ) : null}
         </div>
       )}
     </div>

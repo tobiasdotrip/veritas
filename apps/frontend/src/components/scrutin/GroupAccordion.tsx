@@ -76,10 +76,10 @@ export function GroupAccordion({ groups, className }: GroupAccordionProps) {
           <AccordionPrimitive.Item
             key={g.politicalGroupId}
             value={g.politicalGroupId}
-            className="rounded-lg border border-border bg-surface"
+            className="overflow-hidden rounded-xl border border-border-light bg-surface shadow-sm"
           >
             <AccordionPrimitive.Header>
-              <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/30 [&[data-state=open]>svg]:rotate-180">
+              <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-primary-bg-subtle focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 [&[data-state=open]>svg]:rotate-180">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-text-primary">
@@ -105,25 +105,43 @@ export function GroupAccordion({ groups, className }: GroupAccordionProps) {
                 />
               </AccordionPrimitive.Trigger>
             </AccordionPrimitive.Header>
-            <AccordionPrimitive.Content className="overflow-hidden px-4 pb-3 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-              <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                <div className="rounded bg-success-bg px-2 py-1 text-success">
-                  Pour : {g.nombrePour ?? 0}
+            <AccordionPrimitive.Content className="overflow-hidden px-5 py-4 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg bg-success-bg px-3 py-2.5 font-medium text-success">
+                  <span className="block text-xs uppercase tracking-wider opacity-70">
+                    Pour
+                  </span>
+                  <span className="text-lg font-bold">{g.nombrePour ?? 0}</span>
                 </div>
-                <div className="rounded bg-danger-bg px-2 py-1 text-danger">
-                  Contre : {g.nombreContre ?? 0}
+                <div className="rounded-lg bg-danger-bg px-3 py-2.5 font-medium text-danger">
+                  <span className="block text-xs uppercase tracking-wider opacity-70">
+                    Contre
+                  </span>
+                  <span className="text-lg font-bold">
+                    {g.nombreContre ?? 0}
+                  </span>
                 </div>
-                <div className="rounded bg-warning-bg px-2 py-1 text-warning">
-                  Abstentions : {g.nombreAbstentions ?? 0}
+                <div className="rounded-lg bg-warning-bg px-3 py-2.5 font-medium text-warning">
+                  <span className="block text-xs uppercase tracking-wider opacity-70">
+                    Abstentions
+                  </span>
+                  <span className="text-lg font-bold">
+                    {g.nombreAbstentions ?? 0}
+                  </span>
                 </div>
-                <div className="rounded bg-neutral-bg px-2 py-1 text-neutral">
-                  Absents : {g.nombreNonVotants ?? 0}
+                <div className="rounded-lg bg-neutral-bg px-3 py-2.5 font-medium text-neutral">
+                  <span className="block text-xs uppercase tracking-wider opacity-70">
+                    Absents
+                  </span>
+                  <span className="text-lg font-bold">
+                    {g.nombreNonVotants ?? 0}
+                  </span>
                 </div>
               </div>
               {g.positionMajoritaire && (
                 <p className="mt-2 text-xs text-text-secondary">
-                  Position majoritaire du groupe :{" "}
-                  <span className="font-medium capitalize text-text-primary">
+                  Consigne du groupe :{" "}
+                  <span className="font-semibold capitalize text-text-primary">
                     {g.positionMajoritaire}
                   </span>
                 </p>

@@ -4,10 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ScrutinHeader } from "@/components/scrutin/ScrutinHeader";
 import { VoteChart } from "@/components/scrutin/VoteChart";
 import { GroupAccordion } from "@/components/scrutin/GroupAccordion";
+import { VoteByDeputy } from "@/components/scrutin/VoteByDeputy";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ShareButton } from "@/components/ui/ShareButton";
+import * as Tabs from "@radix-ui/react-tabs";
 import type { ScrutinDetail } from "@/lib/api-types";
 
 export const Route = createFileRoute("/scrutin/$id")({
@@ -75,19 +77,38 @@ function ScrutinPage() {
         nonVotants={scrutin.nombreNonVotants ?? 0}
       />
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-text-primary">
-          Votes par groupe
-        </h2>
-        {scrutin.groupVotes.length === 0 ? (
-          <EmptyState
-            title="Aucun groupe"
-            description="Les données par groupe ne sont pas disponibles pour ce scrutin."
-          />
-        ) : (
-          <GroupAccordion groups={scrutin.groupVotes} />
-        )}
-      </section>
+      {/* ── Onglets ── */}
+      <Tabs.Root defaultValue="groupes" className="space-y-4">
+        <Tabs.List className="inline-flex gap-1 rounded-lg border border-border-light bg-surface-raised p-1">
+          <Tabs.Trigger
+            value="groupes"
+            className="rounded-md px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          >
+            Votes par groupe
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="deputes"
+            className="rounded-md px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          >
+            Votes par député
+          </Tabs.Trigger>
+        </Tabs.List>
+
+        <Tabs.Content value="groupes" className="space-y-3">
+          {scrutin.groupVotes.length === 0 ? (
+            <EmptyState
+              title="Aucun groupe"
+              description="Les données par groupe ne sont pas disponibles pour ce scrutin."
+            />
+          ) : (
+            <GroupAccordion groups={scrutin.groupVotes} />
+          )}
+        </Tabs.Content>
+
+        <Tabs.Content value="deputes">
+          <VoteByDeputy scrutinId={id} />
+        </Tabs.Content>
+      </Tabs.Root>
     </div>
   );
 }
