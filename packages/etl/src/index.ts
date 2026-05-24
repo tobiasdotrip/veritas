@@ -8,6 +8,7 @@ import {
   parseScrutinsFromZip,
   parseDeputiesFromZip,
   parseOrganesFromZip,
+  parseAmendmentsFromZip,
 } from "./parser/index.js";
 import {
   createLoader,
@@ -16,14 +17,17 @@ import {
   loadMandates,
   loadAffiliations,
   loadScrutins,
+  loadAmendments,
 } from "./loader.js";
 import { runClassification } from "./classifier.js";
+import { runAmendmentMatching } from "./matcher.js";
 
 export * from "./config.js";
 export * from "./downloader.js";
 export * from "./parser/index.js";
 export * from "./loader.js";
 export * from "./classifier.js";
+export * from "./matcher.js";
 export * from "./scheduler.js";
 
 export interface PipelineResult {
@@ -32,6 +36,8 @@ export interface PipelineResult {
   mandates: { inserted: number; updated: number };
   affiliations: { inserted: number };
   scrutins: { inserted: number; updated: number; errors: number };
+  amendments: { inserted: number; updated: number; errors: number };
+  matching: { matched: number; skipped: number };
   classification: { processed: number; classified: number };
 }
 
@@ -52,18 +58,25 @@ export async function runEtlPipeline(
     mandates: { inserted: 0, updated: 0 },
     affiliations: { inserted: 0 },
     scrutins: { inserted: 0, updated: 0, errors: 0 },
+    amendments: { inserted: 0, updated: 0, errors: 0 },
+    matching: { matched: 0, skipped: 0 },
     classification: { processed: 0, classified: 0 },
+  };
+  const extractLimits = {
+    maxFiles: config.extractMaxFiles,
+    maxTotalUncompressedBytes: config.extractMaxTotalUncompressedBytes,
   };
 
   try {
     console.log("[etl] Pipeline started");
 
     // ─── 1. Députés ──────────────────────────────────────────────
-    console.log("[etl] Step 1/4: Deputies");
+    console.log("[etl] Step 1/5: Deputies");
     const deputiesResult = await downloadZip(
       config.urls.deputies,
       resolve(config.tempDir, "deputies.zip"),
       config,
+      config.checksums.deputies,
     );
     console.log(
       `[etl] Deputies zip: ${deputiesResult.skipped ? "skipped" : "downloaded"} (${deputiesResult.hash})`,
@@ -73,6 +86,7 @@ export async function runEtlPipeline(
       deputiesResult.filePath,
       config.tempDir,
       config.legislature,
+      extractLimits,
     );
     result.deputies = await loadDeputies(deps, deputiesIter, config);
     console.log(
@@ -86,6 +100,7 @@ export async function runEtlPipeline(
       deputiesResult.filePath,
       config.tempDir,
       config.legislature,
+      extractLimits,
     );
     const mandates: import("./parser/deputies.js").ParsedMandate[] = [];
     const affiliations: import("./parser/deputies.js").ParsedAffiliation[] = [];
@@ -95,11 +110,12 @@ export async function runEtlPipeline(
     }
 
     // ─── 2. Organes ──────────────────────────────────────────────
-    console.log("[etl] Step 2/4: Organes");
+    console.log("[etl] Step 2/5: Organes");
     const organesResult = await downloadZip(
       config.urls.organes,
       resolve(config.tempDir, "organes.zip"),
       config,
+      config.checksums.organes,
     );
     console.log(
       `[etl] Organes zip: ${organesResult.skipped ? "skipped" : "downloaded"} (${organesResult.hash})`,
@@ -109,6 +125,7 @@ export async function runEtlPipeline(
       organesResult.filePath,
       config.tempDir,
       config.legislature,
+      extractLimits,
     );
     result.organes = await loadPoliticalGroups(deps, organesIter, config);
     console.log(
@@ -136,11 +153,12 @@ export async function runEtlPipeline(
     );
 
     // ─── 3. Scrutins ─────────────────────────────────────────────
-    console.log("[etl] Step 3/4: Scrutins");
+    console.log("[etl] Step 3/5: Scrutins");
     const scrutinsResult = await downloadZip(
       config.urls.scrutins,
       resolve(config.tempDir, "scrutins.zip"),
       config,
+      config.checksums.scrutins,
     );
     console.log(
       `[etl] Scrutins zip: ${scrutinsResult.skipped ? "skipped" : "downloaded"} (${scrutinsResult.hash})`,
@@ -149,6 +167,7 @@ export async function runEtlPipeline(
     const scrutinsIter = parseScrutinsFromZip(
       scrutinsResult.filePath,
       config.tempDir,
+      extractLimits,
     );
     result.scrutins = await loadScrutins(deps, scrutinsIter, config, (p) => {
       if (p % 500 === 0) console.log(`[etl] Scrutins processed: ${p}`);
@@ -158,11 +177,54 @@ export async function runEtlPipeline(
     );
 
     // ─── 4. Classification ───────────────────────────────────────
-    console.log("[etl] Step 4/4: Classification");
+    console.log("[etl] Step 4/5: Classification");
     result.classification = await runClassification(deps.db);
     console.log(
       `[etl] Classification: ${result.classification.processed} processed, ${result.classification.classified} classified`,
     );
+
+    // ─── 5. Amendements + Matching ──────────────────────────────
+    console.log("[etl] Step 5/5: Amendments + matching");
+    const amendmentsResult = await downloadZip(
+      config.urls.amendments,
+      resolve(config.tempDir, "amendments.zip"),
+      config,
+      config.checksums.amendments,
+    );
+    console.log(
+      `[etl] Amendments zip: ${amendmentsResult.skipped ? "skipped" : "downloaded"} (${amendmentsResult.hash})`,
+    );
+
+    const amendmentsIter = parseAmendmentsFromZip(
+      amendmentsResult.filePath,
+      config.tempDir,
+      extractLimits,
+    );
+    result.amendments = await loadAmendments(
+      deps,
+      amendmentsIter,
+      config,
+      (p) => {
+        if (p % 1000 === 0) console.log(`[etl] Amendments processed: ${p}`);
+      },
+    );
+    console.log(
+      `[etl] Amendments loaded: ${result.amendments.inserted} inserted, ${result.amendments.updated} updated, ${result.amendments.errors} errors`,
+    );
+
+    // Matching
+    if (result.amendments.inserted > 0 || result.scrutins.inserted > 0) {
+      const matchResult = await runAmendmentMatching(deps);
+      result.matching = {
+        matched: matchResult.matched,
+        skipped: matchResult.skipped,
+      };
+      console.log(
+        `[etl] Matching: ${result.matching.matched} matched, ${result.matching.skipped} skipped`,
+      );
+    } else {
+      console.log("[etl] Skipping matching (no new data)");
+    }
 
     console.log("[etl] Pipeline completed successfully");
   } catch (err) {

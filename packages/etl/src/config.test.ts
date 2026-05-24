@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { validateEtlUrl, ensureTempDir } from "./config.js";
+import { validateEtlUrl, ensureTempDir, type EtlConfig } from "./config.js";
 import { rm } from "node:fs/promises";
 
 describe("validateEtlUrl", () => {
@@ -98,6 +98,12 @@ describe("defaultConfig", () => {
     delete process.env.DOWNLOAD_TIMEOUT_MS;
     delete process.env.DOWNLOAD_RETRIES;
     delete process.env.DOWNLOAD_MAX_SIZE_BYTES;
+    delete process.env.EXTRACT_MAX_FILES;
+    delete process.env.EXTRACT_MAX_TOTAL_UNCOMPRESSED_BYTES;
+    delete process.env.ETL_SHA256_SCRUTINS;
+    delete process.env.ETL_SHA256_DEPUTIES;
+    delete process.env.ETL_SHA256_ORGANES;
+    delete process.env.ETL_SHA256_AMENDMENTS;
     delete process.env.BATCH_SIZE;
     delete process.env.SCRUTIN_TX_SIZE;
     delete process.env.LEGISLATURE;
@@ -114,6 +120,10 @@ describe("defaultConfig", () => {
     process.env.DOWNLOAD_TIMEOUT_MS = "30000";
     process.env.DOWNLOAD_RETRIES = "5";
     process.env.DOWNLOAD_MAX_SIZE_BYTES = "1048576";
+    process.env.EXTRACT_MAX_FILES = "20000";
+    process.env.EXTRACT_MAX_TOTAL_UNCOMPRESSED_BYTES = "2097152";
+    process.env.ETL_SHA256_SCRUTINS =
+      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     process.env.BATCH_SIZE = "500";
     process.env.SCRUTIN_TX_SIZE = "50";
     process.env.LEGISLATURE = "16";
@@ -127,9 +137,21 @@ describe("defaultConfig", () => {
     expect(dynamicConfig.downloadTimeoutMs).toBe(30_000);
     expect(dynamicConfig.downloadRetries).toBe(5);
     expect(dynamicConfig.downloadMaxSizeBytes).toBe(1_048_576);
+    expect(dynamicConfig.extractMaxFiles).toBe(20_000);
+    expect(dynamicConfig.extractMaxTotalUncompressedBytes).toBe(2_097_152);
+    expect(dynamicConfig.checksums.scrutins).toBe(
+      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    );
     expect(dynamicConfig.batchSize).toBe(500);
     expect(dynamicConfig.scrutinTransactionSize).toBe(50);
     expect(dynamicConfig.legislature).toBe("16");
+  });
+
+  it("throws when SHA-256 env format is invalid", async () => {
+    process.env.ETL_SHA256_SCRUTINS = "not-a-hash";
+    await expect(import("./config.js")).rejects.toThrow(
+      "scrutins SHA-256 must be a 64-char hex string",
+    );
   });
 });
 
@@ -145,12 +167,15 @@ describe("ensureTempDir", () => {
   });
 
   it("creates the temp directory recursively without error", async () => {
-    const config = {
+    const config: EtlConfig = {
       tempDir: testDir,
-      urls: { scrutins: "", deputies: "", organes: "" },
+      urls: { scrutins: "", deputies: "", organes: "", amendments: "" },
       downloadTimeoutMs: 0,
       downloadRetries: 0,
       downloadMaxSizeBytes: 0,
+      extractMaxFiles: 0,
+      extractMaxTotalUncompressedBytes: 0,
+      checksums: {},
       batchSize: 0,
       scrutinTransactionSize: 0,
       legislature: "17",

@@ -2,6 +2,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { apiFetch } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { ScrutinHeader } from "@/components/scrutin/ScrutinHeader";
+import { AmendmentCard } from "@/components/scrutin/AmendmentCard";
 import { VoteChart } from "@/components/scrutin/VoteChart";
 import { GroupAccordion } from "@/components/scrutin/GroupAccordion";
 import { VoteByDeputy } from "@/components/scrutin/VoteByDeputy";
@@ -69,6 +70,9 @@ function ScrutinPage() {
           title={`Scrutin n°${scrutin.numero} — ${scrutin.titre}`}
         />
       </div>
+
+      {/* Texte de l'amendement */}
+      {scrutin.amendment && <AmendmentCard amendment={scrutin.amendment} />}
 
       <VoteChart
         pour={scrutin.nombrePour ?? 0}

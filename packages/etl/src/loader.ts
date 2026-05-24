@@ -11,6 +11,7 @@ import type {
   ParsedPoliticalGroup,
   ParsedMandate,
   ParsedAffiliation,
+  ParsedAmendment,
 } from "./parser/index.js";
 
 export interface LoaderDeps {
@@ -314,21 +315,24 @@ export async function loadScrutins(
                 .onConflictDoNothing();
             }
 
-            await trx.insert(schema.scrutinGroupVotes).values(
-              dedupedGroups.map((gv) => ({
-                scrutinId: s.id,
-                politicalGroupId: gv.politicalGroupId,
-                nombreMembresGroupe: gv.nombreMembresGroupe ?? null,
-                positionMajoritaire: gv.positionMajoritaire ?? null,
-                nombrePour: gv.nombrePour ?? null,
-                nombreContre: gv.nombreContre ?? null,
-                nombreAbstentions: gv.nombreAbstentions ?? null,
-                nombreNonVotants: gv.nombreNonVotants ?? null,
-                nombreNonVotantsVolontaires:
-                  gv.nombreNonVotantsVolontaires ?? null,
-                createdAt: new Date(),
-              })),
-            );
+            await trx
+              .insert(schema.scrutinGroupVotes)
+              .values(
+                dedupedGroups.map((gv) => ({
+                  scrutinId: s.id,
+                  politicalGroupId: gv.politicalGroupId,
+                  nombreMembresGroupe: gv.nombreMembresGroupe ?? null,
+                  positionMajoritaire: gv.positionMajoritaire ?? null,
+                  nombrePour: gv.nombrePour ?? null,
+                  nombreContre: gv.nombreContre ?? null,
+                  nombreAbstentions: gv.nombreAbstentions ?? null,
+                  nombreNonVotants: gv.nombreNonVotants ?? null,
+                  nombreNonVotantsVolontaires:
+                    gv.nombreNonVotantsVolontaires ?? null,
+                  createdAt: new Date(),
+                })),
+              )
+              .onConflictDoNothing();
           }
         }
 
@@ -388,6 +392,87 @@ export async function loadScrutins(
     processed++;
 
     if (processed % config.scrutinTransactionSize === 0) {
+      await flushBatch();
+      onProgress?.(processed);
+    }
+  }
+
+  await flushBatch();
+  onProgress?.(processed);
+
+  return { inserted, updated, errors };
+}
+
+// ─── Amendements ─────────────────────────────────────────────────
+
+export async function loadAmendments(
+  deps: LoaderDeps,
+  amendments: AsyncIterable<ParsedAmendment>,
+  config: EtlConfig,
+  onProgress?: (processed: number) => void,
+): Promise<{ inserted: number; updated: number; errors: number }> {
+  let inserted = 0;
+  const updated = 0;
+  let errors = 0;
+  let processed = 0;
+
+  let batch: ParsedAmendment[] = [];
+
+  async function flushBatch() {
+    if (batch.length === 0) return;
+
+    try {
+      await deps.db.transaction(async (trx) => {
+        for (const a of batch) {
+          const values = {
+            id: a.id,
+            numero: a.numero,
+            texteLegislatifRef: a.texteLegislatifRef ?? null,
+            dossierRef: a.dossierRef,
+            dispositif: a.dispositif ?? null,
+            exposeSommaire: a.exposeSommaire ?? null,
+            sortCode: a.sortCode ?? null,
+            articleRef: a.articleRef ?? null,
+            auteurs: a.auteurs.length > 0 ? a.auteurs : null,
+          };
+
+          await trx
+            .insert(schema.amendments)
+            .values({ ...values, createdAt: new Date() })
+            .onConflictDoUpdate({
+              target: schema.amendments.id,
+              set: {
+                numero: values.numero,
+                texteLegislatifRef: values.texteLegislatifRef,
+                dossierRef: values.dossierRef,
+                dispositif: values.dispositif,
+                exposeSommaire: values.exposeSommaire,
+                sortCode: values.sortCode,
+                articleRef: values.articleRef,
+                auteurs: values.auteurs,
+              },
+            });
+        }
+
+        inserted += batch.length;
+      });
+    } catch (err) {
+      errors += batch.length;
+      console.error(
+        `[loader] Amendments batch failed (${batch.length}): ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    } finally {
+      batch = [];
+    }
+  }
+
+  for await (const a of amendments) {
+    batch.push(a);
+    processed++;
+
+    if (processed % config.batchSize === 0) {
       await flushBatch();
       onProgress?.(processed);
     }

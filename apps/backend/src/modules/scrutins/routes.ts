@@ -23,8 +23,21 @@ const ScrutinSchema = z.object({
   demandeur: z.string().nullable(),
 });
 
+const AmendmentSchema = z.object({
+  id: z.string(),
+  numero: z.string(),
+  dispositif: z.string().nullable(),
+  exposeSommaire: z.string().nullable(),
+  sortCode: z.string().nullable(),
+  articleRef: z.string().nullable(),
+  auteurs: z.string().nullable(),
+  matchMethod: z.string(),
+  confidence: z.string().nullable(),
+});
+
 const ScrutinDetailSchema = ScrutinSchema.extend({
   libelleTypeVote: z.string().nullable(),
+  amendment: AmendmentSchema.nullable(),
   themes: z.array(
     z.object({
       id: z.number(),

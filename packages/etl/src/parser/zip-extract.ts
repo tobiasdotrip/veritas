@@ -4,11 +4,13 @@ import { resolve } from "node:path";
 import {
   assertSafeZipArchive,
   assertJsonZipEntry,
+  assertZipExtractionLimits,
   isZipEntrySymlink,
   type ZipEntryAttributes,
 } from "./zip-entry-type.js";
+import { resolveSafeZipEntryPath } from "./safe-zip-path.js";
 
-type AsyncZip = {
+export type AsyncZip = {
   entries: () => Promise<Record<string, ZipEntryAttributes>>;
   extract: (name: string, path: string) => Promise<void>;
   close: () => Promise<void>;
@@ -21,6 +23,23 @@ function openZip(zipPath: string): AsyncZip {
   return new StreamZipAsync({ file: zipPath });
 }
 
+export async function withZipEntries<T>(
+  zipPath: string,
+  fn: (
+    zip: AsyncZip,
+    entries: Record<string, ZipEntryAttributes>,
+  ) => Promise<T>,
+): Promise<T> {
+  const zip = openZip(zipPath);
+  try {
+    const entries = await zip.entries();
+    assertSafeZipArchive(entries);
+    return await fn(zip, entries);
+  } finally {
+    await zip.close();
+  }
+}
+
 /**
  * Extracts ALL JSON entries from a zip subdirectory (e.g. "json/acteur/")
  * into a flat directory on disk. Returns the list of extracted file paths.
@@ -29,13 +48,12 @@ export async function extractAllJsonFromZipDir(
   zipPath: string,
   tempDir: string,
   subDir: string,
+  limits: {
+    maxFiles: number;
+    maxTotalUncompressedBytes: number;
+  },
 ): Promise<string[]> {
-  const zip = openZip(zipPath);
-
-  try {
-    const entries = await zip.entries();
-    assertSafeZipArchive(entries);
-
+  return withZipEntries(zipPath, async (zip, entries) => {
     const jsonEntries = Object.entries(entries).filter(
       ([name, entry]) =>
         name.startsWith(`${subDir}/`) &&
@@ -46,6 +64,14 @@ export async function extractAllJsonFromZipDir(
     if (jsonEntries.length === 0) {
       throw new Error(`No JSON entries found in ${subDir}/ within ${zipPath}`);
     }
+    assertZipExtractionLimits(
+      jsonEntries.map(([, entry]) => entry),
+      {
+        maxFiles: limits.maxFiles,
+        maxTotalUncompressedBytes: limits.maxTotalUncompressedBytes,
+        label: `ZIP extraction for ${subDir}`,
+      },
+    );
 
     const outDir = resolve(tempDir, subDir);
     await mkdir(outDir, { recursive: true });
@@ -57,15 +83,13 @@ export async function extractAllJsonFromZipDir(
         continue;
       }
       const fileName = name.split("/").pop()!;
-      const outPath = resolve(outDir, fileName);
+      const outPath = resolveSafeZipEntryPath(outDir, fileName);
       await zip.extract(name, outPath);
       extractedPaths.push(outPath);
     }
 
     return extractedPaths;
-  } finally {
-    await zip.close();
-  }
+  });
 }
 
 /**
@@ -80,13 +104,12 @@ export async function extractAllJsonFromZipDir(
 export async function extractJsonEntryFromZip(
   zipPath: string,
   tempDir: string,
+  limits: {
+    maxFiles: number;
+    maxTotalUncompressedBytes: number;
+  },
 ): Promise<string> {
-  const zip = openZip(zipPath);
-
-  try {
-    const entries = await zip.entries();
-    assertSafeZipArchive(entries);
-
+  return withZipEntries(zipPath, async (zip, entries) => {
     const jsonEntry = Object.values(entries).find((e) =>
       e.name.endsWith(".json"),
     );
@@ -94,19 +117,14 @@ export async function extractJsonEntryFromZip(
       throw new Error(`No JSON entry found in ${zipPath}`);
     }
     assertJsonZipEntry(jsonEntry);
+    assertZipExtractionLimits([jsonEntry], {
+      maxFiles: limits.maxFiles,
+      maxTotalUncompressedBytes: limits.maxTotalUncompressedBytes,
+      label: "ZIP extraction",
+    });
 
     const resolvedPath = resolveSafeZipEntryPath(tempDir, jsonEntry.name);
     await zip.extract(jsonEntry.name, resolvedPath);
     return resolvedPath;
-  } finally {
-    await zip.close();
-  }
-}
-
-function resolveSafeZipEntryPath(tempDir: string, entryName: string): string {
-  const resolved = resolve(tempDir, entryName);
-  if (!resolved.startsWith(resolve(tempDir))) {
-    throw new Error(`Unsafe zip entry path: ${entryName} (zip slip attempt)`);
-  }
-  return resolved;
+  });
 }

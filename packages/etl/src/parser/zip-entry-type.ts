@@ -2,6 +2,8 @@ export interface ZipEntryAttributes {
   name: string;
   attr?: number;
   isDirectory?: boolean;
+  size?: number;
+  compressedSize?: number;
 }
 
 const S_IFMT = 0o170000;
@@ -75,5 +77,38 @@ export function assertJsonZipEntry(entry: ZipEntryAttributes): void {
   }
   if (!isZipEntryRegularFile(entry)) {
     throw new Error(`ZIP JSON entry is not a regular file: ${entry.name}`);
+  }
+}
+
+function getUncompressedSize(entry: ZipEntryAttributes): number {
+  if (!Number.isFinite(entry.size) || (entry.size ?? -1) < 0) {
+    throw new Error(`ZIP entry has invalid uncompressed size: ${entry.name}`);
+  }
+  return entry.size!;
+}
+
+export function assertZipExtractionLimits(
+  entries: ZipEntryAttributes[],
+  options: {
+    maxFiles: number;
+    maxTotalUncompressedBytes: number;
+    label: string;
+  },
+): void {
+  const { maxFiles, maxTotalUncompressedBytes, label } = options;
+  if (entries.length > maxFiles) {
+    throw new Error(
+      `${label} exceeds max extracted files (${entries.length} > ${maxFiles})`,
+    );
+  }
+
+  let total = 0;
+  for (const entry of entries) {
+    total += getUncompressedSize(entry);
+    if (total > maxTotalUncompressedBytes) {
+      throw new Error(
+        `${label} exceeds max uncompressed bytes (${total} > ${maxTotalUncompressedBytes})`,
+      );
+    }
   }
 }

@@ -48,9 +48,20 @@ export interface DeputeVoteItem {
   alignment: "aligned" | "opposed" | "neutral";
 }
 
+export interface Amendment {
+  id: string;
+  numero: string;
+  dispositif: string | null;
+  exposeSommaire: string | null;
+  auteurs: string | null;
+  articleRef: string | null;
+  sortCode: string | null;
+}
+
 export interface ScrutinDetail extends Scrutin {
   libelleTypeVote: string | null;
   nombreNonVotants: number | null;
+  amendment: Amendment | null;
   themes: {
     id: number;
     slug: string;

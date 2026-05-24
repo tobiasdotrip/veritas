@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertJsonZipEntry,
   assertSafeZipArchive,
+  assertZipExtractionLimits,
   getZipEntryFileType,
   getZipEntryUnixMode,
   isZipEntryRegularFile,
@@ -61,5 +62,47 @@ describe("zip entry type detection", () => {
         "etc/passwd": entryWithMode("etc/passwd", 0o120000),
       }),
     ).toThrow("Unsafe ZIP entry type: etc/passwd");
+  });
+
+  it("rejects extraction when file count exceeds limit", () => {
+    expect(() =>
+      assertZipExtractionLimits(
+        [
+          { name: "a.json", size: 1 },
+          { name: "b.json", size: 1 },
+        ],
+        {
+          maxFiles: 1,
+          maxTotalUncompressedBytes: 10,
+          label: "zip test",
+        },
+      ),
+    ).toThrow("zip test exceeds max extracted files (2 > 1)");
+  });
+
+  it("rejects extraction when uncompressed size exceeds limit", () => {
+    expect(() =>
+      assertZipExtractionLimits(
+        [
+          { name: "a.json", size: 8 },
+          { name: "b.json", size: 5 },
+        ],
+        {
+          maxFiles: 10,
+          maxTotalUncompressedBytes: 10,
+          label: "zip test",
+        },
+      ),
+    ).toThrow("zip test exceeds max uncompressed bytes (13 > 10)");
+  });
+
+  it("rejects entries with invalid size metadata", () => {
+    expect(() =>
+      assertZipExtractionLimits([{ name: "a.json" }], {
+        maxFiles: 10,
+        maxTotalUncompressedBytes: 10,
+        label: "zip test",
+      }),
+    ).toThrow("ZIP entry has invalid uncompressed size: a.json");
   });
 });

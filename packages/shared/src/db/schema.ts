@@ -4,6 +4,7 @@ import {
   decimal,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   serial,
@@ -262,6 +263,7 @@ export const scrutinsRelations = relations(scrutins, ({ many }) => ({
   votes: many(scrutinVotes),
   groupVotes: many(scrutinGroupVotes),
   themes: many(scrutinThemes),
+  amendments: many(scrutinAmendments),
 }));
 
 // ─── Votes par groupe sur un scrutin ─────────────────────────────
@@ -410,6 +412,73 @@ export const scrutinThemesRelations = relations(scrutinThemes, ({ one }) => ({
     references: [themes.id],
   }),
 }));
+
+// ─── Amendements ────────────────────────────────────────────────
+
+export const amendments = pgTable(
+  "amendments",
+  {
+    id: varchar("id", { length: 50 }).primaryKey(), // AMANR5L17N...
+    numero: varchar("numero", { length: 10 }).notNull(),
+    texteLegislatifRef: varchar("texte_legislatif_ref", { length: 50 }),
+    dossierRef: varchar("dossier_ref", { length: 50 }).notNull(),
+    dispositif: text("dispositif"),
+    exposeSommaire: text("expose_sommaire"),
+    sortCode: varchar("sort_code", { length: 50 }),
+    articleRef: varchar("article_ref", { length: 50 }),
+    auteurs: jsonb("auteurs"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_amendments_dossier_numero").on(table.dossierRef, table.numero),
+    index("idx_amendments_numero").on(table.numero),
+    index("idx_amendments_texte_legislatif").on(table.texteLegislatifRef),
+  ],
+);
+
+export const amendmentsRelations = relations(amendments, ({ many }) => ({
+  scrutins: many(scrutinAmendments),
+}));
+
+// ─── Liaison scrutin ↔ amendement ───────────────────────────────
+
+export const scrutinAmendments = pgTable(
+  "scrutin_amendments",
+  {
+    id: serial("id").primaryKey(),
+    scrutinId: varchar("scrutin_id", { length: 50 })
+      .notNull()
+      .references(() => scrutins.id, { onDelete: "cascade" }),
+    amendmentId: varchar("amendment_id", { length: 50 })
+      .notNull()
+      .references(() => amendments.id, { onDelete: "cascade" }),
+    matchMethod: varchar("match_method", { length: 20 }).notNull(),
+    confidence: decimal("confidence", { precision: 3, scale: 2 }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_scrutin_amendment_unique").on(
+      table.scrutinId,
+      table.amendmentId,
+    ),
+    index("idx_scrutin_amendment_scrutin").on(table.scrutinId),
+    index("idx_scrutin_amendment_amendment").on(table.amendmentId),
+  ],
+);
+
+export const scrutinAmendmentsRelations = relations(
+  scrutinAmendments,
+  ({ one }) => ({
+    scrutin: one(scrutins, {
+      fields: [scrutinAmendments.scrutinId],
+      references: [scrutins.id],
+    }),
+    amendment: one(amendments, {
+      fields: [scrutinAmendments.amendmentId],
+      references: [amendments.id],
+    }),
+  }),
+);
 
 // ─── Logs de synchronisation ETL ─────────────────────────────────
 

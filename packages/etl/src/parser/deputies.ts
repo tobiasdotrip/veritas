@@ -254,8 +254,17 @@ export async function* parseDeputiesFromZip(
   zipPath: string,
   tempDir: string,
   legislature: string,
+  limits: {
+    maxFiles: number;
+    maxTotalUncompressedBytes: number;
+  },
 ): AsyncGenerator<ParsedDeputy> {
-  const files = await extractAllJsonFromZipDir(zipPath, tempDir, "json/acteur");
+  const files = await extractAllJsonFromZipDir(
+    zipPath,
+    tempDir,
+    "json/acteur",
+    limits,
+  );
 
   for (const filePath of files) {
     const raw = JSON.parse(await readFile(filePath, "utf-8")) as RawActeurFile;
@@ -275,8 +284,17 @@ export async function* parseOrganesFromZip(
   zipPath: string,
   tempDir: string,
   legislature: string,
+  limits: {
+    maxFiles: number;
+    maxTotalUncompressedBytes: number;
+  },
 ): AsyncGenerator<ParsedPoliticalGroup> {
-  const files = await extractAllJsonFromZipDir(zipPath, tempDir, "json/organe");
+  const files = await extractAllJsonFromZipDir(
+    zipPath,
+    tempDir,
+    "json/organe",
+    limits,
+  );
 
   for (const filePath of files) {
     const raw = JSON.parse(await readFile(filePath, "utf-8")) as RawOrganeFile;

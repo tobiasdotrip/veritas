@@ -268,8 +268,17 @@ export function parseScrutin(wrapper: RawScrutinFile): ParsedScrutin {
 export async function* parseScrutinsFromZip(
   zipPath: string,
   tempDir: string,
+  limits: {
+    maxFiles: number;
+    maxTotalUncompressedBytes: number;
+  },
 ): AsyncGenerator<ParsedScrutin> {
-  const files = await extractAllJsonFromZipDir(zipPath, tempDir, "json");
+  const files = await extractAllJsonFromZipDir(
+    zipPath,
+    tempDir,
+    "json",
+    limits,
+  );
 
   for (const filePath of files) {
     const raw = JSON.parse(await readFile(filePath, "utf-8")) as RawScrutinFile;

@@ -1,9 +1,11 @@
 import { expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/node-postgres";
 import {
   describeIntegration,
   FIXTURE,
   useIntegrationTest,
 } from "../../test-utils/index.js";
+import * as schema from "../../db/schema.js";
 
 describeIntegration("GET /api/v1/scrutins", () => {
   const ctx = useIntegrationTest();
@@ -64,6 +66,44 @@ describeIntegration("GET /api/v1/scrutins", () => {
     expect(
       response.body.data.themes.some((t) => t.slug === FIXTURE.theme.slug),
     ).toBe(true);
+  });
+
+  it("returns amendment auteurs as a display string", async () => {
+    const db = drizzle(ctx.pool, { schema });
+
+    await db.insert(schema.amendments).values({
+      id: "AMANR5L17N1867",
+      numero: "1867 rect.",
+      dossierRef: "DLR5L17N00001",
+      dispositif: "Dispositif test",
+      auteurs: [
+        { type: "depute", prenom: "Jean", nom: "Dupont" },
+        { type: "groupe", libelle: "Groupe RE" },
+      ],
+    });
+
+    await db.insert(schema.scrutinAmendments).values({
+      scrutinId: FIXTURE.scrutins.sante.id,
+      amendmentId: "AMANR5L17N1867",
+      matchMethod: "titre",
+      confidence: "0.80",
+    });
+
+    const response = await ctx.injectJson<{
+      data: {
+        amendment: {
+          auteurs: string | null;
+        } | null;
+      };
+    }>(ctx.app, {
+      method: "GET",
+      url: `/api/v1/scrutins/${FIXTURE.scrutins.sante.id}`,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.amendment?.auteurs).toBe(
+      "Jean Dupont ; Groupe RE",
+    );
   });
 
   it("rejects invalid theme slug", async () => {

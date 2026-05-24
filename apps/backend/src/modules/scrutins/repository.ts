@@ -8,6 +8,8 @@ import {
   deputies,
   politicalGroups,
   scrutinGroupVotes,
+  scrutinAmendments,
+  amendments,
 } from "../../db/schema.js";
 import { decodeCursor, buildCursorResponse } from "../common/pagination.js";
 import type {
@@ -15,6 +17,38 @@ import type {
   OffsetPaginationInput,
 } from "../common/pagination.js";
 import { withTextSearchErrorHandling } from "../common/db-errors.js";
+
+function formatAmendmentAuteurs(auteurs: unknown): string | null {
+  if (typeof auteurs === "string") {
+    const trimmed = auteurs.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (!Array.isArray(auteurs)) {
+    return null;
+  }
+
+  const labels = auteurs
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const auteur = entry as Record<string, unknown>;
+
+      const libelle =
+        typeof auteur.libelle === "string" ? auteur.libelle.trim() : "";
+      if (libelle) return libelle;
+
+      const prenom =
+        typeof auteur.prenom === "string" ? auteur.prenom.trim() : "";
+      const nom = typeof auteur.nom === "string" ? auteur.nom.trim() : "";
+      const fullName = [prenom, nom].filter(Boolean).join(" ").trim();
+      return fullName || null;
+    })
+    .filter((value): value is string => Boolean(value));
+
+  if (labels.length === 0) return null;
+
+  return [...new Set(labels)].join(" ; ");
+}
 
 export interface ScrutinSearchFilters {
   q?: string | undefined;
@@ -175,10 +209,37 @@ export function createScrutinRepository(db: Database) {
         )
         .where(eq(scrutinGroupVotes.scrutinId, id));
 
+      // Join scrutin_amendments → amendments to get the linked amendment
+      const amendmentRows = await db
+        .select({
+          id: amendments.id,
+          numero: amendments.numero,
+          dispositif: amendments.dispositif,
+          exposeSommaire: amendments.exposeSommaire,
+          sortCode: amendments.sortCode,
+          articleRef: amendments.articleRef,
+          auteurs: amendments.auteurs,
+          matchMethod: scrutinAmendments.matchMethod,
+          confidence: scrutinAmendments.confidence,
+        })
+        .from(scrutinAmendments)
+        .innerJoin(amendments, eq(scrutinAmendments.amendmentId, amendments.id))
+        .where(eq(scrutinAmendments.scrutinId, id))
+        .limit(1);
+
+      const amendmentRow = amendmentRows[0] ?? null;
+      const amendment = amendmentRow
+        ? {
+            ...amendmentRow,
+            auteurs: formatAmendmentAuteurs(amendmentRow.auteurs),
+          }
+        : null;
+
       return {
         ...scrutin,
         themes: themeRows,
         groupVotes,
+        amendment,
       };
     },
 
