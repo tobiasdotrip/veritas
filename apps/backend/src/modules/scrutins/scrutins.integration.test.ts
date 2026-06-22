@@ -72,7 +72,7 @@ describeIntegration("GET /api/v1/scrutins", () => {
     const db = drizzle(ctx.pool, { schema });
 
     await db.insert(schema.amendments).values({
-      id: "AMANR5L17N1867",
+      id: "AMANR5L17N1867TEST",
       numero: "1867 rect.",
       dossierRef: "DLR5L17N00001",
       dispositif: "Dispositif test",
@@ -84,7 +84,7 @@ describeIntegration("GET /api/v1/scrutins", () => {
 
     await db.insert(schema.scrutinAmendments).values({
       scrutinId: FIXTURE.scrutins.sante.id,
-      amendmentId: "AMANR5L17N1867",
+      amendmentId: "AMANR5L17N1867TEST",
       matchMethod: "titre",
       confidence: "0.80",
     });

@@ -1,4 +1,4 @@
-import { eq, and, sql, desc, asc, gte, lte, count } from "drizzle-orm";
+import { eq, and, or, sql, desc, asc, gte, lte, count } from "drizzle-orm";
 import type { Database } from "../../db/client.js";
 import {
   deputies,
@@ -263,10 +263,40 @@ export function createDeputyRepository(db: Database) {
     },
 
     async getStats(deputyId: string, legislature: string) {
+      const mandates = await db
+        .select({
+          startDate: deputyMandates.startDate,
+          endDate: deputyMandates.endDate,
+        })
+        .from(deputyMandates)
+        .where(
+          and(
+            eq(deputyMandates.deputyId, deputyId),
+            eq(deputyMandates.legislature, legislature),
+          ),
+        );
+
+      const mandateDateConditions = mandates.map((m) => {
+        const conditions = [gte(scrutins.dateScrutin, m.startDate)];
+        if (m.endDate) {
+          conditions.push(lte(scrutins.dateScrutin, m.endDate));
+        }
+        return and(...conditions);
+      });
+
+      const dateCondition =
+        mandateDateConditions.length === 1
+          ? mandateDateConditions[0]
+          : mandateDateConditions.length > 1
+            ? or(...mandateDateConditions)
+            : undefined;
+
       const totalScrutinsResult = await db
         .select({ total: count() })
         .from(scrutins)
-        .where(eq(scrutins.legislature, legislature));
+        .where(
+          and(eq(scrutins.legislature, legislature), dateCondition),
+        );
       const totalScrutins = totalScrutinsResult[0]?.total ?? 0;
 
       const votesCastResult = await db
@@ -278,6 +308,7 @@ export function createDeputyRepository(db: Database) {
             eq(scrutinVotes.deputyId, deputyId),
             eq(scrutins.legislature, legislature),
             sql`${scrutinVotes.position} != 'nonVotant'`,
+            dateCondition,
           ),
         );
       const votesCast = votesCastResult[0]?.total ?? 0;
@@ -302,6 +333,7 @@ export function createDeputyRepository(db: Database) {
             eq(scrutins.legislature, legislature),
             sql`${scrutinVotes.position} != 'nonVotant'`,
             sql`${scrutinVotes.position}::text = ${scrutinGroupVotes.positionMajoritaire}`,
+            dateCondition,
           ),
         );
       const votesWithGroup = loyaltyResult[0]?.total ?? 0;
@@ -327,6 +359,7 @@ export function createDeputyRepository(db: Database) {
             sql`${scrutinVotes.position} != 'nonVotant'`,
             sql`${scrutinVotes.position}::text != ${scrutinGroupVotes.positionMajoritaire}`,
             sql`${scrutinGroupVotes.positionMajoritaire} IS NOT NULL`,
+            dateCondition,
           ),
         );
       const votesAgainstGroup = againstGroupResult[0]?.total ?? 0;
