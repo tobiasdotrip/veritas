@@ -18,7 +18,7 @@ export interface RawScrutin {
   sort?: { code?: string; libelle?: string };
   titre?: string;
   demandeur?: { texte?: string } | string;
-  objet?: { libelle?: string } | string;
+  objet?: { libelle?: string; dossierLegislatif?: { dossierRef?: string } } | string;
   modePublicationDesVotes?: string;
   ventilationVotes?: {
     organe?: {
@@ -106,6 +106,7 @@ export interface ParsedScrutin {
   titre: string;
   demandeur?: string | undefined;
   objet?: string | undefined;
+  dossierRef?: string | undefined;
   modePublicationDesVotes?: string | undefined;
   nombreVotants?: number | undefined;
   suffragesExprimes?: number | undefined;
@@ -248,6 +249,10 @@ export function parseScrutin(wrapper: RawScrutinFile): ParsedScrutin {
     titre: normalizeText(raw.titre) ?? raw.uid,
     demandeur: normalizeText(raw.demandeur),
     objet: normalizeText(raw.objet),
+    dossierRef:
+      typeof raw.objet === "object" && raw.objet
+        ? raw.objet.dossierLegislatif?.dossierRef
+        : undefined,
     modePublicationDesVotes: raw.modePublicationDesVotes,
     nombreVotants: undefined,
     suffragesExprimes: undefined,

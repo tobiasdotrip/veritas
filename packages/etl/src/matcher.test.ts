@@ -25,8 +25,8 @@ describe("normalizeAmendmentNumero", () => {
 
 describe("pickCandidateForScrutinTitle", () => {
   const candidates = [
-    { id: "A1", numero: "1867", dossierRef: "DLR-A" },
-    { id: "A2", numero: "1867 rect.", dossierRef: "DLR-B" },
+    { id: "A1", numero: "1867", dossierRef: "DLR-A", articleRef: null, auteurs: null },
+    { id: "A2", numero: "1867 rect.", dossierRef: "DLR-B", articleRef: null, auteurs: null },
   ];
 
   it("choisit l'amendement rectifie si le titre contient rect.", () => {
@@ -48,8 +48,8 @@ describe("pickCandidateForScrutinTitle", () => {
   it("retourne undefined si ambigu", () => {
     const ambiguous = pickCandidateForScrutinTitle(
       [
-        { id: "A1", numero: "1867", dossierRef: "DLR-A" },
-        { id: "A2", numero: "1867", dossierRef: "DLR-B" },
+        { id: "A1", numero: "1867", dossierRef: "DLR-A", articleRef: null, auteurs: null },
+        { id: "A2", numero: "1867", dossierRef: "DLR-B", articleRef: null, auteurs: null },
       ],
       "Vote sur l'amendement n° 1867",
     );

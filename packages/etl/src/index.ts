@@ -9,6 +9,7 @@ import {
   parseDeputiesFromZip,
   parseOrganesFromZip,
   parseAmendmentsFromZip,
+  parseDossiersLegislatifsFromZip,
 } from "./parser/index.js";
 import {
   createLoader,
@@ -37,6 +38,7 @@ export interface PipelineResult {
   affiliations: { inserted: number };
   scrutins: { inserted: number; updated: number; errors: number };
   amendments: { inserted: number; updated: number; errors: number };
+  dossiersLegislatifs: { count: number };
   matching: { matched: number; skipped: number };
   classification: { processed: number; classified: number };
 }
@@ -59,6 +61,7 @@ export async function runEtlPipeline(
     affiliations: { inserted: 0 },
     scrutins: { inserted: 0, updated: 0, errors: 0 },
     amendments: { inserted: 0, updated: 0, errors: 0 },
+    dossiersLegislatifs: { count: 0 },
     matching: { matched: 0, skipped: 0 },
     classification: { processed: 0, classified: 0 },
   };
@@ -183,8 +186,32 @@ export async function runEtlPipeline(
       `[etl] Classification: ${result.classification.processed} processed, ${result.classification.classified} classified`,
     );
 
-    // ─── 5. Amendements + Matching ──────────────────────────────
-    console.log("[etl] Step 5/5: Amendments + matching");
+    // ─── 5. Dossiers législatifs ───────────────────────────────
+    console.log("[etl] Step 5/6: Dossiers législatifs");
+    const dossiersResult = await downloadZip(
+      config.urls.dossiersLegislatifs,
+      resolve(config.tempDir, "dossiers_legislatifs.zip"),
+      config,
+      config.checksums.dossiersLegislatifs,
+    );
+    console.log(
+      `[etl] Dossiers législatifs zip: ${dossiersResult.skipped ? "skipped" : "downloaded"} (${dossiersResult.hash})`,
+    );
+
+    const dossiersIter = parseDossiersLegislatifsFromZip(
+      dossiersResult.filePath,
+      config.tempDir,
+      extractLimits,
+    );
+    const dossiers: import("./parser/dossiers.js").ParsedDossierLegislatif[] = [];
+    for await (const d of dossiersIter) {
+      dossiers.push(d);
+    }
+    result.dossiersLegislatifs.count = dossiers.length;
+    console.log(`[etl] Dossiers législatifs loaded: ${dossiers.length}`);
+
+    // ─── 6. Amendements + Matching ──────────────────────────────
+    console.log("[etl] Step 6/6: Amendments + matching");
     const amendmentsResult = await downloadZip(
       config.urls.amendments,
       resolve(config.tempDir, "amendments.zip"),
@@ -214,7 +241,7 @@ export async function runEtlPipeline(
 
     // Matching
     if (result.amendments.inserted > 0 || result.scrutins.inserted > 0) {
-      const matchResult = await runAmendmentMatching(deps);
+      const matchResult = await runAmendmentMatching(deps, dossiers);
       result.matching = {
         matched: matchResult.matched,
         skipped: matchResult.skipped,

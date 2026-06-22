@@ -247,6 +247,7 @@ export async function loadScrutins(
             demandeur: s.demandeur ?? null,
             objet: s.objet ?? null,
             modePublicationDesVotes: s.modePublicationDesVotes ?? null,
+            dossierRef: s.dossierRef ?? null,
             nombreVotants: s.nombreVotants ?? null,
             suffragesExprimes: s.suffragesExprimes ?? null,
             nombrePour: s.nombrePour ?? null,
@@ -263,7 +264,7 @@ export async function loadScrutins(
             .values({ ...scrutinValues, createdAt: new Date() })
             .onConflictDoUpdate({
               target: schema.scrutins.id,
-              set: { updatedAt: new Date() },
+              set: scrutinValues,
             });
 
           if (s.groupVotes.length > 0) {

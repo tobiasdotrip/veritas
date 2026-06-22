@@ -36,6 +36,7 @@ interface RawAmendement {
     cosignataires?: {
       acteurRef?: string | string[];
     };
+    libelle?: string;
   };
   pointeurFragmentTexte?: {
     division?: {
@@ -149,6 +150,7 @@ function parseAuteurs(raw: RawAmendement["signataires"]): ParsedAuteur[] {
     auteurs.push({
       type: raw.auteur.typeAuteur ?? "inconnu",
       acteurRef: raw.auteur.acteurRef,
+      libelle: stripHtml(raw.libelle),
     });
   }
   const cosig = raw.cosignataires?.acteurRef;
