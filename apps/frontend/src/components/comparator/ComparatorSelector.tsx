@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn, getDeputyPhotoUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
 import { useSearch } from "@/hooks/useSearch";
 import { useComparatorStore } from "@/stores/comparator-store";
@@ -114,6 +114,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
                     const already =
                       reference?.slug === d.slug ||
                       compared.some((x) => x.slug === d.slug);
+                    const itemPhotoUrl = d.photoUrl ?? getDeputyPhotoUrl(d.id);
                     return (
                       <li key={d.id}>
                         <button
@@ -125,7 +126,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
                               firstName: d.firstName,
                               lastName: d.lastName,
                               slug: d.slug,
-                              photoUrl: d.photoUrl,
+                              photoUrl: itemPhotoUrl,
                               groupAbbreviation: d.groupAbbreviation,
                             };
                             if (!reference) {
@@ -143,9 +144,9 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
                               : "hover:bg-primary-bg-subtle focus-visible:bg-primary-bg-subtle focus-visible:outline-none",
                           )}
                         >
-                          {d.photoUrl ? (
+                          {itemPhotoUrl ? (
                             <img
-                              src={d.photoUrl}
+                              src={itemPhotoUrl}
                               alt=""
                               className="h-9 w-9 rounded-full object-cover"
                               aria-hidden="true"

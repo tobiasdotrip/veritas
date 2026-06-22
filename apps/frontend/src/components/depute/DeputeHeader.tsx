@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, getDeputyPhotoUrl } from "@/lib/utils";
 import type { DeputeProfile } from "@/lib/api-types";
 
 export interface DeputeHeaderProps {
@@ -9,13 +9,14 @@ export interface DeputeHeaderProps {
 export function DeputeHeader({ depute, className }: DeputeHeaderProps) {
   const fullName = `${depute.firstName} ${depute.lastName}`;
   const isActive = !depute.mandateEnd;
+  const photoUrl = depute.photoUrl ?? getDeputyPhotoUrl(depute.id);
 
   return (
     <div className={cn("flex items-start gap-5", className)}>
       <div className="shrink-0">
-        {depute.photoUrl ? (
+        {photoUrl ? (
           <img
-            src={depute.photoUrl}
+            src={photoUrl}
             alt={`Photo de ${fullName}`}
             width={112}
             height={112}

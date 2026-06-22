@@ -11,7 +11,7 @@ import { BadgeResultat } from "@/components/ui/BadgeResultat";
 import { SearchCombobox } from "@/components/ui/SearchCombobox";
 import { useSearch as useSearchData } from "@/hooks/useSearch";
 import { useThemeScrutins } from "@/hooks/useThemeScrutins";
-import { formatDateShort } from "@/lib/utils";
+import { formatDateShort, getDeputyPhotoUrl } from "@/lib/utils";
 import { Search } from "lucide-react";
 import {
   defaultDeputeSearch,
@@ -228,9 +228,9 @@ function SearchPage() {
                           });
                         }}
                       >
-                        {d.photoUrl ? (
+                        {(d.photoUrl ?? getDeputyPhotoUrl(d.id)) ? (
                           <img
-                            src={d.photoUrl}
+                            src={d.photoUrl ?? getDeputyPhotoUrl(d.id)}
                             alt=""
                             className="h-12 w-12 rounded-full object-cover"
                             aria-hidden="true"
