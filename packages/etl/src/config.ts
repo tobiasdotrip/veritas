@@ -11,7 +11,9 @@ const DEFAULT_URLS = {
   organes:
     "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_senateurs_ministres_legislature/AMO20_dep_sen_min_tous_mandats_et_organes.json.zip",
   amendments:
-    "https://data.assemblee-nationale.fr/static/openData/repository/17/loi/amendements_div_legis/Amendements.json.zip",
+    "https://data.assemblee-nationale.fr/static/openData/repository/17/loi/amendments_div_legis/Amendments.json.zip",
+  dossiersLegislatifs:
+    "https://data.assemblee-nationale.fr/static/openData/repository/17/loi/dossiers_legislatifs/Dossiers_Legislatifs.json.zip",
 } as const;
 
 export function validateEtlUrl(url: string, label: string): string {
@@ -46,6 +48,7 @@ export interface EtlConfig {
     deputies: string;
     organes: string;
     amendments: string;
+    dossiersLegislatifs: string;
   };
   tempDir: string;
   downloadTimeoutMs: number;
@@ -58,6 +61,7 @@ export interface EtlConfig {
     deputies?: string | undefined;
     organes?: string | undefined;
     amendments?: string | undefined;
+    dossiersLegislatifs?: string | undefined;
   };
   batchSize: number;
   scrutinTransactionSize: number;
@@ -98,6 +102,11 @@ export const defaultConfig: EtlConfig = {
       process.env.ETL_URL_AMENDMENTS ?? DEFAULT_URLS.amendments,
       "amendments",
     ),
+    dossiersLegislatifs: validateEtlUrl(
+      process.env.ETL_URL_DOSSIERS_LEGISLATIFS ??
+        DEFAULT_URLS.dossiersLegislatifs,
+      "dossiersLegislatifs",
+    ),
   },
   tempDir: resolve(process.env.TEMP_DIR ?? "./tmp/etl"),
   downloadTimeoutMs: Number(process.env.DOWNLOAD_TIMEOUT_MS ?? 120_000),
@@ -122,6 +131,10 @@ export const defaultConfig: EtlConfig = {
     amendments: readOptionalSha256Env(
       process.env.ETL_SHA256_AMENDMENTS,
       "amendments",
+    ),
+    dossiersLegislatifs: readOptionalSha256Env(
+      process.env.ETL_SHA256_DOSSIERS_LEGISLATIFS,
+      "dossiersLegislatifs",
     ),
   },
   batchSize: Number(process.env.BATCH_SIZE ?? 1_000),

@@ -94,6 +94,7 @@ describe("defaultConfig", () => {
     delete process.env.ETL_URL_SCRUTINS;
     delete process.env.ETL_URL_DEPUTIES;
     delete process.env.ETL_URL_ORGANES;
+    delete process.env.ETL_URL_DOSSIERS_LEGISLATIFS;
     delete process.env.TEMP_DIR;
     delete process.env.DOWNLOAD_TIMEOUT_MS;
     delete process.env.DOWNLOAD_RETRIES;
@@ -104,6 +105,7 @@ describe("defaultConfig", () => {
     delete process.env.ETL_SHA256_DEPUTIES;
     delete process.env.ETL_SHA256_ORGANES;
     delete process.env.ETL_SHA256_AMENDMENTS;
+    delete process.env.ETL_SHA256_DOSSIERS_LEGISLATIFS;
     delete process.env.BATCH_SIZE;
     delete process.env.SCRUTIN_TX_SIZE;
     delete process.env.LEGISLATURE;
@@ -169,7 +171,7 @@ describe("ensureTempDir", () => {
   it("creates the temp directory recursively without error", async () => {
     const config: EtlConfig = {
       tempDir: testDir,
-      urls: { scrutins: "", deputies: "", organes: "", amendments: "" },
+      urls: { scrutins: "", deputies: "", organes: "", amendments: "", dossiersLegislatifs: "" },
       downloadTimeoutMs: 0,
       downloadRetries: 0,
       downloadMaxSizeBytes: 0,
