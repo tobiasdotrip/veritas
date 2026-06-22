@@ -15,6 +15,13 @@
       "when": 1779637460416,
       "tag": "0001_true_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779808851187,
+      "tag": "0002_gifted_the_twelve",
+      "breakpoints": true
     }
   ]
 }

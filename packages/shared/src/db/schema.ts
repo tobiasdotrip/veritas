@@ -230,6 +230,7 @@ export const scrutins = pgTable(
     modePublicationDesVotes: varchar("mode_publication_des_votes", {
       length: 50,
     }),
+    dossierRef: varchar("dossier_ref", { length: 50 }),
     nombreVotants: integer("nombre_votants"),
     suffragesExprimes: integer("suffrages_exprimes"),
     nombrePour: integer("nombre_pour"),
@@ -256,6 +257,7 @@ export const scrutins = pgTable(
       "gin",
       sql`to_tsvector('french', coalesce(${table.titre}, '') || ' ' || coalesce(${table.objet}, ''))`,
     ),
+    index("idx_scrutins_dossier_ref").on(table.dossierRef),
   ],
 );
 
