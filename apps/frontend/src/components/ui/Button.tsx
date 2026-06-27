@@ -4,22 +4,22 @@ import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-all duration-base focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:pointer-events-none disabled:opacity-50 min-h-[44px] min-w-[44px] cursor-pointer",
+  "fr-btn inline-flex items-center justify-center gap-2 transition-all duration-base focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:pointer-events-none disabled:opacity-50 min-h-[44px] min-w-[44px] cursor-pointer",
   {
     variants: {
       variant: {
         primary:
-          "bg-primary text-white hover:bg-primary-hover active:bg-primary-active shadow-sm",
+          "fr-btn--primary bg-primary text-white hover:bg-primary-hover active:bg-primary-active shadow-sm",
         secondary:
-          "bg-surface-raised text-text-primary border border-border-light hover:bg-primary-bg-subtle hover:border-primary-bg",
+          "fr-btn--secondary bg-surface-raised text-text-primary border border-border-light hover:bg-primary-bg-subtle hover:border-primary-bg",
         ghost:
-          "bg-transparent text-text-secondary hover:bg-primary-bg-subtle hover:text-primary",
-        danger: "bg-danger text-white hover:bg-accent-hover shadow-sm",
+          "fr-btn--tertiary bg-transparent text-text-secondary hover:bg-primary-bg-subtle hover:text-primary",
+        danger: "fr-btn--danger bg-danger text-white hover:bg-danger-hover shadow-sm",
         outline:
-          "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-white",
+          "fr-btn--tertiary-no-outline border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-white",
       },
       size: {
-        sm: "px-3 py-1.5 text-sm rounded-md",
+        sm: "fr-btn--sm px-3 py-1.5 text-sm rounded-md",
         md: "px-5 py-2.5 text-base rounded-lg",
         lg: "px-6 py-3 text-lg rounded-lg",
       },

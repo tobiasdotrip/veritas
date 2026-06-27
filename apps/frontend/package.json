@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --configLoader native",
-    "build": "vite build --configLoader native",
+    "dev": "node scripts/copy-dsfr-assets.mjs && vite dev --configLoader native",
+    "build": "node scripts/copy-dsfr-assets.mjs && vite build --configLoader native",
     "start": "node dist/server/server.js",
     "typecheck": "tsc --noEmit",
     "routes:generate": "node --input-type=module -e \"import { Generator, getConfig } from '@tanstack/router-generator'; const c=getConfig({}, process.cwd()); await new Generator({ root: process.cwd(), config: c }).run();\"",
     "lint": "eslint src --config ../../eslint.config.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "copy-dsfr-assets": "node scripts/copy-dsfr-assets.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.10",
@@ -20,6 +21,7 @@
     "@tanstack/react-router": "^1.170.5",
     "@tanstack/react-start": "^1.168.7",
     "@veritas/shared": "workspace:*",
+    "@codegouvfr/react-dsfr": "^1.32.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.509.0",
@@ -46,6 +48,6 @@
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.9"
   }
 }

@@ -6,20 +6,23 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = "default", ...props }, ref) => {
+  ({ className, variant = "default", children, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          "rounded-lg border border-border-light bg-surface",
-          variant === "default" && "p-4 shadow-sm",
-          variant === "flat" && "p-4",
+          "rounded-xl border bg-surface p-5 shadow-sm",
+          variant !== "flat" && "border-border-light",
+          variant === "flat" && "border-transparent bg-surface-raised shadow-none",
           variant === "hoverable" &&
-            "p-4 shadow-sm transition-all duration-base hover:shadow-md hover:-translate-y-px",
+            "transition-all duration-base hover:-translate-y-1 hover:border-primary-bg hover:shadow-md hover:shadow-primary/5",
+          "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25",
           className,
         )}
         {...props}
-      />
+      >
+        {children}
+      </div>
     );
   },
 );

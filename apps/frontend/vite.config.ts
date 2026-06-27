@@ -7,11 +7,22 @@ export default defineConfig({
   server: {
     port: Number(process.env.PORT ?? 3001),
   },
+  ssr: {
+    noExternal: ["@codegouvfr/react-dsfr"],
+  },
+  optimizeDeps: {
+    include: ["@codegouvfr/react-dsfr"],
+  },
   plugins: [
     tsConfigPaths({
       projects: ["./tsconfig.json"],
     }),
-    tanstackStart(),
+    process.env.VITEST !== "true" &&
+      tanstackStart({
+        client: {
+          entry: "./src/client.tsx",
+        },
+      }),
     react(),
   ],
 });

@@ -1,11 +1,16 @@
 import * as React from "react";
+import { Input as DsfrInput } from "@codegouvfr/react-dsfr/Input";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "label"> {
   iconLeft?: React.ReactNode;
   clearable?: boolean;
   wrapperClassName?: string;
+  label?: React.ReactNode;
+  hideLabel?: boolean;
+  iconId?: "fr-icon-search-line";
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -13,8 +18,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     {
       className,
       iconLeft,
+      iconId,
       clearable,
       wrapperClassName,
+      label,
+      hideLabel,
       type = "text",
       value,
       onChange,
@@ -26,23 +34,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={cn("relative flex items-center", wrapperClassName)}>
-        {iconLeft && (
-          <span className="pointer-events-none absolute left-3 text-text-muted">
-            {iconLeft}
-          </span>
-        )}
-        <input
-          ref={ref}
-          type={type}
-          className={cn(
-            "flex h-11 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted truncate focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-50",
-            iconLeft && "pl-10",
-            clearable && "pr-10",
-            className,
-          )}
-          value={value}
-          onChange={onChange}
-          {...props}
+        <DsfrInput
+          label={label ?? ""}
+          hideLabel={hideLabel ?? false}
+          className="w-full"
+          {...(iconId || iconLeft ? { iconId: iconId ?? "fr-icon-search-line" } : {})}
+          nativeInputProps={{
+            ref,
+            type,
+            value,
+            onChange,
+            className: cn(clearable && "pr-10", className),
+            ...props,
+          }}
         />
         {clearable && hasValue && (
           <button
@@ -52,7 +56,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 target: { value: "" },
               } as React.ChangeEvent<HTMLInputElement>);
             }}
-            className="absolute right-3 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-muted hover:bg-neutral-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-muted hover:bg-neutral-bg hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             aria-label="Effacer la saisie"
           >
             <X className="h-4 w-4" aria-hidden="true" />

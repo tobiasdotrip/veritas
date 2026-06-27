@@ -24,6 +24,24 @@ describe("useSearch", () => {
     expect(mockApiFetch).not.toHaveBeenCalled();
   });
 
+  it("fetches results by theme without text query", async () => {
+    mockApiFetch.mockResolvedValue({
+      data: {
+        deputies: [],
+        scrutins: [{ id: "VT1", numero: 1, titre: "Test", dateScrutin: "2024-01-01", sortCode: "adopté", nombrePour: 10, nombreContre: 0, nombreAbstentions: 0 }],
+      },
+    });
+
+    const { result } = renderHook(() => useSearch("", "sante", 20), {
+      wrapper: createQueryWrapper(),
+    });
+
+    await waitForHook(result, (r) => r.isSuccess);
+
+    expect(mockApiFetch).toHaveBeenCalledWith("/search?theme=sante&limit=20");
+    expect(result.current.data?.scrutins).toHaveLength(1);
+  });
+
   it("fetches search results when query is long enough", async () => {
     mockApiFetch.mockResolvedValue({
       data: {
@@ -32,15 +50,13 @@ describe("useSearch", () => {
       },
     });
 
-    const { result } = renderHook(() => useSearch("jean", 0, 20), {
+    const { result } = renderHook(() => useSearch("jean", undefined, 20), {
       wrapper: createQueryWrapper(),
     });
 
     await waitForHook(result, (r) => r.isSuccess);
 
-    expect(mockApiFetch).toHaveBeenCalledWith(
-      "/search?q=jean&offset=0&limit=20",
-    );
+    expect(mockApiFetch).toHaveBeenCalledWith("/search?q=jean&limit=20");
     expect(result.current.data?.deputies).toHaveLength(1);
   });
 });

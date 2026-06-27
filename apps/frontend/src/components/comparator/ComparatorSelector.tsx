@@ -20,7 +20,7 @@ export function ComparatorSelector({ className }: ComparatorSelectorProps) {
   const setReference = useComparatorStore((s) => s.setReference);
   const clearReference = useComparatorStore((s) => s.clearReference);
 
-  const { data, isLoading } = useSearch(query, 0, 10);
+  const { data, isLoading } = useSearch(query, undefined, 10);
 
   const canAdd = compared.length + (reference ? 1 : 0) < 5;
 

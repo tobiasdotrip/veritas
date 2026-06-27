@@ -16,7 +16,7 @@ const config = {
 
 export interface BadgeResultatProps {
   resultat: "adopté" | "rejeté" | null;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -31,6 +31,7 @@ export function BadgeResultat({
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full bg-neutral-bg px-2.5 py-1 text-xs font-semibold text-neutral",
           size === "md" && "px-3 py-1.5 text-sm",
+          size === "lg" && "px-3.5 py-2 text-sm",
           className,
         )}
         aria-label="Résultat inconnu"
@@ -47,6 +48,7 @@ export function BadgeResultat({
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
         c.classes,
         size === "md" && "px-3 py-1.5 text-sm",
+        size === "lg" && "px-3.5 py-2 text-sm",
         className,
       )}
       role="status"

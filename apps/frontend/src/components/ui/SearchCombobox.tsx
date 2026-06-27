@@ -36,7 +36,7 @@ export function SearchCombobox({
   label,
 }: SearchComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [activeIndex, setActiveIndex] = React.useState(-1);
+  const [activeIndexState, setActiveIndex] = React.useState(-1);
   const listRef = React.useRef<HTMLUListElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const blurTimeoutRef = React.useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -62,11 +62,9 @@ export function SearchCombobox({
     });
   }, [options]);
 
-  React.useEffect(() => {
-    setActiveIndex(-1);
-  }, [options]);
-
   const totalOptions = options.length;
+  const activeIndex =
+    totalOptions > 0 ? Math.min(activeIndexState, totalOptions - 1) : -1;
 
   const closeDropdown = () => {
     setOpen(false);
@@ -115,7 +113,7 @@ export function SearchCombobox({
       );
       el?.scrollIntoView({ block: "nearest" });
     }
-  }, [activeIndex]);
+  }, [activeIndex, listRef]);
 
   return (
     <div className={cn("relative", className)}>
@@ -142,6 +140,7 @@ export function SearchCombobox({
           value={value}
           onChange={(e) => {
             onChange?.(e.target.value);
+            setActiveIndex(-1);
             setOpen(true);
           }}
           onFocus={() => {

@@ -4,6 +4,9 @@
   /*
    * Palette officielle — Système de Design de l'État (DSFR)
    * https://www.systeme-de-design.gouv.fr
+   *
+   * Les valeurs hex ci-dessous correspondent aux décisions de couleur DSFR
+   * en mode clair. Elles permettent à Tailwind de générer les opacités.
    */
 
   /* ── Primaire : Bleu France ── */
@@ -14,36 +17,37 @@
   --color-primary-bg: #e3e3fd;
   --color-primary-bg-subtle: #f5f5fe;
 
-  /* ── Accent : Rouge Marianne ── */
-  --color-accent: #e1000f;
-  --color-accent-hover: #b8000c;
-  --color-accent-bg: #fde8ec;
+  /* ── Accent : Violet (neutre/comparatif) ── */
+  --color-accent: #6b21a8;
+  --color-accent-hover: #581c87;
+  --color-accent-bg: #f3e8ff;
 
   /* ── Sémantique ── */
-  --color-success: #00a95f;
+  --color-success: #18753c;
   --color-success-bg: #e6f9f0;
-  --color-danger: #e1000f;
+  --color-danger: #c9191e;
+  --color-danger-hover: #a6141a;
   --color-danger-bg: #fde8ec;
-  --color-warning: #c3992a;
-  --color-warning-bg: #fef3c7;
-  --color-info: #417dc4;
+  --color-warning: #b34000;
+  --color-warning-bg: #fff4e8;
+  --color-info: #0762c8;
   --color-info-bg: #e8f0fa;
 
   /* ── Neutres ── */
   --color-neutral: #666666;
-  --color-neutral-bg: #f0f0f0;
+  --color-neutral-bg: #eeeeee;
 
   /* ── Surfaces ── */
   --color-surface: #ffffff;
   --color-surface-raised: #f5f5fe;
   --color-surface-alt: #f6f6f6;
   --color-border: #dddddd;
-  --color-border-light: #e8e8e8;
+  --color-border-light: #eeeeee;
 
   /* ── Texte ── */
   --color-text-primary: #161616;
-  --color-text-secondary: #555555;
-  --color-text-muted: #929292;
+  --color-text-secondary: #3a3a3a;
+  --color-text-muted: #666666;
   --color-text-inverted: #ffffff;
 
   /* ── Espacements ── */
@@ -71,6 +75,10 @@
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-slow: 300ms;
+
+  /* ── Typographie DSFR ── */
+  --font-sans: "Marianne", "Arial", sans-serif;
+  --font-serif: "Spectral", "Georgia", serif;
 }
 
 /* ── Keyframes ── */
@@ -87,7 +95,7 @@
 body {
   background-color: var(--color-surface-alt);
   color: var(--color-text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

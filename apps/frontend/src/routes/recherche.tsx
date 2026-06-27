@@ -10,7 +10,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { BadgeResultat } from "@/components/ui/BadgeResultat";
 import { SearchCombobox } from "@/components/ui/SearchCombobox";
 import { useSearch as useSearchData } from "@/hooks/useSearch";
-import { useThemeScrutins } from "@/hooks/useThemeScrutins";
 import { formatDateShort, getDeputyPhotoUrl } from "@/lib/utils";
 import { Search } from "lucide-react";
 import {
@@ -71,37 +70,25 @@ function SearchPage() {
     isLoading: isSearchLoading,
     error,
     refetch,
-  } = useSearchData(query, 0, 20);
-  const {
-    data: themeScrutins,
-    isLoading: isThemeLoading,
-    error: themeError,
-  } = useThemeScrutins(search.theme, 20);
+  } = useSearchData(query, search.theme, 20);
 
-  const isLoading = isSearchLoading || (!!search.theme && isThemeLoading);
-  const loadError = error ?? themeError;
+  const isLoading = isSearchLoading;
+  const loadError = error;
   const hasSearch = query.length >= 2 || !!search.theme;
 
   const data = React.useMemo(() => {
     const type = search.type ?? "all";
+    const hasActiveSearch = query.length >= 2 || !!search.theme;
     const searchDeputies =
       query.length >= 2 && type !== "scrutin" ? (rawData?.deputies ?? []) : [];
     const searchScrutins =
-      query.length >= 2 && type !== "depute" ? (rawData?.scrutins ?? []) : [];
-    const themedScrutins =
-      search.theme && type !== "depute" ? (themeScrutins ?? []) : [];
-
-    const scrutinIds = new Set(searchScrutins.map((s) => s.id));
-    const mergedScrutins = [
-      ...searchScrutins,
-      ...themedScrutins.filter((s) => !scrutinIds.has(s.id)),
-    ];
+      hasActiveSearch && type !== "depute" ? (rawData?.scrutins ?? []) : [];
 
     return {
       deputies: searchDeputies,
-      scrutins: mergedScrutins,
+      scrutins: searchScrutins,
     };
-  }, [rawData, search.type, search.theme, themeScrutins, query]);
+  }, [rawData, search.type, search.theme, query]);
 
   const options = React.useMemo(() => {
     const list: { id: string; label: string; group: string; meta: string }[] =

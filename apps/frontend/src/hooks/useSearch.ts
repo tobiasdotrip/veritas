@@ -2,14 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { SearchResultDepute, SearchResultScrutin } from "@/lib/api-types";
 
-export function useSearch(q: string, offset = 0, limit = 20) {
+export function useSearch(q: string, theme?: string, limit = 20) {
   const params = new URLSearchParams();
   if (q.length >= 2) params.set("q", q);
-  params.set("offset", String(offset));
+  if (theme) params.set("theme", theme);
   params.set("limit", String(limit));
 
   return useQuery({
-    queryKey: ["search", q, offset, limit],
+    queryKey: ["search", q, theme, limit],
     queryFn: async () =>
       (
         await apiFetch<{
@@ -17,7 +17,7 @@ export function useSearch(q: string, offset = 0, limit = 20) {
           scrutins: SearchResultScrutin[];
         }>(`/search?${params.toString()}`)
       ).data,
-    enabled: q.length >= 2,
+    enabled: q.length >= 2 || !!theme,
     staleTime: 1000 * 60 * 2,
   });
 }
